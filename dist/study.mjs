@@ -135,7 +135,7 @@ function checkTrial(t, s, i) {
   for (const key of ['pauseCount','resumeCount','queryReformulations','resultOpens','incorrectResultOpens']) assert(Number.isInteger(t[key]), 'Trial counts must be whole numbers.');
   assert(t.elapsedMs === t.activeElapsedMs && text(t.finalQuery) && typeof t.restored === 'boolean', 'The trial data are incomplete.');
 }
-export function restoreSession(input, time = now()) {
+export function validateSession(input, time = now()) {
   assert(typeof input === 'string' && new TextEncoder().encode(input).length <= MAX_IMPORT_BYTES, 'Choose a session JSON file smaller than 1 MB.');
   let s;
   try { s = JSON.parse(input); } catch { throw new Error('This file is not valid JSON.'); }
@@ -168,12 +168,7 @@ export function restoreSession(input, time = now()) {
     for (const key of ['activeMs', 'wallElapsedMs', 'pauseCount', 'resumeCount', 'queryReformulations']) assert(finite(c[key]), 'The saved task measurements are invalid.');
     for (const key of ['pauseCount','resumeCount','queryReformulations']) assert(Number.isInteger(c[key]), 'Saved trial counts must be whole numbers.');
     assert(typeof c.runningAtSave === 'boolean' && typeof c.restored === 'boolean', 'The saved task recovery state is invalid.');
-    c.activeSince = null;
-    c.restored = true;
-    if (c.runningAtSave) c.pauseCount++;
-    c.pauseReason = 'restored';
-    c.runningAtSave = false;
-    recordEvent(s, 'session_restored', {}, time);
+    assert(c.activeSince === null, 'Export the session before importing its clock state.');
   }
   const pick = (object, keys) => Object.fromEntries(keys.filter(k => k in object).map(k => [k, object[k]]));
   s.trials = s.trials.map(t => pick(t, ['taskIndex','condition','taskSet','queryType','targetId','selectedId','success','skipped','elapsedMs','activeElapsedMs','wallElapsedMs','pauseCount','resumeCount','restored','initialQuery','finalQuery','queryReformulations','resultOpens','incorrectResultOpens','incorrectFinalSelection']));
@@ -184,6 +179,17 @@ export function restoreSession(input, time = now()) {
   // Drop unknown top-level fields so an imported file cannot alter application settings.
   const keys = ['version','schemaVersion','datasetVersion','protocolVersion','timingDefinition','participant','order','setRotation','startedAt','finishedAt','phase','taskIndex','trials','ratings','events','currentTrial','ratingDraft'];
   return Object.fromEntries(keys.filter(k => k in s).map(k => [k, s[k]]));
+}
+export function restoreSession(input, time = now()) {
+  const s = validateSession(input, time), c = s.currentTrial;
+  if (c) {
+    c.restored = true;
+    if (c.runningAtSave) c.pauseCount++;
+    c.pauseReason = 'restored';
+    c.runningAtSave = false;
+    recordEvent(s, 'session_restored', {}, time);
+  }
+  return s;
 }
 const mean = values => values.length ? values.reduce((a,b) => a+b,0) / values.length : null;
 export function summarize(session) {

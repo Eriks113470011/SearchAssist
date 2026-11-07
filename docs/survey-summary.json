@@ -1,0 +1,474 @@
+{
+  "source_filename": "Search Behavior, Failures, and Result Transparency (Responses).xlsx",
+  "sha256": "14874b4ce1bfebd823ffb5fb9a31d67470e33fa1aaba65bd95ad95609ec88b49",
+  "sheet": "Form Responses 1",
+  "response_count": 26,
+  "consent_yes": 26,
+  "date_range": [
+    "2026-10-01 13:17:56.077000",
+    "2026-10-15 10:30:42.840000"
+  ],
+  "items": {
+    "3": {
+      "question": "How often do you use search features within websites or applications?",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Multiple times per day": 19,
+        "A few times per week": 4,
+        "About once per day": 3
+      }
+    },
+    "4": {
+      "question": "Which devices do you commonly use for searches? (Select all that apply.)",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Desktop computer": 8,
+        "Laptop": 21,
+        "Smartphone": 24,
+        "Tablet": 2,
+        "Voice assistant": 1
+      }
+    },
+    "7": {
+      "question": "How often are you unsure of the exact spelling or wording of what you want to find?",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Sometimes": 9,
+        "Often": 4,
+        "Rarely": 11,
+        "Never": 1,
+        "Very often": 1
+      }
+    },
+    "14": {
+      "question": "Did you eventually find what you needed?",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Maybe": 1,
+        "Yes, without much difficulty": 11,
+        "Yes, through another method": 8,
+        "Yes, but it required several attempts": 5,
+        "No": 1
+      }
+    },
+    "17": {
+      "question": "How often have you experienced each problem? [Misspelling prevented a useful result]",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Sometimes": 5,
+        "Rarely": 14,
+        "Never": 2,
+        "Often": 2,
+        "Very Often": 3
+      }
+    },
+    "18": {
+      "question": "How often have you experienced each problem? [I only knew part of the name]",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Sometimes": 12,
+        "Often": 5,
+        "Rarely": 4,
+        "Never": 1,
+        "Very Often": 4
+      }
+    },
+    "19": {
+      "question": "How often have you experienced each problem? [An abbreviation was not recognized]",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Never": 8,
+        "Sometimes": 8,
+        "Often": 4,
+        "Very Often": 2,
+        "Rarely": 4
+      }
+    },
+    "20": {
+      "question": "How often have you experienced each problem? [I used a different word with a similar meaning]",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Rarely": 11,
+        "Never": 2,
+        "Often": 4,
+        "Sometimes": 6,
+        "Very Often": 3
+      }
+    },
+    "21": {
+      "question": "How often have you experienced each problem? [Changing the word order changed the results]",
+      "valid_nonblank_n": 25,
+      "overall_n": 26,
+      "counts": {
+        "Never": 3,
+        "Sometimes": 5,
+        "Often": 5,
+        "Rarely": 9,
+        "Very Often": 3
+      }
+    },
+    "22": {
+      "question": "How often have you experienced each problem? [No results were returned]",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Sometimes": 6,
+        "Never": 5,
+        "Rarely": 7,
+        "Often": 4,
+        "Very Often": 4
+      }
+    },
+    "23": {
+      "question": "How often have you experienced each problem? [Too many irrelevant results appeared]",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Often": 8,
+        "Rarely": 3,
+        "Sometimes": 8,
+        "Very Often": 6,
+        "Never": 1
+      }
+    },
+    "24": {
+      "question": "How often have you experienced each problem? [The correct result appeared too low]",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Rarely": 9,
+        "Sometimes": 8,
+        "Often": 4,
+        "Very Often": 3,
+        "Never": 2
+      }
+    },
+    "25": {
+      "question": "How often have you experienced each problem? [My query was corrected incorrectly]",
+      "valid_nonblank_n": 25,
+      "overall_n": 26,
+      "counts": {
+        "Often": 6,
+        "Sometimes": 4,
+        "Rarely": 8,
+        "Very Often": 3,
+        "Never": 4
+      }
+    },
+    "26": {
+      "question": "How often have you experienced each problem? [I did not understand why a result appeared]",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Sometimes": 10,
+        "Never": 4,
+        "Rarely": 5,
+        "Often": 4,
+        "Very Often": 3
+      }
+    },
+    "27": {
+      "question": "How often have you experienced each problem? [Search controls were difficult to navigate]",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Never": 8,
+        "Rarely": 10,
+        "Sometimes": 5,
+        "Often": 2,
+        "Very Often": 1
+      }
+    },
+    "28": {
+      "question": "How many unsuccessful attempts do you usually make before abandoning a search?",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Three attempts": 6,
+        "It depends on how important the search is": 10,
+        "Four or more attempts": 5,
+        "Two attempts": 5
+      }
+    },
+    "29": {
+      "question": "Which three search problems are most frustrating to you?",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Misspelling prevented a useful result": 9,
+        "I only knew part of the nam": 12,
+        "An abbreviation was not recognized": 3,
+        "No results were returned": 11,
+        "Too many irrelevant results appeared": 15,
+        "The correct result appeared too low": 5,
+        "My query was corrected incorrectly": 4,
+        "I did not understand why a result appeared": 3,
+        "Search controls were difficult to navigate": 2,
+        "Changing the word order changed the results": 1
+      }
+    },
+    "30": {
+      "question": "How often do you see a result and wonder why it matched your query?",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Sometimes": 12,
+        "Rarely": 8,
+        "Often": 3,
+        "Very often": 1,
+        "Never": 2
+      }
+    },
+    "31": {
+      "question": "How important is it to understand why a search result appeared?",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Moderately important": 9,
+        "Slightly important": 7,
+        "Extremely important": 3,
+        "Very important": 4,
+        "Not important": 3
+      }
+    },
+    "32": {
+      "question": "What information would help you understand an approximate match? (Select all that apply.)",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Highlighting the matching text": 16,
+        "Showing a corrected spelling": 9,
+        "Identifying a known alias": 9,
+        "Showing whether the title, category, or description matched": 14,
+        "Explaining that only part of the query matched": 8,
+        "Identifying a known synonym": 7,
+        "Showing that the words appeared in a different order": 2,
+        "Identifying a recognized abbreviation": 6,
+        "Showing the strength of the match": 5,
+        "I do not want match explanations": 1,
+        "Other": 1
+      }
+    },
+    "33": {
+      "question": "Where should a match explanation appear?",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Directly beneath each result": 7,
+        "Beside each result as a label": 3,
+        "I would not want an explanation": 1,
+        "Only when requested": 7,
+        "In a tooltip or information icon": 6,
+        "At the top of the results page": 2
+      }
+    },
+    "34": {
+      "question": "How much explanation would you prefer?",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "A short label, such as “Close spelling”": 8,
+        "No explanation": 1,
+        "A short sentence explaining the match": 13,
+        "Different amounts depending on the match": 2,
+        "A detailed explanation": 2
+      }
+    },
+    "35": {
+      "question": "If a system believes your query contains a mistake, what should it do?",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Show an editable suggestion before applying it": 15,
+        "Correct it but provide an undo option": 14,
+        "Never suggest corrections": 2,
+        "Show results for both versions": 4,
+        "Correct it automatically without asking": 5
+      }
+    },
+    "36": {
+      "question": "Suppose you search for “calender,” and the system returns “Calendar Settings.” Should that result appear?",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "It depends": 6,
+        "Yes": 17,
+        "No": 3
+      }
+    },
+    "37": {
+      "question": "Which explanation would be most helpful for that result?",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Did you mean “calendar”?": 12,
+        "No explanation is necessary": 5,
+        "Close spelling: “calender” matched “calendar”": 7,
+        "Showing the corrected letters through highlighting": 2
+      }
+    },
+    "38": {
+      "question": "Suppose you search for “NYC,” and the system returns “New York City.” Should that result appear?",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Yes": 18,
+        "Only if the application explicitly stores NYC as an alias": 6,
+        "No": 2
+      }
+    },
+    "39": {
+      "question": "Suppose you search for “laptop,” and the system returns an item described as a “notebook computer.” Should that result appear?",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Only if the application explicitly defines the terms as synonyms": 9,
+        "It depends on the application": 5,
+        "Yes": 6,
+        "Unsure": 2,
+        "No": 4
+      }
+    },
+    "40": {
+      "question": "How should the system determine that two terms are related?",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Learn relationships from previous user searches": 7,
+        "Automatically determine similar meanings": 4,
+        "Use a standard dictionary": 5,
+        "Unsure": 2,
+        "Ask the user whether the terms are related": 3,
+        "Use aliases and synonyms explicitly stored by the application": 5
+      }
+    },
+    "42": {
+      "question": "Which explanation would make you most confident in a synonym result?",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "“Synonym match: laptop is related to notebook computer”": 10,
+        "Highlighting the related terms": 6,
+        "Other": 1,
+        "“Known alternative term”": 4,
+        "Showing the source of the synonym relationship": 3,
+        "I would not trust a synonym match": 2
+      }
+    },
+    "43": {
+      "question": "When no strong result is found, what should the system provide? (Select all that apply.)",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Corrected spelling suggestions": 12,
+        "Categories or filters": 6,
+        "The closest available matches": 14,
+        "A way to browse manually": 5,
+        "Related search terms": 14,
+        "A clear message that nothing matched": 8,
+        "Results containing only part of the query": 6,
+        "Tips for rewriting the query": 2
+      }
+    },
+    "44": {
+      "question": "Should approximate results appear when there is no strong match?",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Yes, but in a separate section": 12,
+        "Only after the user requests them": 8,
+        "Yes, automatically": 4,
+        "Unsure": 1,
+        "No": 1
+      }
+    },
+    "47": {
+      "question": "How important are the following search features? [Full keyboard navigation]",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Slightly": 5,
+        "Moderately": 9,
+        "Very": 3,
+        "Extremely": 6,
+        "Not important": 3
+      }
+    },
+    "48": {
+      "question": "How important are the following search features? [Visible keyboard focus]",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Very": 3,
+        "Slightly": 4,
+        "Extremely": 4,
+        "Not important": 4,
+        "Moderately": 11
+      }
+    },
+    "49": {
+      "question": "How important are the following search features? [Screen-reader result announcements]",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Moderately": 6,
+        "Not important": 6,
+        "Extremely": 3,
+        "Very": 4,
+        "Slightly": 7
+      }
+    },
+    "50": {
+      "question": "How important are the following search features? [Highlighting that does not rely only on color]",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Very": 6,
+        "Not important": 3,
+        "Extremely": 3,
+        "Slightly": 5,
+        "Moderately": 9
+      }
+    },
+    "51": {
+      "question": "How important are the following search features? [Clear result counts and status messages]",
+      "valid_nonblank_n": 26,
+      "overall_n": 26,
+      "counts": {
+        "Very": 7,
+        "Moderately": 6,
+        "Not important": 5,
+        "Extremely": 8
+      }
+    }
+  },
+  "quality_notes": [
+    {
+      "column_number": 21,
+      "invalid_values": {
+        "Search problem": 1
+      },
+      "valid_n": 25
+    },
+    {
+      "column_number": 25,
+      "invalid_values": {
+        "Search problem": 1
+      },
+      "valid_n": 25
+    },
+    "One malformed top-frustration option excluded from option counts; respondent remains in denominator.",
+    "Truncated incomplete-name option normalized only for display.",
+    "All 26 response rows retained without formal quality screening.",
+    "Multiple-selection totals can exceed 26.",
+    "No efficacy or causal conclusions from survey responses."
+  ]
+}

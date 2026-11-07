@@ -64,6 +64,13 @@ test('incomplete sessions are opt-in and unfinished ratings do not become final 
   assert.equal(rows.length, 3);assert.equal(rows[0].attempted, 4);assert.equal(rows[0].confidence, null);
   assert.equal(rows[1].meanActiveMs, null);assert.match(workspace.auditCsv(entries), /Incomplete session/);
 });
+test('turning off partial inclusion resolves conflicts from disabled incomplete copies', () => {
+  const entries = workspace.reviewFiles([file(recording('P001')),file(recording('P001',1))]);
+  const choices = {0:true,1:true};
+  assert.equal(workspace.selectSessions(entries,{choices,includePartial:true}).sessions.length,0);
+  const selection = workspace.selectSessions(entries,{choices,includePartial:false});
+  assert.deepEqual(selection.conflicts,[]);assert.deepEqual(selection.sessions.map(e=>e.id),[0]);
+});
 test('interruption exclusions affect only timing, and all-excluded means stay empty', () => {
   const s = JSON.parse(recording());
   s.trials.slice(0,4).forEach(t => {t.pauseCount=1;t.resumeCount=1;t.restored=true;});

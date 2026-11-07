@@ -42,6 +42,7 @@ async function checkSession(page) {
 try {
   browser = await chromium.launch({headless:true});
   const context = await browser.newContext({acceptDownloads:true,viewport:{width:1440,height:1000}});
+  context.setDefaultTimeout(15000);
   const page = await context.newPage();page.on('pageerror',error=>errors.push(error.message));
   await page.goto(url+'/#workspace');
   await visible(page,'#assignment-table');
@@ -104,8 +105,10 @@ try {
   const audit = await downloaded(fresh,'#download-audit');assert.equal(audit.split('\r\n').length,6);
   assert.equal((await checkSession(fresh)).participant,'P007');
   await mkdir('test-results',{recursive:true});
+  await fresh.evaluate(()=>window.scrollTo(0,0));
   await fresh.screenshot({path:'test-results/workspace-desktop.png',fullPage:true});
   await fresh.setViewportSize({width:390,height:844});
+  await fresh.evaluate(()=>window.scrollTo(0,0));
   await fresh.screenshot({path:'test-results/workspace-mobile.png',fullPage:true});
   assert.equal(await fresh.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Mobile layout overflows');
   await fresh.reload();await visible(fresh,'#review-files');

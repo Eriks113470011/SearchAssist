@@ -39,7 +39,7 @@ export function reviewFiles(files) {
 
 export function selectSessions(entries, {includePartial = false, choices = {}} = {}) {
   // A duplicate participant is excluded unless exactly one of its files is selected.
-  const selected = entries.filter(e => e.session && choices[e.id] !== false && (!e.duplicate || choices[e.id] === true));
+  const selected = entries.filter(e => e.session && (includePartial || e.session.phase === 'complete') && choices[e.id] !== false && (!e.duplicate || choices[e.id] === true));
   const codes = new Map();
   for (const e of selected) {
     const key = e.session.participant.toUpperCase();

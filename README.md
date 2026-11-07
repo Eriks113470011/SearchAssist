@@ -24,6 +24,7 @@ Open http://localhost:8080. Core functionality works without external services. 
 - A guided within-subject evaluation with all six condition orders, three task-set rotations, twelve trials, saved post-block rating drafts, trial CSV, condition-summary CSV, and a restorable session JSON event log.
 - Pause/resume and reload recovery that preserve the current query, suggestion undo, completed tasks, and recorded active time. Restored sessions require an explicit Resume.
 - Reproducible aggregate survey-analysis script, source notes, and an evaluation protocol.
+- A facilitator workspace with balanced participant assignments, batch session review, explicit duplicate resolution, timing exclusions, and participant-condition and inclusion-log CSV exports.
 
 ## Files
 
@@ -33,16 +34,22 @@ Open http://localhost:8080. Core functionality works without external services. 
 | `dist/styles.css` | Responsive visual design |
 | `dist/app.mjs` | Views, result rendering, recovery, and local study workflow |
 | `dist/study.mjs` | Versioned session state, timing, validation, restoration, summaries, and CSV exports |
+| `dist/workspace.mjs` | Assignment schedules, read-only batch validation, inclusion rules, and descriptive comparisons |
+| `dist/workspace-view.mjs` | Facilitator workspace interface and local file controls |
 | `dist/engine.mjs` | Shared deterministic matching engine and explanations |
 | `dist/data.mjs` | Synthetic directory and curated relationships |
 | `tests/search.test.mjs` | Matching, conditions, evidence, filters, and study-target regression checks |
 | `tests/study.test.mjs` | Timing, query recording, all 18 study assignments, restore validation, and exports |
+| `tests/workspace.test.mjs` | Balanced schedules, duplicates, partial sessions, timing exclusions, and review exports |
+| `tests/browser.mjs` | Chromium checks for study recovery, imports/downloads, workspace decisions, and mobile overflow |
 | `docs/survey-summary.json` | Aggregated counts, denominators, source fingerprint, and quality notes |
 | `docs/analyze_survey.py` | Workbook analysis using openpyxl; raw text is not exported |
 | `docs/RESEARCH.md` | Survey findings and project-method update |
 | `docs/EVALUATION.md` | Study protocol, measurements, and interpretation limits |
 
 Run all automated tests with `npm test` (Node.js 22 or later). Run module syntax checks with `npm run check`. Neither command needs package installation.
+
+For browser QA, run `npm install`, `npx playwright install chromium`, and `npm run test:browser`. The browser test starts its own temporary HTTP server and uses synthetic recordings. GitHub Actions installs Chromium with its operating-system dependencies and runs these checks. Screenshots are generated under `test-results/` for internal layout review.
 
 Reproduce survey counts with `python3 docs/analyze_survey.py /path/to/responses.xlsx docs/survey-summary.json`. This script requires `openpyxl` in your Python environment. The supplied source workbook and abstract are not included in this repository or app.
 
@@ -68,4 +75,14 @@ To restore, open **Run a study**, choose a v0.2 session JSON file under 1 MB, an
 
 ## Status
 
-Version 0.2 improves study recording and recovery. Automated tests cover search, timing, session restoration, exports, and all six condition orders crossed with three task rotations. A manual release walkthrough is described in `docs/RELEASE-v0.2.md`. Accessibility features require screen-reader and mobile-device testing. Real participant evaluation, task-difficulty calibration, formal comprehension measures, and a validated usability instrument remain future work. `docs/EVALUATION.md` explains the design limits.
+Version 0.3 adds the facilitator workspace. The recording schema remains v0.2 with the same dataset, tasks, engine, and timing definition, so v0.2 recordings remain restorable and reviewable. The application version shown in navigation is independent of the recording-schema version. See `docs/RELEASE-v0.3.md` for workflow and verification. Accessibility features require screen-reader and physical-device testing. Real participant evaluation, task-difficulty calibration, formal comprehension measures, and a validated usability instrument remain future work. `docs/EVALUATION.md` explains the design limits.
+
+## Facilitator workspace
+
+Open **Study workspace** to generate 1–180 numbered assignments. Every 18 consecutive assignments cover all six condition orders crossed with three task rotations once. Start numbering where the previous schedule stopped to continue its sequence. This is deterministic balancing; it is not randomization, a recruitment target, or a power calculation. Download the schedule to retain it. **Set up session** fills the normal study form and still requires the recording acknowledgement; export and clear an existing session before setting up another participant.
+
+Review up to 60 session JSON files at once, totaling at most 10 MB and at most 1 MB per file. A new batch replaces the current in-memory review. Invalid files are isolated with per-file messages. Only completed sessions are included by default. All files sharing a participant code (case-insensitive) are excluded until exactly one is selected. Import all candidate files in one batch when resolving duplicate exports. Reloading clears the review; source files and the current study recording are untouched.
+
+The optional timing filter excludes paused, resumed, or restored trials from timing means only; success denominators still include those trials. Choose analysis rules before collecting data. Comparisons show equally weighted participant means, with contributing participant counts per condition. When incomplete sessions are included, condition groups can contain different people; the display does not perform paired or inferential tests. Empty means stay blank in CSV.
+
+Download the participant-condition CSV for one row per included recording and condition, and the inclusion log for every imported file and its inclusion reason. Both exports record the partial-session and interruption filters. They contain participant codes and source file names, but omit typed queries and observation notes. They are descriptive analysis inputs, not a central participant database; full recordings remain available in the original JSON files.

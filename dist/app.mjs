@@ -1,6 +1,7 @@
 import {records,categories} from './data.mjs';
 import {search,normalize,explain,kindLabels} from './engine.mjs';
 import * as study from './study.mjs';
+import {mountWorkspace} from './workspace-view.mjs';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let mode='assist',view='search',limit=12,revealApprox=false,previousQuery=null,currentMatches=[],session=null,queryTimer,announcementTimer;
@@ -232,17 +233,26 @@ function bindExports() {
 function route() {
   if (location.hash === '#main') return;
   view = location.hash.slice(1) || 'search';
-  if (!['search','research','study'].includes(view)) view = 'search';
+  if (!['search','research','study','workspace'].includes(view)) view = 'search';
   if (session?.phase === 'tasks') {
     if (view !== 'search' && isRunning()) pauseStudy('navigation', false);
-    if (!isRunning() || view !== 'search') {view = 'study'; endTaskUI();}
+    if (!isRunning() || view !== 'search') {if (view === 'search') view = 'study'; endTaskUI();}
   }
   $$('.view').forEach(section => section.hidden = section.id !== `view-${view}`);
   $$('[data-view]').forEach(link => {link.classList.toggle('active',link.dataset.view===view); if (link.dataset.view===view) link.setAttribute('aria-current','page'); else link.removeAttribute('aria-current');});
-  $('#breadcrumb').innerHTML = `Workspace <b>/</b> ${{search:'Explore search',research:'Research & insights',study:'Run a study'}[view]}`;
+  $('#breadcrumb').innerHTML = `Workspace <b>/</b> ${{search:'Explore search',research:'Research & insights',study:'Run a study',workspace:'Study workspace'}[view]}`;
   if (view === 'study') studyView();
   if (view === 'research') renderResearch();
 }
+mountWorkspace($('#view-workspace'));
+document.addEventListener('study-assignment', event => {
+  if (session) {alert('Export and clear the current study session before setting up another participant.'); return;}
+  history.replaceState(null, '', '#study'); route();
+  $('#participant-code').value = event.detail.participant;
+  $('#condition-order').value = event.detail.order;
+  $('#set-rotation').value = String(event.detail.setRotation);
+  $('#participant-code').focus();
+});
 window.addEventListener('hashchange', route);
 document.addEventListener('visibilitychange', () => {if (document.hidden) pauseStudy('tab_hidden');});
 window.addEventListener('pagehide', () => pauseStudy('page_exit', false));

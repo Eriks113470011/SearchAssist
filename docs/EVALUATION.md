@@ -41,7 +41,9 @@ All 48 entries, all fields, all categories, and curated relationships enabled ar
 | --- | --- |
 | Task success | Submitted entry ID equals the predefined target ID |
 | Incorrect final selection | A non-target entry was submitted; skips recorded separately |
-| Task time | Monotonic milliseconds from rendering the supplied query to Submit or Skip |
+| Active task time | Accumulated monotonic milliseconds from task setup to Submit or Skip; explicit pauses, navigation away, hidden-tab time, and time away after reload excluded |
+| Wall task time | Device-clock milliseconds since the task began, including interruptions; susceptible to device-clock changes |
+| Interruptions | Pause/resume counts and a restored flag retained per trial; recorded active time does not restart |
 | Query reformulations | Consecutive changes from the supplied starting query, coalesced after 300 ms idle; suggestion applications and undo included |
 | Result opens | Count of opened entry dialogs; incorrect opens are distinguished from incorrect final selection |
 | Confidence | Seven-point custom rating after each condition block |
@@ -52,7 +54,9 @@ All 48 entries, all fields, all categories, and curated relationships enabled ar
 
 The app saves final query state at submission even if the 300 ms edit timer has not fired. Query counts are editing episodes, not keystrokes, semantic reformulations, or an independent count of submitted searches. Single-word and multi-word queries are limited by the matching rules documented in the README. There is no task timeout.
 
-Reloading or resuming a trial restarts its timer and sets `restarted: true`; repeated attempts stay in the event log. Review or exclude these timing values. Switching away from the tab can inflate time; the current version does not measure active-focus time. A stopped session can be exported before clearing. Partial sessions may have incomplete block ratings.
+In v0.2, pausing, navigation away from the search view, hiding the tab, and page exits stop active timing. Resume continues the same query and recorded active time. Reloaded or imported sessions remain paused until an explicit Resume, with `restored: true` on the unfinished trial. The app checkpoints every second and on interactions; an abrupt exit can lose time since the last checkpoint, and browser scheduling can delay checkpoints. Tab visibility does not measure attention: a visible window can remain timed even when the participant looks away or another window covers it.
+
+`elapsedMs` is retained as an alias of `activeElapsedMs`. `wallElapsedMs` includes interruption time, and `pauseCount`, `resumeCount`, and `restored` identify interrupted trials. Predefine how to review or exclude these trials in timing analyses. v0.1 used restarted timers and a different schema; its JSON remains separate and cannot be restored as v0.2. Partial sessions may have incomplete block ratings, with unfinished answers saved in `ratingDraft` rather than final ratings.
 
 ## Session workflow
 
@@ -61,12 +65,12 @@ Reloading or resuming a trial restarts its timer and sets `restarted: true`; rep
 3. Start after the recording acknowledgement.
 4. For each task, modify the supplied query as needed and open a result. Submit a choice or Skip.
 5. Complete confidence, trust, and ease ratings after each four-task block. Add optional observations without personal information.
-6. Export both the JSON session and CSV trials at completion. Store them under your study’s data-handling plan. Data are only held in the current browser tab by default.
+6. Export the JSON session, trial CSV, and condition-summary CSV at completion (or pause and export partial progress). Store them under your study’s data-handling plan. Data are only held in the current browser tab by default. Restore a v0.2 JSON through Run a study when needed; validate the participant code and progress before resuming.
 7. Clear the tab’s session before the next participant. Label developer QA exports separately and exclude them from research.
 
 ## Analysis and reporting
 
-Use participant-level paired comparisons, rather than treating every trial as an independent participant. Report success numerator and denominator, skips and wrong final choices separately, timing distributions, task types, condition order, task rotation, and restarted trials. Report task time for successes and failures separately where useful. Ordinal rating summaries should retain their scale definitions. Do not select only favorable tasks or exclude failures after seeing the results without a predefined rule.
+Use participant-level paired comparisons, rather than treating every trial as an independent participant. Report success numerator and denominator, skips and wrong final choices separately, timing distributions, task types, condition order, task rotation, and paused or restored trials. Distinguish active and wall time. The condition-summary CSV reports mean active time across all attempted tasks and successful-task mean active time separately, with empty means left blank. Report task time for successes and failures separately where useful. Ordinal rating summaries should retain their scale definitions. Do not select only favorable tasks or exclude failures after seeing the results without a predefined rule.
 
 Pilot first. Set a recruitment target and analysis plan before formal collection, with instructor guidance. The survey sample size does not determine the usability-study sample size. Add comprehension questions if understanding is a primary outcome, and use a validated usability instrument if that is part of the final claim. Screen-reader and mobile testing require additional observation; keyboard support alone does not establish accessibility conformance.
 

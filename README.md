@@ -21,7 +21,8 @@ Open http://localhost:8080. Core functionality works without external services. 
 - Evidence highlights, field-specific short explanations, optional explanations on request, editable correction suggestions with undo, category/title filters, and controls for approximate results.
 - Keyboard operation using Tab, Enter, Escape, slash to focus search, and arrow keys between result titles. Visible focus, underlined highlights, labelled inputs, modal dialogs, and live result announcements.
 - Research and insights page with aggregate survey findings and evidence-to-design mappings.
-- A guided within-subject evaluation with all six condition orders, three task-set rotations, twelve trials, post-block ratings, trial CSV, and a full session JSON event log.
+- A guided within-subject evaluation with all six condition orders, three task-set rotations, twelve trials, saved post-block rating drafts, trial CSV, condition-summary CSV, and a restorable session JSON event log.
+- Pause/resume and reload recovery that preserve the current query, suggestion undo, completed tasks, and recorded active time. Restored sessions require an explicit Resume.
 - Reproducible aggregate survey-analysis script, source notes, and an evaluation protocol.
 
 ## Files
@@ -31,15 +32,17 @@ Open http://localhost:8080. Core functionality works without external services. 
 | `dist/index.html` | App shell and accessible controls |
 | `dist/styles.css` | Responsive visual design |
 | `dist/app.mjs` | Views, result rendering, recovery, and local study workflow |
+| `dist/study.mjs` | Versioned session state, timing, validation, restoration, summaries, and CSV exports |
 | `dist/engine.mjs` | Shared deterministic matching engine and explanations |
 | `dist/data.mjs` | Synthetic directory and curated relationships |
 | `tests/search.test.mjs` | Matching, conditions, evidence, filters, and study-target regression checks |
+| `tests/study.test.mjs` | Timing, query recording, all 18 study assignments, restore validation, and exports |
 | `docs/survey-summary.json` | Aggregated counts, denominators, source fingerprint, and quality notes |
 | `docs/analyze_survey.py` | Workbook analysis using openpyxl; raw text is not exported |
 | `docs/RESEARCH.md` | Survey findings and project-method update |
 | `docs/EVALUATION.md` | Study protocol, measurements, and interpretation limits |
 
-Run search tests with `node --test tests/search.test.mjs`.
+Run all automated tests with `npm test` (Node.js 22 or later). Run module syntax checks with `npm run check`. Neither command needs package installation.
 
 Reproduce survey counts with `python3 docs/analyze_survey.py /path/to/responses.xlsx docs/survey-summary.json`. This script requires `openpyxl` in your Python environment. The supplied source workbook and abstract are not included in this repository or app.
 
@@ -57,8 +60,12 @@ The engine is intentionally small, interpretable, and bounded. It is not a web s
 
 The study stores data in browser `sessionStorage` after a local recording acknowledgement. Data remain in this tab across reloads, subject to browser behavior; closing the tab generally clears them. Export before leaving. A browser denying storage can prevent recovery after reload. There is no central participant database or automatic upload. Hosting infrastructure can retain ordinary request logs, but typed queries are not put in URLs or sent by app code. No analytics scripts are used.
 
-Result CSV neutralizes leading spreadsheet formula characters. JSON preserves entered query text. Treat exports as study data and avoid personal information. Reloading or resuming a task restarts its timer and flags the trial; exclude or review those trials in timing analyses. Do not pool QA sessions with participant data.
+Result CSV neutralizes leading spreadsheet formula characters. JSON preserves entered query text. Treat exports as study data and avoid personal information. Do not pool QA sessions with participant data.
+
+Active time uses a monotonic clock and accumulates across resumptions. Manual pauses, navigation away from the task, hidden tabs, and page exits stop active timing. Reload recovery and imported JSON sessions open paused. Wall time includes interruptions and time away; it uses the device clock and can be affected by clock changes. An abrupt exit can lose active time since the last checkpoint (normally up to one second; browser scheduling can delay it). `elapsedMs` and `activeElapsedMs` both report active time; `wallElapsedMs`, `pauseCount`, `resumeCount`, and `restored` describe interruptions. Define how to review interrupted trials before collecting data.
+
+To restore, open **Run a study**, choose a v0.2 session JSON file under 1 MB, and choose **Resume task** when ready. Invalid files are rejected before replacing the current session; replacing a valid current session requires confirmation. Export the current JSON first to keep both sessions. Unfinished ratings are also restored. v0.1 JSON uses different timing semantics and cannot be imported into v0.2; any v0.1 session already stored in the tab remains available as an original JSON download. Keep v0.1 and v0.2 timing analyses separate.
 
 ## Status
 
-Version 0.1 is an operational starting point. Search regression checks and a browser walkthrough are included in the development verification. Accessibility features require screen-reader and mobile-device testing. Real participant evaluation, task-difficulty calibration, formal comprehension measures, and a validated usability instrument remain future work. `docs/EVALUATION.md` explains the design limits.
+Version 0.2 improves study recording and recovery. Automated tests cover search, timing, session restoration, exports, and all six condition orders crossed with three task rotations. A manual release walkthrough is described in `docs/RELEASE-v0.2.md`. Accessibility features require screen-reader and mobile-device testing. Real participant evaluation, task-difficulty calibration, formal comprehension measures, and a validated usability instrument remain future work. `docs/EVALUATION.md` explains the design limits.

@@ -50,6 +50,7 @@ export function mountWorkspace(root) {
       find('#plan-prefix').value = planConfig.prefix; find('#plan-start').value = planConfig.start; find('#plan-count').value = planConfig.count;
       find('#include-partial').checked = includePartial; find('#exclude-interrupted').checked = excludeInterrupted;
       dirty = false; renderPlan(); renderReview();
+      find('#plan-status').textContent = `${plan.length} assignments restored from the workspace.`;
       find('#review-status').textContent = `${entries.length} review file(s) restored from the workspace.`;
       find('#project-status').textContent = 'Workspace opened. Review choices and analysis settings have been restored.';
       find('#project-dirty').textContent = 'No unsaved workspace changes.';

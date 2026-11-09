@@ -83,6 +83,6 @@ export function auditCsv(entries, options = {}) {
   const conflicts = new Set(selectSessions(entries, options).conflicts);
   const rows = entries.map(e => ({fileIndex: e.id + 1, fileName: e.name, participant: e.session?.participant ?? '', phase: e.session?.phase ?? '', trials: e.session?.trials.length ?? '', included: selected.has(e.id),
     reason: e.error ? e.error : conflicts.has(e.session.participant.toUpperCase()) ? 'Multiple files selected for this participant' : options.choices?.[e.id] === false ? 'Manually excluded' : e.duplicate && options.choices?.[e.id] !== true ? 'Duplicate requires explicit selection' : !options.includePartial && e.session.phase !== 'complete' ? 'Incomplete session' : 'Included',
-    includePartial: !!options.includePartial, excludeInterrupted: !!options.excludeInterrupted}));
-  return csv(rows, ['fileIndex','fileName','participant','phase','trials','included','reason','includePartial','excludeInterrupted']);
+    decisionNote: options.notes?.[e.id] ?? '', includePartial: !!options.includePartial, excludeInterrupted: !!options.excludeInterrupted}));
+  return csv(rows, ['fileIndex','fileName','participant','phase','trials','included','reason','decisionNote','includePartial','excludeInterrupted']);
 }

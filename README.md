@@ -25,6 +25,7 @@ Open http://localhost:8080. Core functionality works without external services. 
 - Pause/resume and reload recovery that preserve the current query, suggestion undo, completed tasks, and recorded active time. Restored sessions require an explicit Resume.
 - Reproducible aggregate survey-analysis script, source notes, and an evaluation protocol.
 - A facilitator workspace with balanced participant assignments, batch session review, explicit duplicate resolution, timing exclusions, and participant-condition and inclusion-log CSV exports.
+- Portable workspace JSON files that preserve the generated assignment plan, full review recordings, choices, filters, and optional per-file decision notes for another visit or device.
 
 ## Files
 
@@ -36,11 +37,13 @@ Open http://localhost:8080. Core functionality works without external services. 
 | `dist/study.mjs` | Versioned session state, timing, validation, restoration, summaries, and CSV exports |
 | `dist/workspace.mjs` | Assignment schedules, read-only batch validation, inclusion rules, and descriptive comparisons |
 | `dist/workspace-view.mjs` | Facilitator workspace interface and local file controls |
+| `dist/review-project.mjs` | Versioned workspace JSON validation, saving, and reopening |
 | `dist/engine.mjs` | Shared deterministic matching engine and explanations |
 | `dist/data.mjs` | Synthetic directory and curated relationships |
 | `tests/search.test.mjs` | Matching, conditions, evidence, filters, and study-target regression checks |
 | `tests/study.test.mjs` | Timing, query recording, all 18 study assignments, restore validation, and exports |
 | `tests/workspace.test.mjs` | Balanced schedules, duplicates, partial sessions, timing exclusions, and review exports |
+| `tests/review-project.test.mjs` | Project round-trips, validation, recording isolation, decision notes, and limits |
 | `tests/browser.mjs` | Chromium checks for study recovery, imports/downloads, workspace decisions, and mobile overflow |
 | `docs/survey-summary.json` | Aggregated counts, denominators, source fingerprint, and quality notes |
 | `docs/analyze_survey.py` | Workbook analysis using openpyxl; raw text is not exported |
@@ -75,7 +78,7 @@ To restore, open **Run a study**, choose a v0.2 session JSON file under 1 MB, an
 
 ## Status
 
-Version 0.3 adds the facilitator workspace. The recording schema remains v0.2 with the same dataset, tasks, engine, and timing definition, so v0.2 recordings remain restorable and reviewable. The application version shown in navigation is independent of the recording-schema version. See `docs/RELEASE-v0.3.md` for workflow and verification. Accessibility features require screen-reader and physical-device testing. Real participant evaluation, task-difficulty calibration, formal comprehension measures, and a validated usability instrument remain future work. `docs/EVALUATION.md` explains the design limits.
+Version 0.4 adds portable facilitator workspace files and decision notes. The recording schema remains v0.2 with the same dataset, tasks, engine, and timing definition, so v0.2 recordings remain restorable and reviewable. The application version shown in navigation is independent of the recording-schema and workspace-project versions. See `docs/RELEASE-v0.4.md` for workflow and verification. Accessibility features require screen-reader and physical-device testing. Real participant evaluation, task-difficulty calibration, formal comprehension measures, and a validated usability instrument remain future work. `docs/EVALUATION.md` explains the design limits.
 
 ## Facilitator workspace
 
@@ -85,4 +88,14 @@ Review up to 60 session JSON files at once, totaling at most 10 MB and at most 1
 
 The optional timing filter excludes paused, resumed, or restored trials from timing means only; success denominators still include those trials. Choose analysis rules before collecting data. Comparisons show equally weighted participant means, with contributing participant counts per condition. When incomplete sessions are included, condition groups can contain different people; the display does not perform paired or inferential tests. Empty means stay blank in CSV.
 
-Download the participant-condition CSV for one row per included recording and condition, and the inclusion log for every imported file and its inclusion reason. Both exports record the partial-session and interruption filters. They contain participant codes and source file names, but omit typed queries and observation notes. They are descriptive analysis inputs, not a central participant database; full recordings remain available in the original JSON files.
+Download the participant-condition CSV for one row per included recording and condition, and the inclusion log for every imported file and its inclusion reason. Both exports record the partial-session and interruption filters. They contain participant codes and source file names, but omit typed queries and participant observation notes. The inclusion log also includes optional reviewer decision notes. They are descriptive analysis inputs, not a central participant database; full recordings remain available in the original JSON files.
+
+## Save and reopen a workspace
+
+Choose **Download workspace JSON** in Study workspace to keep a generated assignment plan, imported recordings, duplicate decisions, inclusion choices, both analysis filters, and decision notes. Generate the assignment schedule before saving edited plan fields. The unsaved-changes message tracks workspace edits; CSV downloads do not mark the workspace as saved. Nothing is saved automatically, and reload still clears the in-memory workspace.
+
+On a later visit or another device, choose the saved file through **Open workspace JSON**. Validating the entire project happens before a replacement prompt or any state change. Damaged or unsupported projects leave the current workspace intact. Replacing an existing review or unsaved plan requires confirmation. Individual session JSON belongs in **Review session exports**, while workspace JSON belongs in **Open workspace JSON**. Neither opening nor reviewing projects resumes or replaces the active study recording.
+
+Workspace JSON uses `searchassist-review-project`, project version 1, and a 12 MB file limit. Its embedded recordings must pass the same v0.2 checks and 60-file / 10 MB aggregate / 1 MB-per-recording limits as the review. Duplicate groups and comparison results are recomputed. Invalid source files retain only their name, error, choice, and decision note; their original invalid contents are not stored.
+
+**Workspace JSON contains the full validated recordings, including typed queries and participant observations.** Keep it with the original study data and do not commit it to the repository. The CSV reports remain reduced outputs; the inclusion log carries your decision notes. Notes are limited to 1,000 characters per review file. Opening a workspace restores those notes and decisions, including unresolved duplicate conflicts, without silently resolving them.

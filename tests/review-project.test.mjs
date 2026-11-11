@@ -21,7 +21,7 @@ function state() {
     {name:'one.json',text:recording('P001')}, {name:'copy.json',text:recording('p001')},
     {name:'partial.json',text:recording('P002',false)}, {name:'invalid.json',text:'Private invalid raw content'}
   ]);
-  return {planConfig:{prefix:'TEST_',start:19,count:36},entries,options:{includePartial:true,excludeInterrupted:true,choices:{0:true,1:false,2:false}},notes:{0:'Preferred completed export',1:'Duplicate excluded',2:'Pause for follow-up',3:'Invalid recording'}};
+  return {planConfig:{prefix:'TEST_',start:19,count:36},entries,options:{includePartial:true,excludeInterrupted:true,pairedSuccessfulOnly:true,choices:{0:true,1:false,2:false}},notes:{0:'Preferred completed export',1:'Duplicate excluded',2:'Pause for follow-up',3:'Invalid recording'}};
 }
 const project = () => JSON.parse(exportProject(state(),savedAt));
 
@@ -72,7 +72,7 @@ test('damaged plans, settings, choices, names, notes, and validation records rej
 });
 test('empty workspaces support saving just the assignment plan',()=>{
   const restored=parseProject(exportProject({planConfig:{prefix:'P',start:1,count:18},entries:[]},savedAt));
-  assert.deepEqual(restored.entries,[]);assert.deepEqual(restored.options,{includePartial:false,excludeInterrupted:false,choices:{}});
+  assert.deepEqual(restored.entries,[]);assert.deepEqual(restored.options,{includePartial:false,excludeInterrupted:false,pairedSuccessfulOnly:true,choices:{}});
 });
 test('inclusion notes are CSV-escaped while raw query and participant observation remain omitted',()=>{
   const s=state();s.notes[0]=' =HYPERLINK("example")';s.notes[1]='Line one\n"Line two"';
@@ -84,4 +84,19 @@ test('unresolved duplicate conflicts remain unresolved after reopening',()=>{
   const s=state();s.options.choices={0:true,1:true};
   const restored=parseProject(exportProject(s,savedAt));
   assert.deepEqual(selectSessions(restored.entries,restored.options).conflicts,['P001']);
+});
+test('v2 workspaces preserve the paired-timing setting and reject absent or invalid values',()=>{
+  const original=state();original.options.pairedSuccessfulOnly=false;
+  const text=exportProject(original,savedAt), p=JSON.parse(text);
+  assert.equal(p.projectVersion,2);assert.equal(parseProject(text).options.pairedSuccessfulOnly,false);
+  delete p.analysis.pairedSuccessfulOnly;assert.throws(()=>parseProject(JSON.stringify(p)),/paired-timing/);
+  p.analysis.pairedSuccessfulOnly='false';assert.throws(()=>parseProject(JSON.stringify(p)),/paired-timing/);
+});
+test('v0.4 project files open with successful-only paired timing and save as version 2',()=>{
+  const p=project();p.projectVersion=1;delete p.analysis.pairedSuccessfulOnly;
+  const restored=parseProject(JSON.stringify(p));
+  assert.equal(restored.options.pairedSuccessfulOnly,true);assert.deepEqual(restored.entries,state().entries);
+  assert.equal(JSON.parse(exportProject(restored,savedAt)).projectVersion,2);
+  // The old format did not define this field; do not apply unknown legacy settings.
+  p.analysis.pairedSuccessfulOnly=false;assert.equal(parseProject(JSON.stringify(p)).options.pairedSuccessfulOnly,true);
 });

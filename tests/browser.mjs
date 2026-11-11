@@ -21,13 +21,16 @@ let browser;
 const errors = [];
 const upload = (name, text) => ({name, mimeType:'application/json', buffer:Buffer.from(text)});
 const at = ms => ({wall:Date.UTC(2026,10,7)+ms,mono:ms});
-function fixture(participant, count = 12) {
+function fixture(participant, count = 12, {durations={A:500,B:500,C:500},fail=[],interrupt=[]}={}) {
   const s = study.createSession({participant,order:'ABC',setRotation:0},at(0));
+  let ms=0;
   for (let i=0;i<count;i++) {
-    study.startTrial(s,at(i*1000));study.completeTrial(s,study.taskAt(s).target,at(i*1000+500));
-    if(s.phase==='ratings')study.addRatings(s,{confidence:4,trust:5,ease:6,notes:''},at(i*1000+500));
+    study.startTrial(s,at(ms));const task=study.taskAt(s),condition=s.order[Math.floor(i/4)],key=`${condition}:${task.type}`,d=durations[condition];
+    if(interrupt.includes(key)){study.pauseTrial(s,'manual',at(ms+d/2));study.resumeTrial(s,at(ms+d/2+1000));ms+=1000;}
+    ms+=d;study.completeTrial(s,fail.includes(key)?null:task.target,at(ms));
+    if(s.phase==='ratings')study.addRatings(s,{confidence:4,trust:5,ease:6,notes:''},at(ms));
   }
-  return JSON.stringify(study.snapshot(s,at(count*1000)));
+  return JSON.stringify(study.snapshot(s,at(ms)));
 }
 async function downloaded(page, selector) {
   const pending = page.waitForEvent('download');await page.locator(selector).click();
@@ -165,8 +168,56 @@ try {
   await fresh.locator('#save-project').click();
   await fresh.locator('#project-status').filter({hasText:'Generate the assignment schedule'}).waitFor();
   assert.equal((await checkSession(fresh)).participant,'P007');
+  const pairedPage=await context.newPage();pairedPage.on('pageerror',error=>errors.push(error.message));
+  await pairedPage.goto(url+'/#workspace');
+  assert.equal(await pairedPage.locator('#download-paired').isEnabled(),false);
+  await pairedPage.locator('#review-files').setInputFiles([
+    upload('pair-one.json',fixture('PAIR1',12,{durations:{A:1000,B:700,C:400},fail:['A:spelling']})),
+    upload('pair-two.json',fixture('PAIR2',12,{durations:{A:2000,B:1000,C:500},interrupt:['B:alias']})),
+    upload('pair-partial.json',fixture('PAIR3',8,{durations:{A:1000,B:900,C:500}}))
+  ]);
+  await pairedPage.locator('#review-status').filter({hasText:'3 valid and 0 invalid'}).waitFor();
+  const pairedCells=()=>pairedPage.locator('#paired-table tbody tr').first().locator('td');
+  assert.equal(await pairedCells().nth(1).innerText(),'2');
+  assert.equal(await pairedCells().nth(2).innerText(),'+12.50 pp');
+  assert.equal(await pairedCells().nth(4).innerText(),'7');
+  assert.equal(await pairedCells().nth(5).innerText(),'-0.65 s');
+  await pairedPage.locator('#include-partial').check();
+  assert.equal(await pairedCells().nth(1).innerText(),'3');
+  assert.equal(await pairedPage.locator('#paired-table tbody tr').nth(1).locator('td').nth(1).innerText(),'2');
+  await pairedPage.locator('#exclude-interrupted').check();
+  assert.equal(await pairedCells().nth(4).innerText(),'10');
+  await pairedPage.locator('#paired-successful-only').uncheck();
+  assert.equal(await pairedCells().nth(4).innerText(),'11');
+  assert.equal(await pairedCells().nth(2).innerText(),'+8.33 pp');
+  const pairedParticipantCsv=await downloaded(pairedPage,'#download-paired');
+  assert.equal(pairedParticipantCsv.split('\r\n').length,10);
+  assert.ok(pairedParticipantCsv.includes('"-300"'));assert.ok(!pairedParticipantCsv.includes('"\'-300"'));
+  assert.equal((await downloaded(pairedPage,'#download-paired-summary')).split('\r\n').length,4);
+  const pairedProject=await downloaded(pairedPage,'#save-project'),savedPaired=JSON.parse(pairedProject);
+  assert.equal(savedPaired.projectVersion,2);assert.equal(savedPaired.analysis.pairedSuccessfulOnly,false);
+  await pairedPage.reload();await visible(pairedPage,'#open-project');
+  assert.equal(await pairedPage.locator('#download-paired').isEnabled(),false);
+  await pairedPage.locator('#open-project').setInputFiles(upload('paired-project.json',pairedProject));
+  await pairedPage.locator('#project-status').filter({hasText:'Workspace opened'}).waitFor();
+  assert.equal(await pairedPage.locator('#paired-successful-only').isChecked(),false);
+  assert.equal(await downloaded(pairedPage,'#download-paired'),pairedParticipantCsv);
+  const legacy=structuredClone(savedPaired);legacy.projectVersion=1;delete legacy.analysis.pairedSuccessfulOnly;
+  const acceptLegacy=new Promise(done=>pairedPage.once('dialog',async dialog=>{await dialog.accept();done();}));
+  await pairedPage.locator('#open-project').setInputFiles(upload('v04-workspace.json',JSON.stringify(legacy)));await acceptLegacy;
+  await pairedPage.locator('#project-status').filter({hasText:'Workspace opened'}).waitFor();
+  assert.equal(await pairedPage.locator('#paired-successful-only').isChecked(),true);
+  const damaged=structuredClone(savedPaired);delete damaged.analysis.pairedSuccessfulOnly;
+  await pairedPage.locator('#open-project').setInputFiles(upload('damaged-v2.json',JSON.stringify(damaged)));
+  await pairedPage.locator('#project-status').filter({hasText:'paired-timing setting is invalid'}).waitFor();
+  assert.equal(await pairedPage.locator('#paired-successful-only').isChecked(),true);
+  await pairedPage.evaluate(()=>window.scrollTo(0,0));
+  await pairedPage.screenshot({path:'test-results/paired-desktop.png',fullPage:true});
+  await pairedPage.setViewportSize({width:390,height:844});await pairedPage.evaluate(()=>window.scrollTo(0,0));
+  await pairedPage.screenshot({path:'test-results/paired-mobile.png',fullPage:true});
+  assert.equal(await pairedPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Paired layout overflows on mobile');
   assert.deepEqual(errors,[]);
-  console.log('Browser checks passed: study recovery, imports/exports, review decisions, mobile layout, workspace JSON round-trip, invalid-project isolation, accepted/cancelled replacement, restored CSVs, notes, settings, and active-recording isolation.');
+  console.log('Browser checks passed: study and workspace regression checks, paired differences, eligible participant counts, matched task types, timing filters, paired exports, v2 settings, v0.4 migration, invalid-setting isolation, and desktop/mobile layout.');
 } finally {
   if(browser)await browser.close();
   await new Promise(done=>server.close(done));

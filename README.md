@@ -26,6 +26,7 @@ Open http://localhost:8080. Core functionality works without external services. 
 - Reproducible aggregate survey-analysis script, source notes, and an evaluation protocol.
 - A facilitator workspace with balanced participant assignments, batch session review, explicit duplicate resolution, timing exclusions, and participant-condition and inclusion-log CSV exports.
 - Portable workspace JSON files that preserve the generated assignment plan, full review recordings, choices, filters, and optional per-file decision notes for another visit or device.
+- Within-participant comparisons for B − A, C − A, and C − B, with matched task-type timing, participant counts, and paired participant/summary CSV exports.
 
 ## Files
 
@@ -38,12 +39,14 @@ Open http://localhost:8080. Core functionality works without external services. 
 | `dist/workspace.mjs` | Assignment schedules, read-only batch validation, inclusion rules, and descriptive comparisons |
 | `dist/workspace-view.mjs` | Facilitator workspace interface and local file controls |
 | `dist/review-project.mjs` | Versioned workspace JSON validation, saving, and reopening |
+| `dist/paired.mjs` | Matched participant comparisons, timing eligibility, differences, and paired CSVs |
 | `dist/engine.mjs` | Shared deterministic matching engine and explanations |
 | `dist/data.mjs` | Synthetic directory and curated relationships |
 | `tests/search.test.mjs` | Matching, conditions, evidence, filters, and study-target regression checks |
 | `tests/study.test.mjs` | Timing, query recording, all 18 study assignments, restore validation, and exports |
 | `tests/workspace.test.mjs` | Balanced schedules, duplicates, partial sessions, timing exclusions, and review exports |
 | `tests/review-project.test.mjs` | Project round-trips, validation, recording isolation, decision notes, and limits |
+| `tests/paired.test.mjs` | Comparison signs, full-block eligibility, matched timing, equal weighting, missing data, and CSV measurements |
 | `tests/browser.mjs` | Chromium checks for study recovery, imports/downloads, workspace decisions, and mobile overflow |
 | `docs/survey-summary.json` | Aggregated counts, denominators, source fingerprint, and quality notes |
 | `docs/analyze_survey.py` | Workbook analysis using openpyxl; raw text is not exported |
@@ -78,7 +81,7 @@ To restore, open **Run a study**, choose a v0.2 session JSON file under 1 MB, an
 
 ## Status
 
-Version 0.4 adds portable facilitator workspace files and decision notes. The recording schema remains v0.2 with the same dataset, tasks, engine, and timing definition, so v0.2 recordings remain restorable and reviewable. The application version shown in navigation is independent of the recording-schema and workspace-project versions. See `docs/RELEASE-v0.4.md` for workflow and verification. Accessibility features require screen-reader and physical-device testing. Real participant evaluation, task-difficulty calibration, formal comprehension measures, and a validated usability instrument remain future work. `docs/EVALUATION.md` explains the design limits.
+Version 0.5 adds within-participant comparisons and matched task-type timing. The recording schema remains v0.2 with the same dataset, tasks, engine, and timing definition, so v0.2 recordings remain restorable and reviewable. The application version shown in navigation is independent of the recording-schema and workspace-project versions. See `docs/RELEASE-v0.5.md` for workflow and verification. Accessibility features require screen-reader and physical-device testing. Real participant evaluation, task-difficulty calibration, formal comprehension measures, and a validated usability instrument remain future work. `docs/EVALUATION.md` explains the design limits.
 
 ## Facilitator workspace
 
@@ -96,6 +99,18 @@ Choose **Download workspace JSON** in Study workspace to keep a generated assign
 
 On a later visit or another device, choose the saved file through **Open workspace JSON**. Validating the entire project happens before a replacement prompt or any state change. Damaged or unsupported projects leave the current workspace intact. Replacing an existing review or unsaved plan requires confirmation. Individual session JSON belongs in **Review session exports**, while workspace JSON belongs in **Open workspace JSON**. Neither opening nor reviewing projects resumes or replaces the active study recording.
 
-Workspace JSON uses `searchassist-review-project`, project version 1, and a 12 MB file limit. Its embedded recordings must pass the same v0.2 checks and 60-file / 10 MB aggregate / 1 MB-per-recording limits as the review. Duplicate groups and comparison results are recomputed. Invalid source files retain only their name, error, choice, and decision note; their original invalid contents are not stored.
+Workspace JSON uses `searchassist-review-project`, project version 2, and a 12 MB file limit. Version 2 preserves the paired-timing setting. v0.4's version-1 workspace files still open, with successful-only paired timing enabled by default; subsequent saves use version 2. Older v0.4 apps cannot open version-2 projects, so keep original version-1 files when needed. Its embedded recordings must pass the same v0.2 checks and 60-file / 10 MB aggregate / 1 MB-per-recording limits as the review. Duplicate groups and comparison results are recomputed. Invalid source files retain only their name, error, choice, and decision note; their original invalid contents are not stored.
 
 **Workspace JSON contains the full validated recordings, including typed queries and participant observations.** Keep it with the original study data and do not commit it to the repository. The CSV reports remain reduced outputs; the inclusion log carries your decision notes. Notes are limited to 1,000 characters per review file. Opening a workspace restores those notes and decisions, including unresolved duplicate conflicts, without silently resolving them.
+
+## Within-participant comparisons
+
+The workspace now shows B − A (Fuzzy minus Exact), C − A (SearchAssist minus Exact), and C − B (SearchAssist minus Fuzzy). Each pair uses the same participants on both sides and requires all four trials in both condition blocks. A completed block does not require a submitted block rating because paired reports compare task success and timing only. Incomplete sessions remain opt-in; when included, different pairs may have different eligible participants.
+
+Success difference is comparison success proportion minus reference success proportion, in percentage points. For example, 3/4 in B versus 2/4 in A is +25 percentage points for B − A. The summary averages participant differences equally. Success uses all four trials in each block, including wrong choices and skips, regardless of timing filters.
+
+Paired timing matches spelling, alias, partial, and reordered task types within the participant. **Require correct selections in both conditions** is enabled by default; unchecking it includes wrong choices and skips in timing. When interruption exclusion is enabled, an interruption on either side removes that task type from both sides. Each participant's eligible type differences are averaged, then participant means are averaged with equal weight. No eligible types means a missing timing value, not zero. Counts of timing participants and matched type pairs are shown. Successful-only results describe jointly successful types; type coverage can differ between participants and comparisons. Matching type does not validate equal task difficulty.
+
+A negative active-time difference means less active time in the comparison condition. These are descriptive comparisons, without p-values, confidence intervals, or causal claims. Choose analysis rules before collection. The original condition table remains available and can use different participant or timing subsets from the paired table.
+
+**Paired participant CSV** includes one row per selected session and comparison, including ineligible pairs with missing values and an explanation. It records block counts, success differences, matched type coverage, timing means/differences, excluded types, and all applicable filters. **Paired summary CSV** contains three aggregate comparison rows with participant counts and means. Both omit queries and participant/reviewer notes. Computed negative numbers remain numeric in CSV; spreadsheet formula protection still applies to user-supplied strings.

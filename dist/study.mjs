@@ -202,7 +202,7 @@ export function summarize(session) {
 export function csv(rows, keys) {
   const cell = value => {
     let s = String(value ?? '');
-    if (typeof value === 'string' && (/^[\s\uFEFF]*[=+@\-]/.test(s) || /^[\t\r\n]/.test(s))) s = "'" + s;
+    if (!(typeof value === 'number' && Number.isFinite(value)) && (/^[\s\uFEFF]*[=+@\-]/.test(s) || /^[\t\r\n]/.test(s))) s = "'" + s;
     return '"' + s.replace(/"/g, '""') + '"';
   };
   return [keys.map(cell).join(','), ...rows.map(r => keys.map(k => cell(r[k])).join(','))].join('\r\n');

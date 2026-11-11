@@ -23,7 +23,14 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-package-lock --ignore-scripts
-      - run: npx playwright install --with-deps chromium
+      - name: Use an installed Chromium browser when available
+        run: |
+          searchassist_chromium_path="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [ -n "$searchassist_chromium_path" ]; then
+            printf 'SEARCHASSIST_CHROMIUM_PATH=%s\n' "$searchassist_chromium_path" >> "$GITHUB_ENV"
+          fi
+      - if: env.SEARCHASSIST_CHROMIUM_PATH == ''
+        run: npx playwright install --with-deps chromium
       - run: npm run test:browser
       - uses: actions/upload-artifact@v4
         if: always()

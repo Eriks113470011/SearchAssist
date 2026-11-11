@@ -331,11 +331,12 @@ try {
   const reportPage=await context.newPage();reportPage.on('pageerror',error=>errors.push(error.message));
   const requests=[];reportPage.on('request',request=>requests.push(request.url()));
   await reportPage.setContent(reportHtml,{waitUntil:'load'});
-  assert.equal(await reportPage.locator('table').count(),5);assert.equal(await reportPage.locator('section').count(),3);
+  assert.equal(await reportPage.locator('table').count(),5);assert.equal(await reportPage.getByRole('region').count(),5);assert.equal(await reportPage.locator('section').count(),3);
   assert.deepEqual(requests,[],'Standalone report requested an external resource');
   await reportPage.screenshot({path:'test-results/summary-desktop.png',fullPage:true});
   await reportPage.pdf({path:'test-results/study-summary.pdf',printBackground:true,preferCSSPageSize:true});
   await reportPage.setViewportSize({width:390,height:844});
+  assert.ok(await reportPage.locator('.table-wrap').first().evaluate(node=>node.scrollWidth>node.clientWidth));
   await reportPage.screenshot({path:'test-results/summary-mobile.png',fullPage:true});
   assert.equal(await reportPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Report layout overflows on mobile');
   assert.equal((await checkSession(fresh)).participant,'P007');

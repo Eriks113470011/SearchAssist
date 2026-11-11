@@ -27,6 +27,7 @@ Open http://localhost:8080. Core functionality works without external services. 
 - A facilitator workspace with balanced participant assignments, batch session review, explicit duplicate resolution, timing exclusions, and participant-condition and inclusion-log CSV exports.
 - Portable workspace JSON files that preserve the generated assignment plan, full review recordings, choices, filters, and optional per-file decision notes for another visit or device.
 - Within-participant comparisons for B − A, C − A, and C − B, with matched task-type timing, participant counts, and paired participant/summary CSV exports.
+- Study coverage against the generated plan, all 18 condition-order/task-rotation counts, per-recording assignment checks, and three coverage CSV reports.
 
 ## Files
 
@@ -40,6 +41,7 @@ Open http://localhost:8080. Core functionality works without external services. 
 | `dist/workspace-view.mjs` | Facilitator workspace interface and local file controls |
 | `dist/review-project.mjs` | Versioned workspace JSON validation, saving, and reopening |
 | `dist/paired.mjs` | Matched participant comparisons, timing eligibility, differences, and paired CSVs |
+| `dist/coverage.mjs` | Batch coverage, assignment mismatches, plan/actual counts, and coverage CSVs |
 | `dist/engine.mjs` | Shared deterministic matching engine and explanations |
 | `dist/data.mjs` | Synthetic directory and curated relationships |
 | `tests/search.test.mjs` | Matching, conditions, evidence, filters, and study-target regression checks |
@@ -47,6 +49,7 @@ Open http://localhost:8080. Core functionality works without external services. 
 | `tests/workspace.test.mjs` | Balanced schedules, duplicates, partial sessions, timing exclusions, and review exports |
 | `tests/review-project.test.mjs` | Project round-trips, validation, recording isolation, decision notes, and limits |
 | `tests/paired.test.mjs` | Comparison signs, full-block eligibility, matched timing, equal weighting, missing data, and CSV measurements |
+| `tests/coverage.test.mjs` | Imported versus included codes, assignment matching, balance counts, duplicates, partial sessions, and coverage exports |
 | `tests/browser.mjs` | Chromium checks for study recovery, imports/downloads, workspace decisions, and mobile overflow |
 | `docs/survey-summary.json` | Aggregated counts, denominators, source fingerprint, and quality notes |
 | `docs/analyze_survey.py` | Workbook analysis using openpyxl; raw text is not exported |
@@ -81,7 +84,7 @@ To restore, open **Run a study**, choose a v0.2 session JSON file under 1 MB, an
 
 ## Status
 
-Version 0.5 adds within-participant comparisons and matched task-type timing. The recording schema remains v0.2 with the same dataset, tasks, engine, and timing definition, so v0.2 recordings remain restorable and reviewable. The application version shown in navigation is independent of the recording-schema and workspace-project versions. See `docs/RELEASE-v0.5.md` for workflow and verification. Accessibility features require screen-reader and physical-device testing. Real participant evaluation, task-difficulty calibration, formal comprehension measures, and a validated usability instrument remain future work. `docs/EVALUATION.md` explains the design limits.
+Version 0.6 adds coverage and assignment checks against the generated plan. The recording schema remains v0.2 with the same dataset, tasks, engine, and timing definition, so v0.2 recordings remain restorable and reviewable. The application version shown in navigation is independent of the recording-schema and workspace-project versions. See `docs/RELEASE-v0.6.md` for workflow and verification. Accessibility features require screen-reader and physical-device testing. Real participant evaluation, task-difficulty calibration, formal comprehension measures, and a validated usability instrument remain future work. `docs/EVALUATION.md` explains the design limits.
 
 ## Facilitator workspace
 
@@ -114,3 +117,17 @@ Paired timing matches spelling, alias, partial, and reordered task types within 
 A negative active-time difference means less active time in the comparison condition. These are descriptive comparisons, without p-values, confidence intervals, or causal claims. Choose analysis rules before collection. The original condition table remains available and can use different participant or timing subsets from the paired table.
 
 **Paired participant CSV** includes one row per selected session and comparison, including ineligible pairs with missing values and an explanation. It records block counts, success differences, matched type coverage, timing means/differences, excluded types, and all applicable filters. **Paired summary CSV** contains three aggregate comparison rows with participant counts and means. Both omit queries and participant/reviewer notes. Computed negative numbers remain numeric in CSV; spreadsheet formula protection still applies to user-supplied strings.
+
+## Study coverage and assignment checks
+
+**Study coverage** compares the generated or restored assignment plan with this imported batch. Generate the schedule after editing its fields. The summary distinguishes planned codes with a valid imported recording, planned codes not imported, and planned codes without an included recording. A recording can be imported yet excluded by your choices, duplicate-resolution rules, or incomplete-session setting. Code matching is case-insensitive and otherwise exact: `p001` matches `P001`, while `P1` does not.
+
+Expand **Planned participant progress** for one row per assignment. It shows imported-file counts, included progress, and whether the included recording's order and task rotation match the plan. **Recording assignment checks** covers every imported file, including excluded copies, and flags invalid recordings, codes outside the current plan, and order/rotation differences. Invalid JSON has no trusted participant code; the app does not infer one from its file name.
+
+**Condition order and task rotation counts** always lists all 18 combinations. Planned counts come from the generated schedule. Included and included-complete counts use each selected recording's actual order/rotation, including unplanned codes and mismatches. Included-matching-plan counts require a planned code with both settings matching. Each included participant code contributes once after duplicate resolution. These are counts for the current batch, not a recruitment target or a test of statistical balance.
+
+Checks are descriptive and never change inclusion, overwrite recorded assignments, or affect timing/success calculations. Review a mismatch against the study log and change inclusion manually if appropriate. “Not imported” does not mean that a person did not participate: a recording may simply be outside the current batch. A plan may contain up to 180 assignments while the review remains limited to 60 files at a time.
+
+Download **Coverage CSV** for every planned code, **Balance CSV** for all 18 combinations, and **Assignment checks CSV** for every imported file. They record `coverage-v1`, the plan prefix/start/count, and the incomplete-session setting alongside the counts, inclusion flags, or assignment checks. Numeric rotation indices use 0–2; readable task-cycle labels are included. They omit queries, participant observations, and reviewer notes. Source file names and participant codes are retained where relevant.
+
+Coverage is recomputed from existing workspace data rather than stored as a trusted summary. Workspace project version 2 is unchanged; version-1 and version-2 projects still open, and reopening restores the plan and review decisions used to reconstruct coverage. No additional participant data are uploaded or persisted.

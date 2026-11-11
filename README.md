@@ -58,7 +58,7 @@ Open http://localhost:8080. Core functionality works without external services. 
 
 Run all automated tests with `npm test` (Node.js 22 or later). Run module syntax checks with `npm run check`. Neither command needs package installation.
 
-For browser QA, run `npm install`, `npx playwright install chromium`, and `npm run test:browser`. The browser test starts its own temporary HTTP server and uses synthetic recordings. GitHub Actions installs Chromium with its operating-system dependencies and runs these checks. Screenshots are generated under `test-results/` for internal layout review.
+For browser QA, run `npm install`, `npx playwright install chromium`, and `npm run test:browser`. Alternatively, set `SEARCHASSIST_CHROMIUM_PATH` to an installed Chrome/Chromium executable. The browser test starts its own temporary HTTP server and uses synthetic recordings. GitHub Actions prefers Chrome/Chromium already installed on the runner and falls back to installing Playwright Chromium and its operating-system dependencies when none is available. Screenshots are generated under `test-results/` for internal layout review.
 
 Reproduce survey counts with `python3 docs/analyze_survey.py /path/to/responses.xlsx docs/survey-summary.json`. This script requires `openpyxl` in your Python environment. The supplied source workbook and abstract are not included in this repository or app.
 

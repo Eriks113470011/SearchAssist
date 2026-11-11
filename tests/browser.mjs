@@ -43,7 +43,7 @@ async function checkSession(page) {
   return page.evaluate(key => JSON.parse(sessionStorage.getItem(key)),study.STORAGE_KEY);
 }
 try {
-  browser = await chromium.launch({headless:true});
+  browser = await chromium.launch({headless:true,...(process.env.SEARCHASSIST_CHROMIUM_PATH ? {executablePath:process.env.SEARCHASSIST_CHROMIUM_PATH} : {})});
   const context = await browser.newContext({acceptDownloads:true,viewport:{width:1440,height:1000}});
   context.setDefaultTimeout(15000);
   const page = await context.newPage();page.on('pageerror',error=>errors.push(error.message));

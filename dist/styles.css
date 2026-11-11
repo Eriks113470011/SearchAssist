@@ -12,3 +12,6 @@
 
 /* v0.4 portable workspace projects */
 #review-table .data-table{min-width:820px}#review-table textarea{min-width:170px;width:100%;max-width:260px;resize:vertical;min-height:65px;border:1px solid #c4d4b9;border-radius:5px;padding:9px;font:inherit;line-height:1.5}#project-status{font-size:12px;line-height:1.6;margin-top:14px}#project-dirty{margin-top:12px}.project-panel .small-print{margin-top:12px}#review-table textarea:focus{outline:2px solid var(--green);outline-offset:2px}
+
+/* v0.5 within-participant comparisons */
+#paired-table .data-table{min-width:780px}#paired-table td:not(:first-child){font-variant-numeric:tabular-nums}#view-workspace .review-filters label:has(#paired-successful-only){max-width:480px}

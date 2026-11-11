@@ -21,8 +21,8 @@ let browser;
 const errors = [];
 const upload = (name, text) => ({name, mimeType:'application/json', buffer:Buffer.from(text)});
 const at = ms => ({wall:Date.UTC(2026,10,7)+ms,mono:ms});
-function fixture(participant, count = 12, {durations={A:500,B:500,C:500},fail=[],interrupt=[]}={}) {
-  const s = study.createSession({participant,order:'ABC',setRotation:0},at(0));
+function fixture(participant, count = 12, {durations={A:500,B:500,C:500},fail=[],interrupt=[],order='ABC',setRotation=0}={}) {
+  const s = study.createSession({participant,order,setRotation},at(0));
   let ms=0;
   for (let i=0;i<count;i++) {
     study.startTrial(s,at(ms));const task=study.taskAt(s),condition=s.order[Math.floor(i/4)],key=`${condition}:${task.type}`,d=durations[condition];
@@ -216,8 +216,65 @@ try {
   await pairedPage.setViewportSize({width:390,height:844});await pairedPage.evaluate(()=>window.scrollTo(0,0));
   await pairedPage.screenshot({path:'test-results/paired-mobile.png',fullPage:true});
   assert.equal(await pairedPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Paired layout overflows on mobile');
+  const coveragePage=await context.newPage();coveragePage.on('pageerror',error=>errors.push(error.message));
+  await coveragePage.goto(url+'/#workspace');
+  assert.equal(await coveragePage.locator('#download-checks').isEnabled(),false);
+  await coveragePage.locator('#plan-count').fill('4');await coveragePage.locator('#assignment-form button').click();
+  assert.match(await coveragePage.locator('#coverage-status').innerText(),/4 planned.*4 not imported/);
+  await coveragePage.locator('#review-files').setInputFiles([
+    upload('matching.json',fixture('P001')),
+    upload('wrong-duplicate.json',fixture('p001',12,{order:'CBA',setRotation:2})),
+    upload('wrong-order.json',fixture('P002')),
+    upload('partial.json',fixture('P003',4,{order:'BAC'})),
+    upload('unplanned.json',fixture('OUTSIDE',12,{setRotation:2})),
+    upload('P004.json','{')
+  ]);
+  await coveragePage.locator('#review-status').filter({hasText:'5 valid and 1 invalid'}).waitFor();
+  assert.match(await coveragePage.locator('#coverage-status').innerText(),/3 planned code\(s\) imported.*1 not imported/);
+  assert.match(await coveragePage.locator('#coverage-status').innerText(),/0 matching plan, 1 assignment mismatch\(es\), 1 unplanned/);
+  await coveragePage.locator('summary').filter({hasText:'Planned participant progress'}).click();
+  await coveragePage.locator('summary').filter({hasText:'Condition order and task rotation counts'}).click();
+  await coveragePage.locator('summary').filter({hasText:'Recording assignment checks'}).click();
+  assert.equal(await coveragePage.locator('#coverage-progress tbody tr').count(),4);
+  assert.equal(await coveragePage.locator('#coverage-balance tbody tr').count(),18);
+  assert.equal(await coveragePage.locator('#coverage-progress tbody tr').nth(3).locator('td').last().innerText(),'Not imported in this batch');
+  await coveragePage.locator('[data-review-id="0"]').check();
+  assert.match(await coveragePage.locator('#coverage-status').innerText(),/1 matching plan/);
+  await coveragePage.locator('[data-review-id="1"]').check();
+  assert.equal(await coveragePage.locator('#coverage-progress tbody tr').first().locator('td').last().innerText(),'Conflicting selections');
+  await coveragePage.locator('[data-review-id="1"]').uncheck();
+  await coveragePage.locator('#include-partial').check();
+  assert.match(await coveragePage.locator('#coverage-status').innerText(),/2 matching plan, 1 assignment mismatch\(es\), 1 unplanned/);
+  const abc=coveragePage.locator('#coverage-balance tbody tr').first().locator('td');
+  assert.equal(await abc.nth(2).innerText(),'1');assert.equal(await abc.nth(3).innerText(),'2');assert.equal(await abc.nth(5).innerText(),'1');
+  await coveragePage.locator('[data-review-id="2"]').uncheck();
+  assert.match(await coveragePage.locator('#coverage-status').innerText(),/2 matching plan, 0 assignment mismatch\(es\), 1 unplanned/);
+  assert.equal(await coveragePage.locator('#coverage-checks tbody tr').nth(2).locator('td').nth(3).innerText(),'No');
+  assert.match(await coveragePage.locator('#coverage-checks tbody tr').nth(2).locator('td').last().innerText(),/Order differs from plan/);
+  const savedCoverage=await downloaded(coveragePage,'#download-coverage'),savedBalance=await downloaded(coveragePage,'#download-balance'),savedChecks=await downloaded(coveragePage,'#download-checks');
+  assert.equal(savedCoverage.split('\r\n').length,5);assert.equal(savedBalance.split('\r\n').length,19);assert.equal(savedChecks.split('\r\n').length,7);
+  await coveragePage.locator('#plan-prefix').fill('AUDIT_');await coveragePage.locator('#assignment-form button').click();
+  assert.match(await coveragePage.locator('#coverage-status').innerText(),/0 planned code\(s\) imported.*4 not imported/);
+  await coveragePage.locator('#plan-prefix').fill('P');await coveragePage.locator('#assignment-form button').click();
+  assert.equal(await downloaded(coveragePage,'#download-coverage'),savedCoverage);
+  const coverageProject=await downloaded(coveragePage,'#save-project');assert.equal(JSON.parse(coverageProject).projectVersion,2);
+  await coveragePage.reload();await visible(coveragePage,'#open-project');
+  await coveragePage.locator('#open-project').setInputFiles(upload('coverage-workspace.json',coverageProject));
+  await coveragePage.locator('#project-status').filter({hasText:'Workspace opened'}).waitFor();
+  assert.equal(await downloaded(coveragePage,'#download-coverage'),savedCoverage);
+  assert.equal(await downloaded(coveragePage,'#download-balance'),savedBalance);
+  assert.equal(await downloaded(coveragePage,'#download-checks'),savedChecks);
+  await coveragePage.locator('summary').filter({hasText:'Planned participant progress'}).click();
+  await coveragePage.locator('summary').filter({hasText:'Condition order and task rotation counts'}).click();
+  await coveragePage.locator('summary').filter({hasText:'Recording assignment checks'}).click();
+  await coveragePage.evaluate(()=>window.scrollTo(0,0));
+  await coveragePage.screenshot({path:'test-results/coverage-desktop.png',fullPage:true});
+  await coveragePage.setViewportSize({width:390,height:844});await coveragePage.evaluate(()=>window.scrollTo(0,0));
+  await coveragePage.screenshot({path:'test-results/coverage-mobile.png',fullPage:true});
+  assert.equal(await coveragePage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Coverage layout overflows on mobile');
+  assert.equal((await checkSession(fresh)).participant,'P007');
   assert.deepEqual(errors,[]);
-  console.log('Browser checks passed: study and workspace regression checks, paired differences, eligible participant counts, matched task types, timing filters, paired exports, v2 settings, v0.4 migration, invalid-setting isolation, and desktop/mobile layout.');
+  console.log('Browser checks passed: study/workspace/paired regressions, coverage summaries, assignment mismatches, unplanned codes, duplicate/partial decisions, all 18 balance cells, coverage CSVs, plan regeneration, workspace round-trips, recording isolation, and desktop/mobile layout.');
 } finally {
   if(browser)await browser.close();
   await new Promise(done=>server.close(done));

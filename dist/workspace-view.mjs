@@ -1,5 +1,6 @@
 import {assignments, assignmentCsv, reviewFiles, selectSessions, compareConditions, reviewCsv, auditCsv, MAX_FILES, MAX_BATCH_BYTES} from './workspace.mjs';
 
+import {studyCoverage, coverageCsv, balanceCsv, assignmentChecksCsv} from './coverage.mjs';
 import {pairedSummary, pairedCsv, pairedSummaryCsv} from './paired.mjs';
 import {parseProject, exportProject, MAX_PROJECT_BYTES} from './review-project.mjs';
 
@@ -17,11 +18,16 @@ export function mountWorkspace(root) {
     <div class="panel section-gap"><h2>Plan participant assignments</h2><p>Every 18 consecutive assignments cover all six condition orders and three task rotations once. Continue numbering when adding participants. This is a balancing schedule, not random assignment or a sample-size recommendation.</p>
     <form id="assignment-form" class="workspace-controls"><label>Code prefix<input id="plan-prefix" value="P" maxlength="12" required></label><label>Starting number<input id="plan-start" type="number" value="1" min="1" max="999999" required></label><label>Participants<input id="plan-count" type="number" value="18" min="1" max="180" required></label><button class="primary">Generate schedule</button></form>
     <p id="plan-status" role="status" aria-live="polite"></p><div class="export-actions"><button id="download-plan" class="secondary">Download assignment CSV ↓</button></div><div id="assignment-table" class="table-scroll" role="region" aria-label="Participant assignments" tabindex="0"></div></div>
-    <div class="panel section-gap"><h2>Review session exports</h2><p>Choose up to 60 v0.2 session JSON files, at most 1 MB each and 10 MB total. v0.5 retains the v0.2 recording schema. The review does not modify recordings or your current study session. Files stay in memory here; reload clears the review.</p>
+    <div class="panel section-gap"><h2>Review session exports</h2><p>Choose up to 60 v0.2 session JSON files, at most 1 MB each and 10 MB total. v0.6 retains the v0.2 recording schema. The review does not modify recordings or your current study session. Files stay in memory here; reload clears the review.</p>
     <label class="file-label" for="review-files">Session JSON files</label><input id="review-files" type="file" accept=".json,application/json" multiple><p id="review-status" role="status" aria-live="polite"></p>
     <div class="workspace-controls review-filters"><label><input id="include-partial" type="checkbox"> Include incomplete sessions</label><label><input id="exclude-interrupted" type="checkbox"> Exclude interrupted trials from timing means</label><button id="clear-review" class="text-btn">Clear review</button></div>
     <p class="small-print">Complete sessions are included by default. Every file with a repeated participant code is excluded until you choose one. Codes are compared without letter case. Selecting multiple files for one code excludes that participant until the conflict is resolved. Set analysis rules before collection.</p>
     <div id="review-table" class="table-scroll" role="region" aria-label="Session inclusion decisions" tabindex="0"></div><p id="duplicate-status" role="status" aria-live="polite"></p>
+    <h3 class="section-gap">Study coverage</h3><p class="small-print">Coverage uses the generated or restored assignment plan and this imported batch. Generate the schedule after editing plan fields. Codes are compared without letter case. “Not imported” means no valid recording for that code is in this batch; invalid files cannot be matched from their names. Checks do not change inclusion decisions.</p><p id="coverage-status" role="status" aria-live="polite"></p>
+    <details class="coverage-details"><summary>Planned participant progress</summary><div id="coverage-progress" class="table-scroll" role="region" aria-label="Planned participant progress" tabindex="0"></div></details>
+    <details class="coverage-details"><summary>Condition order and task rotation counts</summary><p class="small-print">Included counts follow current review decisions and may contain unplanned codes or assignment mismatches. Matching-plan counts require both the planned code and its order/rotation. These counts describe this batch; they do not determine a recruitment target.</p><div id="coverage-balance" class="table-scroll" role="region" aria-label="Condition order and rotation counts" tabindex="0"></div></details>
+    <details class="coverage-details"><summary>Recording assignment checks</summary><div id="coverage-checks" class="table-scroll" role="region" aria-label="Recording assignment checks" tabindex="0"></div></details>
+    <div class="export-actions"><button id="download-coverage" class="secondary">Download coverage CSV ↓</button><button id="download-balance" class="secondary">Download balance CSV ↓</button><button id="download-checks" class="secondary">Download assignment checks CSV ↓</button></div>
     <h3 class="section-gap">Condition comparison</h3><p class="small-print">Success rates and active times below are means of each included participant’s condition results. Incomplete sessions can contribute different participants to each condition; these displays are descriptive, not paired tests. Timing exclusions do not change success counts. Blank values mean no eligible data.</p>
     <div id="comparison-table" class="table-scroll" role="region" aria-label="Condition comparison" tabindex="0"></div>
     <h3 class="section-gap">Within-participant comparisons</h3><p class="small-print">Each comparison uses participants who finished both four-task condition blocks. If incomplete sessions are included, contributing participants can differ between comparisons. B − A means Fuzzy minus Exact; C is SearchAssist. Positive success differences mean higher success in the comparison condition; negative time differences mean less active time.</p>
@@ -38,7 +44,7 @@ export function mountWorkspace(root) {
     try {
       if (JSON.stringify(readPlanFields()) !== JSON.stringify(planConfig)) throw new Error('Generate the assignment schedule before saving edited plan fields.');
       const content = exportProject({planConfig, entries, options:options(), notes});
-      download(content, 'searchassist-v05-workspace.json', 'application/json');
+      download(content, 'searchassist-v06-workspace.json', 'application/json');
       dirty = false; find('#project-status').textContent = 'Workspace JSON downloaded. Open this file to continue on another visit.'; find('#project-dirty').textContent = 'No unsaved workspace changes.';
     } catch (error) {find('#project-status').textContent = error.message;}
   };
@@ -70,16 +76,28 @@ export function mountWorkspace(root) {
     event.preventDefault();
     try {
       const next = readPlanFields(); plan = assignments(next); planConfig = next; markDirty();
-      renderPlan(); find('#plan-status').textContent = `${plan.length} assignments generated. Download the schedule before leaving.`;
+      renderPlan(); renderCoverage(); find('#plan-status').textContent = `${plan.length} assignments generated. Download the schedule before leaving.`;
     } catch (error) {find('#plan-status').textContent = error.message;}
   };
   find('#assignment-table').onclick = event => {
     const button = event.target.closest('[data-assignment]');
     if (button) document.dispatchEvent(new CustomEvent('study-assignment', {detail: plan[Number(button.dataset.assignment)]}));
   };
-  find('#download-plan').onclick = () => download(assignmentCsv(plan), 'searchassist-v05-assignments.csv');
+  find('#download-plan').onclick = () => download(assignmentCsv(plan), 'searchassist-v06-assignments.csv');
   const options = () => ({includePartial, excludeInterrupted, pairedSuccessfulOnly, choices, notes});
+  function renderCoverage() {
+    const report = studyCoverage(entries, planConfig, options()), summary = report.summary;
+    find('#coverage-status').textContent = `${summary.plannedAssignments} planned · ${summary.plannedCodesImported} planned code(s) imported · ${summary.plannedCodesNotImported} not imported · ${summary.plannedCodesWithoutIncluded} without an included recording. Included: ${summary.matchingPlanIncluded} matching plan, ${summary.mismatchedPlanIncluded} assignment mismatch(es), ${summary.unplannedIncluded} unplanned code(s). ${summary.invalidFiles} invalid file(s).`;
+    find('#coverage-progress').innerHTML = `<table class="data-table"><caption>Current generated plan against this batch</caption><thead><tr><th>Planned code</th><th>Planned order / rotation</th><th>Imported files</th><th>Included progress</th><th>Status</th></tr></thead><tbody>${report.progress.map(r=>`<tr><td>${esc(r.participant)}</td><td>${r.plannedOrder} / ${r.plannedTaskRotation}</td><td>${r.importedFiles}</td><td>${r.included?`${r.includedTrials} / 12 · ${r.includedPhase}`:'—'}</td><td>${r.status}</td></tr>`).join('')}</tbody></table>`;
+    find('#coverage-balance').innerHTML = `<table class="data-table"><caption>All 18 order and rotation combinations</caption><thead><tr><th>Condition order</th><th>Task rotation</th><th>Planned</th><th>Included</th><th>Included complete</th><th>Included matching plan</th></tr></thead><tbody>${report.balance.map(r=>`<tr><td>${r.conditionOrder}</td><td>${r.taskRotation}</td><td>${r.plannedAssignments}</td><td>${r.includedRecordings}</td><td>${r.completeIncludedRecordings}</td><td>${r.matchingPlanIncludedRecordings}</td></tr>`).join('')}</tbody></table>`;
+    find('#coverage-checks').innerHTML = report.files.length ? `<table class="data-table"><caption>All imported files, including excluded copies</caption><thead><tr><th>File / code</th><th>Recorded order / rotation</th><th>Planned order / rotation</th><th>Included</th><th>Assignment check</th></tr></thead><tbody>${report.files.map(r=>`<tr><td>${esc(r.fileName)}<br>${esc(r.participant)}</td><td>${r.recordedOrder||'—'} / ${r.recordedTaskRotation||'—'}</td><td>${r.plannedOrder||'—'} / ${r.plannedTaskRotation||'—'}</td><td>${r.included?'Yes':'No'}</td><td>${esc(r.flags||r.status)}</td></tr>`).join('')}</tbody></table>` : '<p class="small-print">Import recordings to check their assignments.</p>';
+    find('#download-checks').disabled = entries.length === 0;
+  }
+  find('#download-coverage').onclick = () => download(coverageCsv(entries, planConfig, options()), 'searchassist-v06-coverage.csv');
+  find('#download-balance').onclick = () => download(balanceCsv(entries, planConfig, options()), 'searchassist-v06-balance.csv');
+  find('#download-checks').onclick = () => download(assignmentChecksCsv(entries, planConfig, options()), 'searchassist-v06-assignment-checks.csv');
   function renderReview() {
+    renderCoverage();
     const selection = selectSessions(entries, options());
     find('#review-table').innerHTML = entries.length ? `<table class="data-table"><caption>Choose which recordings contribute</caption><thead><tr><th>Include</th><th>File / participant</th><th>Progress</th><th>Checks</th><th>Decision note</th></tr></thead><tbody>${entries.map(e => {
       const s = e.session, disabled = !s || !includePartial && s.phase !== 'complete';
@@ -122,10 +140,10 @@ export function mountWorkspace(root) {
   find('#include-partial').onchange = event => {includePartial = event.target.checked; markDirty(); renderReview();};
   find('#exclude-interrupted').onchange = event => {excludeInterrupted = event.target.checked; markDirty(); renderReview();};
   find('#paired-successful-only').onchange = event => {pairedSuccessfulOnly = event.target.checked; markDirty(); renderReview();};
-  find('#download-paired').onclick = () => download(pairedCsv(entries, options()), 'searchassist-v05-paired-participants.csv');
-  find('#download-paired-summary').onclick = () => download(pairedSummaryCsv(entries, options()), 'searchassist-v05-paired-summary.csv');
+  find('#download-paired').onclick = () => download(pairedCsv(entries, options()), 'searchassist-v06-paired-participants.csv');
+  find('#download-paired-summary').onclick = () => download(pairedSummaryCsv(entries, options()), 'searchassist-v06-paired-summary.csv');
   find('#clear-review').onclick = () => {++importGeneration; entries = []; choices = {}; notes = {}; markDirty(); find('#review-status').textContent = 'Review cleared. Original files and study recordings are unchanged.'; renderReview();};
-  find('#download-review').onclick = () => download(reviewCsv(entries, options()), 'searchassist-v05-participant-conditions.csv');
-  find('#download-audit').onclick = () => download(auditCsv(entries, options()), 'searchassist-v05-inclusion-log.csv');
+  find('#download-review').onclick = () => download(reviewCsv(entries, options()), 'searchassist-v06-participant-conditions.csv');
+  find('#download-audit').onclick = () => download(auditCsv(entries, options()), 'searchassist-v06-inclusion-log.csv');
   renderPlan(); renderReview();
 }

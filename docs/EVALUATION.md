@@ -121,3 +121,12 @@ The 18-cell table distinguishes planned assignments, included recordings by thei
 Retain coverage, balance, and assignment-check CSVs with the original inclusion log. Coverage reports use `coverage-v1` and carry the plan prefix/start/count and incomplete-session setting. They omit query text and participant/reviewer notes; they retain participant codes and file names where applicable. Numeric rotations use 0–2, with readable task-cycle labels. “Not imported” describes only this batch and does not establish missing participation or dropout. Counts do not determine sample size, power, or statistical balance.
 
 Coverage is recomputed whenever the generated plan, imported batch, inclusion choices, or incomplete-session setting changes. It is reconstructed when an existing workspace is reopened. Project version 2 and participant recording version 0.2/schema 2 remain unchanged. Coverage does not change the comparison or paired-analysis definitions.
+
+
+## Aggregate reporting (v0.7)
+
+Use the Study summary after resolving inclusion choices and setting the three analysis filters. Generate edited assignment fields before reporting. The summary takes a read-only snapshot of the current generated plan and imported batch; it does not pool batches or infer participation from absent files. Record analysis decisions in the saved workspace and retain the inclusion/assignment CSVs with the original recordings.
+
+Preview and HTML/JSON downloads share one snapshot until workspace inputs change. The HTML is printable offline, with context/coverage, outcomes, and all 18 balance cells on separate US Letter pages under default browser print settings. JSON records raw aggregate values with explicit units and versions. Missing results remain missing, with denominators shown. Incomplete sessions can contribute different participants to condition rows and comparison pairs. Condition timing can include unsuccessful trials and skips; successful-only filtering applies only to paired timing.
+
+Reports omit individual codes, filenames, plan prefixes, queries, observations, and reviewer notes. This limits disclosure but does not guarantee anonymity, especially with small groups. The report is descriptive: it neither establishes a statistically significant or causal effect nor replaces the detailed audit, original data, study protocol, or a full research report. Browser print settings and screen-reader/physical-printer behavior require manual checks in the target environment.

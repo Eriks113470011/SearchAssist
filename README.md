@@ -27,6 +27,7 @@ Open http://localhost:8080. Core functionality works without external services. 
 - A facilitator workspace with balanced participant assignments, batch session review, explicit duplicate resolution, timing exclusions, and participant-condition and inclusion-log CSV exports.
 - Portable workspace JSON files that preserve the generated assignment plan, full review recordings, choices, filters, and optional per-file decision notes for another visit or device.
 - Within-participant comparisons for B − A, C − A, and C − B, with matched task-type timing, participant counts, and paired participant/summary CSV exports.
+- An offline, printable aggregate study summary with an in-workspace preview and matching HTML/JSON downloads.
 - Study coverage against the generated plan, all 18 condition-order/task-rotation counts, per-recording assignment checks, and three coverage CSV reports.
 
 ## Files
@@ -41,6 +42,7 @@ Open http://localhost:8080. Core functionality works without external services. 
 | `dist/workspace-view.mjs` | Facilitator workspace interface and local file controls |
 | `dist/review-project.mjs` | Versioned workspace JSON validation, saving, and reopening |
 | `dist/paired.mjs` | Matched participant comparisons, timing eligibility, differences, and paired CSVs |
+| `dist/study-summary.mjs` | Aggregate snapshot, explicit field allowlists, offline HTML print layout, and summary JSON |
 | `dist/coverage.mjs` | Batch coverage, assignment mismatches, plan/actual counts, and coverage CSVs |
 | `dist/engine.mjs` | Shared deterministic matching engine and explanations |
 | `dist/data.mjs` | Synthetic directory and curated relationships |
@@ -49,6 +51,7 @@ Open http://localhost:8080. Core functionality works without external services. 
 | `tests/workspace.test.mjs` | Balanced schedules, duplicates, partial sessions, timing exclusions, and review exports |
 | `tests/review-project.test.mjs` | Project round-trips, validation, recording isolation, decision notes, and limits |
 | `tests/paired.test.mjs` | Comparison signs, full-block eligibility, matched timing, equal weighting, missing data, and CSV measurements |
+| `tests/study-summary.test.mjs` | Aggregate agreement, missing values, privacy omissions, settings, units, and read-only reports |
 | `tests/coverage.test.mjs` | Imported versus included codes, assignment matching, balance counts, duplicates, partial sessions, and coverage exports |
 | `tests/browser.mjs` | Chromium checks for study recovery, imports/downloads, workspace decisions, and mobile overflow |
 | `docs/survey-summary.json` | Aggregated counts, denominators, source fingerprint, and quality notes |
@@ -58,7 +61,7 @@ Open http://localhost:8080. Core functionality works without external services. 
 
 Run all automated tests with `npm test` (Node.js 22 or later). Run module syntax checks with `npm run check`. Neither command needs package installation.
 
-For browser QA, run `npm install`, `npx playwright install chromium`, and `npm run test:browser`. Alternatively, set `SEARCHASSIST_CHROMIUM_PATH` to an installed Chrome/Chromium executable. The browser test starts its own temporary HTTP server and uses synthetic recordings. GitHub Actions prefers Chrome/Chromium already installed on the runner and falls back to installing Playwright Chromium and its operating-system dependencies when none is available. Screenshots are generated under `test-results/` for internal layout review.
+For browser QA, run `npm install`, `npx playwright install chromium`, and `npm run test:browser`. Alternatively, set `SEARCHASSIST_CHROMIUM_PATH` to an installed Chrome/Chromium executable. The browser test starts its own temporary HTTP server and uses synthetic recordings. GitHub Actions prefers Chrome/Chromium already installed on the runner and falls back to installing Playwright Chromium and its operating-system dependencies when none is available. Screenshots and a printed study-summary PDF are generated under `test-results/` for internal layout review.
 
 Reproduce survey counts with `python3 docs/analyze_survey.py /path/to/responses.xlsx docs/survey-summary.json`. This script requires `openpyxl` in your Python environment. The supplied source workbook and abstract are not included in this repository or app.
 
@@ -84,7 +87,7 @@ To restore, open **Run a study**, choose a v0.2 session JSON file under 1 MB, an
 
 ## Status
 
-Version 0.6 adds coverage and assignment checks against the generated plan. The recording schema remains v0.2 with the same dataset, tasks, engine, and timing definition, so v0.2 recordings remain restorable and reviewable. The application version shown in navigation is independent of the recording-schema and workspace-project versions. See `docs/RELEASE-v0.6.md` for workflow and verification. Accessibility features require screen-reader and physical-device testing. Real participant evaluation, task-difficulty calibration, formal comprehension measures, and a validated usability instrument remain future work. `docs/EVALUATION.md` explains the design limits.
+Version 0.7 adds a printable aggregate study summary using the current review decisions, coverage, and analysis settings. The recording schema remains v0.2 with the same dataset, tasks, engine, and timing definition, so v0.2 recordings remain restorable and reviewable. The application version shown in navigation is independent of the recording-schema and workspace-project versions. See `docs/RELEASE-v0.7.md` for workflow and verification. Accessibility features require screen-reader and physical-device testing. Real participant evaluation, task-difficulty calibration, formal comprehension measures, and a validated usability instrument remain future work. `docs/EVALUATION.md` explains the design limits.
 
 ## Facilitator workspace
 
@@ -131,3 +134,16 @@ Checks are descriptive and never change inclusion, overwrite recorded assignment
 Download **Coverage CSV** for every planned code, **Balance CSV** for all 18 combinations, and **Assignment checks CSV** for every imported file. They record `coverage-v1`, the plan prefix/start/count, and the incomplete-session setting alongside the counts, inclusion flags, or assignment checks. Numeric rotation indices use 0–2; readable task-cycle labels are included. They omit queries, participant observations, and reviewer notes. Source file names and participant codes are retained where relevant.
 
 Coverage is recomputed from existing workspace data rather than stored as a trusted summary. Workspace project version 2 is unchanged; version-1 and version-2 projects still open, and reopening restores the plan and review decisions used to reconstruct coverage. No additional participant data are uploaded or persisted.
+
+
+## Printable study summary
+
+After importing a review batch, choose **Preview study summary**, **Download summary HTML**, or **Download summary JSON**. Generate the assignment schedule first if you edited its fields. The report includes the generated plan's aggregate coverage, imported/included/excluded counts, all three analysis settings, condition results, paired differences with denominators, all 18 order/rotation cells, and interpretation limits. Reports can be created even when all imported recordings are invalid or excluded; unavailable results remain explicitly missing.
+
+The HTML is self-contained, has no scripts or external assets, and works offline. Open the downloaded file in a browser and use **Print** to print or save as PDF. The print stylesheet uses US Letter with separate pages for context/coverage, outcomes, and balance. The sandboxed preview is for reading; use the downloaded HTML for printing. Browser print settings can change pagination.
+
+HTML and JSON share a single timestamped snapshot until you change the workspace. Changes to the plan, imported batch, inclusion decisions, notes, or filters discard the preview and cached snapshot. Closing a preview preserves the current snapshot. Creating or downloading reports does not change recordings, inclusion choices, workspace contents, or unsaved status.
+
+The JSON uses `searchassist-study-summary`, summary version 1, application version 0.7, and explicit units: success proportions (0–1), success differences in percentage points, and active times/differences in milliseconds. HTML converts time to seconds and success to percentages. Both use the existing calculations without adding significance tests, confidence intervals, or winner labels. A missing result is `null` in JSON and “Not available” in HTML; a genuine zero remains zero.
+
+These aggregate reports omit participant codes, source file names, plan prefixes, recorded queries, participant observations, reviewer notes, and individual result rows. Small-group counts can still identify people in context; this is not a guarantee of anonymity. Keep the workspace, original recordings, inclusion log, and detailed CSVs for the underlying audit. Summary JSON is an output report, not a restorable workspace file. The recording schema stays 0.2 / 2 and workspace project version stays 2 (versions 1 and 2 remain readable).

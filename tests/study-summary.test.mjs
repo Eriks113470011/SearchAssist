@@ -26,7 +26,7 @@ const pick=(r,keys)=>Object.fromEntries(keys.map(k=>[k,r[k]]));
 
 test('empty reports preserve missing values, units, protocol, timestamp, and 18 balance cells',()=>{
   const {summary:r,json,html}=studySummaryAssets([],plan,{},date);
-  assert.equal(r.format,'searchassist-study-summary');assert.equal(r.summaryVersion,1);assert.equal(r.applicationVersion,'0.7');
+  assert.equal(r.format,'searchassist-study-summary');assert.equal(r.summaryVersion,2);assert.equal(r.applicationVersion,'0.8');
   assert.equal(r.generatedAt,'2026-11-11T12:00:00.000Z');assert.equal(r.protocol.recordingVersion,'0.2');
   assert.equal(r.protocol.recordingSchemaVersion,2);assert.equal(r.protocol.timingDefinition,'active-time-v2');
   assert.equal(r.units.activeTime,'milliseconds');assert.equal(r.units.successRate,'proportion from 0 to 1');
@@ -89,7 +89,7 @@ test('HTML escapes dynamic values and blocks scripts, forms, and external reques
   assert.match(html,/&lt;script&gt;alert\(&quot;x&quot;\)&lt;\/script&gt;/);assert.ok(!html.includes('<script'));
   assert.match(html,/default-src 'none'/);assert.match(html,/form-action 'none'/);
   assert.ok(!/<(?:script|link|img|iframe|form)\b/i.test(html));assert.ok(!/https?:\/\//.test(html));
-  assert.equal((html.match(/<section>/g)||[]).length,3);assert.match(html,/@page\{size:letter/);
+  assert.equal((html.match(/<section>/g)||[]).length,4);assert.match(html,/@page\{size:letter/);
 });
 test('invalid timestamps fail before report generation',()=>{
   for(const bad of [null,'not-a-date','x'.repeat(100)])assert.throws(()=>createStudySummary([],plan,{},bad),/date is invalid/);

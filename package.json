@@ -1,12 +1,12 @@
 {
   "name": "searchassist",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "private": true,
   "type": "module",
   "description": "Transparent directory search and a local HCI comparison study",
   "scripts": {
     "test": "node --test tests/*.test.mjs",
-    "check": "node --check dist/app.mjs && node --check dist/study.mjs && node --check dist/engine.mjs && node --check dist/data.mjs && node --check dist/workspace.mjs && node --check dist/workspace-view.mjs && node --check tests/browser.mjs && node --check dist/review-project.mjs && node --check dist/paired.mjs && node --check dist/coverage.mjs && node --check dist/study-summary.mjs",
+    "check": "node --check dist/app.mjs && node --check dist/study.mjs && node --check dist/engine.mjs && node --check dist/data.mjs && node --check dist/workspace.mjs && node --check dist/workspace-view.mjs && node --check tests/browser.mjs && node --check dist/review-project.mjs && node --check dist/paired.mjs && node --check dist/coverage.mjs && node --check dist/study-summary.mjs && node --check dist/ratings.mjs",
     "test:browser": "node tests/browser.mjs"
   },
   "engines": {

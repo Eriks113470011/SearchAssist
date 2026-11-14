@@ -27,6 +27,7 @@ Open http://localhost:8080. Core functionality works without external services. 
 - A facilitator workspace with balanced participant assignments, batch session review, explicit duplicate resolution, timing exclusions, and participant-condition and inclusion-log CSV exports.
 - Portable workspace JSON files that preserve the generated assignment plan, full review recordings, choices, filters, and optional per-file decision notes for another visit or device.
 - Within-participant comparisons for B − A, C − A, and C − B, with matched task-type timing, participant counts, and paired participant/summary CSV exports.
+- Submitted confidence, trust, and ease rating distributions and medians, matched higher/same/lower counts, and two aggregate rating CSVs.
 - An offline, printable aggregate study summary with an in-workspace preview and matching HTML/JSON downloads.
 - Study coverage against the generated plan, all 18 condition-order/task-rotation counts, per-recording assignment checks, and three coverage CSV reports.
 
@@ -41,6 +42,7 @@ Open http://localhost:8080. Core functionality works without external services. 
 | `dist/workspace.mjs` | Assignment schedules, read-only batch validation, inclusion rules, and descriptive comparisons |
 | `dist/workspace-view.mjs` | Facilitator workspace interface and local file controls |
 | `dist/review-project.mjs` | Versioned workspace JSON validation, saving, and reopening |
+| `dist/ratings.mjs` | Submitted ordinal rating distributions, medians, matched directions, and aggregate CSVs |
 | `dist/paired.mjs` | Matched participant comparisons, timing eligibility, differences, and paired CSVs |
 | `dist/study-summary.mjs` | Aggregate snapshot, explicit field allowlists, offline HTML print layout, and summary JSON |
 | `dist/coverage.mjs` | Batch coverage, assignment mismatches, plan/actual counts, and coverage CSVs |
@@ -50,6 +52,7 @@ Open http://localhost:8080. Core functionality works without external services. 
 | `tests/study.test.mjs` | Timing, query recording, all 18 study assignments, restore validation, and exports |
 | `tests/workspace.test.mjs` | Balanced schedules, duplicates, partial sessions, timing exclusions, and review exports |
 | `tests/review-project.test.mjs` | Project round-trips, validation, recording isolation, decision notes, and limits |
+| `tests/ratings.test.mjs` | Submitted versus draft ratings, ordinal distributions, matched sets, inclusion rules, and exports |
 | `tests/paired.test.mjs` | Comparison signs, full-block eligibility, matched timing, equal weighting, missing data, and CSV measurements |
 | `tests/study-summary.test.mjs` | Aggregate agreement, missing values, privacy omissions, settings, units, and read-only reports |
 | `tests/coverage.test.mjs` | Imported versus included codes, assignment matching, balance counts, duplicates, partial sessions, and coverage exports |
@@ -87,7 +90,7 @@ To restore, open **Run a study**, choose a v0.2 session JSON file under 1 MB, an
 
 ## Status
 
-Version 0.7 adds a printable aggregate study summary using the current review decisions, coverage, and analysis settings. The recording schema remains v0.2 with the same dataset, tasks, engine, and timing definition, so v0.2 recordings remain restorable and reviewable. The application version shown in navigation is independent of the recording-schema and workspace-project versions. See `docs/RELEASE-v0.7.md` for workflow and verification. Accessibility features require screen-reader and physical-device testing. Real participant evaluation, task-difficulty calibration, formal comprehension measures, and a validated usability instrument remain future work. `docs/EVALUATION.md` explains the design limits.
+Version 0.8 adds submitted post-block rating analysis and includes it in the aggregate study summary. The recording schema remains v0.2 with the same dataset, tasks, engine, and timing definition, so v0.2 recordings remain restorable and reviewable. The application version shown in navigation is independent of the recording-schema and workspace-project versions. See `docs/RELEASE-v0.8.md` for workflow and verification. Accessibility features require screen-reader and physical-device testing. Real participant evaluation, task-difficulty calibration, formal comprehension measures, and a validated usability instrument remain future work. `docs/EVALUATION.md` explains the design limits.
 
 ## Facilitator workspace
 
@@ -138,12 +141,25 @@ Coverage is recomputed from existing workspace data rather than stored as a trus
 
 ## Printable study summary
 
-After importing a review batch, choose **Preview study summary**, **Download summary HTML**, or **Download summary JSON**. Generate the assignment schedule first if you edited its fields. The report includes the generated plan's aggregate coverage, imported/included/excluded counts, all three analysis settings, condition results, paired differences with denominators, all 18 order/rotation cells, and interpretation limits. Reports can be created even when all imported recordings are invalid or excluded; unavailable results remain explicitly missing.
+After importing a review batch, choose **Preview study summary**, **Download summary HTML**, or **Download summary JSON**. Generate the assignment schedule first if you edited its fields. The report includes the generated plan's aggregate coverage, imported/included/excluded counts, all three analysis settings, condition results, paired differences with denominators, submitted rating distributions and matched directions, all 18 order/rotation cells, and interpretation limits. Reports can be created even when all imported recordings are invalid or excluded; unavailable results remain explicitly missing.
 
-The HTML is self-contained, has no scripts or external assets, and works offline. Open the downloaded file in a browser and use **Print** to print or save as PDF. The print stylesheet uses US Letter with separate pages for context/coverage, outcomes, and balance. The sandboxed preview is for reading; use the downloaded HTML for printing. Browser print settings can change pagination.
+The HTML is self-contained, has no scripts or external assets, and works offline. Open the downloaded file in a browser and use **Print** to print or save as PDF. The print stylesheet uses US Letter with separate pages for context/coverage, outcomes, balance, and post-block ratings. The sandboxed preview is for reading; use the downloaded HTML for printing. Browser print settings can change pagination.
 
 HTML and JSON share a single timestamped snapshot until you change the workspace. Changes to the plan, imported batch, inclusion decisions, notes, or filters discard the preview and cached snapshot. Closing a preview preserves the current snapshot. Creating or downloading reports does not change recordings, inclusion choices, workspace contents, or unsaved status.
 
-The JSON uses `searchassist-study-summary`, summary version 1, application version 0.7, and explicit units: success proportions (0–1), success differences in percentage points, and active times/differences in milliseconds. HTML converts time to seconds and success to percentages. Both use the existing calculations without adding significance tests, confidence intervals, or winner labels. A missing result is `null` in JSON and “Not available” in HTML; a genuine zero remains zero.
+The JSON uses `searchassist-study-summary`, summary version 2, application version 0.8, and explicit units: success proportions (0–1), success differences in percentage points, active times/differences in milliseconds, and ordinal rating responses from 1 to 7. HTML converts time to seconds and success to percentages. Both use the existing calculations without adding significance tests, confidence intervals, or winner labels. A missing result is `null` in JSON and “Not available” in HTML; a genuine zero remains zero.
 
 These aggregate reports omit participant codes, source file names, plan prefixes, recorded queries, participant observations, reviewer notes, and individual result rows. Small-group counts can still identify people in context; this is not a guarantee of anonymity. Keep the workspace, original recordings, inclusion log, and detailed CSVs for the underlying audit. Summary JSON is an output report, not a restorable workspace file. The recording schema stays 0.2 / 2 and workspace project version stays 2 (versions 1 and 2 remain readable).
+
+
+## Post-block ratings
+
+The workspace summarizes the three separate seven-point questions already collected after each condition block. Confidence ranges from **Not at all confident** to **Very confident**; trust from **Not at all** to **Very much**; ease from **Very difficult** to **Very easy**. These are custom ordinal questions, not a validated usability scale. They are not combined into a score.
+
+The distribution table has one row per condition and question (nine rows). It reports submitted and missing counts, the median, and counts for every response from 1 to 7. Missing means an included recording has no submitted rating for that condition; unfinished drafts never count. The median is null/blank when no responses exist. With an even number, it averages the two middle responses and can fall between two scale points. No means, imputation, or interval-scale assumptions are added.
+
+The matched table has nine rows for the three condition comparisons and questions. It requires both submitted ratings from the same included participant, counts matched and unpaired participants, and shows how many reported a higher, same, or lower rating in the comparison condition. Higher + same + lower equals matched. B − A compares Fuzzy with Exact; C is SearchAssist. These ordinal directions do not measure effect size or significance, identify a winner, or establish a causal effect. Condition rows and comparison pairs can contain different participants when incomplete sessions are included.
+
+Existing inclusion choices, duplicate resolution, and incomplete-session inclusion apply. The interruption and successful-only timing settings do not affect ratings. Both rating CSVs are aggregate reports with nine rows, the rating-definition version, scale anchors, and the incomplete-session setting. They omit codes, filenames, queries, observations, and reviewer notes. They can be downloaded for an imported batch with no included recordings, showing zero counts and missing medians; an empty workspace disables their buttons.
+
+The printable summary now has a fourth section for ratings. Summary JSON version 2 adds `ratingScale`, `ratings`, `pairedRatings`, and a rating unit; previous fields keep their meanings. Old downloaded version-1 reports remain standalone outputs. Summary files are not imported as workspaces. Recording schema 0.2 / 2 and workspace project version 2 are unchanged, and reopening existing workspaces recomputes rating results from submitted ratings.

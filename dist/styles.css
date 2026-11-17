@@ -18,3 +18,6 @@
 
 /* v0.6 study coverage */
 .coverage-details{margin:18px 0;border:1px solid var(--line);border-radius:6px;padding:14px}.coverage-details>summary{font-size:13px;font-weight:600;cursor:pointer;color:var(--deep)}.coverage-details[open]>summary{margin-bottom:12px}.coverage-details>.small-print{margin:12px 0}.coverage-details .table-scroll{max-height:440px}#coverage-status{font-size:12px;line-height:1.7;margin:16px 0}#coverage-progress .data-table,#coverage-checks .data-table{min-width:680px}#coverage-balance .data-table{min-width:700px}.coverage-details summary:focus-visible{outline:2px solid var(--green);outline-offset:4px}
+
+/* v0.8 submitted post-block ratings */
+#ratings-table .data-table{min-width:920px}#paired-ratings-table .data-table{min-width:680px}#ratings-status{font-size:12px;line-height:1.7;margin:16px 0}#ratings-table td:nth-child(n+3),#paired-ratings-table td:nth-child(n+3){font-variant-numeric:tabular-nums}

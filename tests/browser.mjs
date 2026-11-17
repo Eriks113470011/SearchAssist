@@ -21,14 +21,14 @@ let browser;
 const errors = [];
 const upload = (name, text) => ({name, mimeType:'application/json', buffer:Buffer.from(text)});
 const at = ms => ({wall:Date.UTC(2026,10,7)+ms,mono:ms});
-function fixture(participant, count = 12, {durations={A:500,B:500,C:500},fail=[],interrupt=[],order='ABC',setRotation=0}={}) {
+function fixture(participant, count = 12, {durations={A:500,B:500,C:500},fail=[],interrupt=[],order='ABC',setRotation=0,ratings={A:{confidence:4,trust:5,ease:6},B:{confidence:4,trust:5,ease:6},C:{confidence:4,trust:5,ease:6}},submitLast=true}={}) {
   const s = study.createSession({participant,order,setRotation},at(0));
   let ms=0;
   for (let i=0;i<count;i++) {
     study.startTrial(s,at(ms));const task=study.taskAt(s),condition=s.order[Math.floor(i/4)],key=`${condition}:${task.type}`,d=durations[condition];
     if(interrupt.includes(key)){study.pauseTrial(s,'manual',at(ms+d/2));study.resumeTrial(s,at(ms+d/2+1000));ms+=1000;}
     ms+=d;study.completeTrial(s,fail.includes(key)?null:task.target,at(ms));
-    if(s.phase==='ratings')study.addRatings(s,{confidence:4,trust:5,ease:6,notes:''},at(ms));
+    if(s.phase==='ratings'){const values={...ratings[condition],notes:'PRIVATE_RATING_OBSERVATION'};if(i===count-1&&!submitLast)s.ratingDraft=values;else study.addRatings(s,values,at(ms));}
   }
   return JSON.stringify(study.snapshot(s,at(ms)));
 }
@@ -278,7 +278,7 @@ try {
   await coveragePage.locator('#preview-summary').click();
   const preview=coveragePage.frameLocator('#summary-frame');
   await preview.locator('h1').filter({hasText:'Study summary'}).waitFor();
-  assert.equal(await preview.locator('tbody tr').count(),35);
+  assert.equal(await preview.locator('tbody tr').count(),53);
   assert.equal(await coveragePage.locator('#summary-frame').getAttribute('sandbox'),'');
   assert.equal(await coveragePage.locator('#preview-summary').getAttribute('aria-expanded'),'true');
   const reportHtml=await downloaded(coveragePage,'#download-summary-html');
@@ -331,7 +331,7 @@ try {
   const reportPage=await context.newPage();reportPage.on('pageerror',error=>errors.push(error.message));
   const requests=[];reportPage.on('request',request=>requests.push(request.url()));
   await reportPage.setContent(reportHtml,{waitUntil:'load'});
-  assert.equal(await reportPage.locator('table').count(),5);assert.equal(await reportPage.getByRole('region').count(),5);assert.equal(await reportPage.locator('section').count(),3);
+  assert.equal(await reportPage.locator('table').count(),7);assert.equal(await reportPage.getByRole('region').count(),7);assert.equal(await reportPage.locator('section').count(),4);
   assert.deepEqual(requests,[],'Standalone report requested an external resource');
   await reportPage.screenshot({path:'test-results/summary-desktop.png',fullPage:true});
   await reportPage.pdf({path:'test-results/study-summary.pdf',printBackground:true,preferCSSPageSize:true});
@@ -339,9 +339,60 @@ try {
   assert.ok(await reportPage.locator('.table-wrap').first().evaluate(node=>node.scrollWidth>node.clientWidth));
   await reportPage.screenshot({path:'test-results/summary-mobile.png',fullPage:true});
   assert.equal(await reportPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Report layout overflows on mobile');
+  const ratingsPage=await context.newPage();ratingsPage.on('pageerror',error=>errors.push(error.message));
+  await ratingsPage.goto(url+'/#workspace');await visible(ratingsPage,'#ratings-table');
+  assert.equal(await ratingsPage.locator('#download-ratings').isEnabled(),false);
+  assert.equal(await ratingsPage.locator('#download-paired-ratings').isEnabled(),false);
+  assert.equal(await ratingsPage.locator('#ratings-table tbody tr').count(),9);
+  assert.equal(await ratingsPage.locator('#ratings-table tbody tr').first().locator('td').nth(4).innerText(),'—');
+  const customRatings={A:{confidence:2,trust:4,ease:6},B:{confidence:6,trust:4,ease:2},C:{confidence:4,trust:7,ease:1}};
+  await ratingsPage.locator('#review-files').setInputFiles([
+    upload('PRIVATE_RATING_FILE.json',fixture('RATE_001',12,{ratings:customRatings})),
+    upload('pending-rating.json',fixture('RATE_002',8,{ratings:customRatings,submitLast:false})),
+    upload('PRIVATE_INVALID.json','{')
+  ]);
+  await ratingsPage.locator('#review-status').filter({hasText:'2 valid and 1 invalid'}).waitFor();
+  const cells=()=>ratingsPage.locator('#ratings-table tbody tr').first().locator('td');
+  assert.equal(await cells().nth(2).innerText(),'1');assert.equal(await cells().nth(4).innerText(),'2');assert.equal(await cells().nth(6).innerText(),'1');
+  const direction=()=>ratingsPage.locator('#paired-ratings-table tbody tr').first().locator('td');
+  assert.equal(await direction().nth(2).innerText(),'1');assert.equal(await direction().nth(4).innerText(),'1');
+  assert.equal(await ratingsPage.locator('#paired-ratings-table tbody tr').nth(1).locator('td').nth(5).innerText(),'1');
+  assert.equal(await ratingsPage.locator('#paired-ratings-table tbody tr').nth(2).locator('td').nth(6).innerText(),'1');
+  await ratingsPage.locator('#include-partial').check();
+  assert.equal(await cells().nth(2).innerText(),'2');assert.equal(await direction().nth(3).innerText(),'1');
+  const bConfidence=ratingsPage.locator('#ratings-table tbody tr').nth(3).locator('td');
+  assert.equal(await bConfidence.nth(2).innerText(),'1');assert.equal(await bConfidence.nth(3).innerText(),'1');
+  const ratingsCsv=await downloaded(ratingsPage,'#download-ratings'),matchedCsv=await downloaded(ratingsPage,'#download-paired-ratings');
+  assert.equal(ratingsCsv.split('\r\n').length,10);assert.equal(matchedCsv.split('\r\n').length,10);
+  for(const text of [ratingsCsv,matchedCsv])for(const secret of ['RATE_001','PRIVATE_RATING_FILE','PRIVATE_RATING_OBSERVATION'])assert.ok(!text.includes(secret));
+  await ratingsPage.locator('#exclude-interrupted').check();await ratingsPage.locator('#paired-successful-only').uncheck();
+  assert.equal(await downloaded(ratingsPage,'#download-ratings'),ratingsCsv);
+  assert.equal(await downloaded(ratingsPage,'#download-paired-ratings'),matchedCsv);
+  const ratingsProject=await downloaded(ratingsPage,'#save-project');
+  assert.equal(await ratingsPage.locator('#project-dirty').innerText(),'No unsaved workspace changes.');
+  const ratingReport=JSON.parse(await downloaded(ratingsPage,'#download-summary-json'));
+  assert.equal(ratingReport.summaryVersion,2);assert.equal(ratingReport.ratings[0].submittedRatings,2);
+  assert.equal(ratingReport.pairedRatings[0].pairedParticipants,1);assert.equal(ratingReport.pairedRatings[0].higher,1);
+  assert.equal(await ratingsPage.locator('#project-dirty').innerText(),'No unsaved workspace changes.');
+  await ratingsPage.reload();await visible(ratingsPage,'#open-project');
+  await ratingsPage.locator('#open-project').setInputFiles(upload('ratings-workspace.json',ratingsProject));
+  await ratingsPage.locator('#project-status').filter({hasText:'Workspace opened'}).waitFor();
+  assert.equal(await downloaded(ratingsPage,'#download-ratings'),ratingsCsv);assert.equal(await downloaded(ratingsPage,'#download-paired-ratings'),matchedCsv);
+  await ratingsPage.locator('[data-review-id="0"]').uncheck();
+  assert.equal(await direction().nth(2).innerText(),'0');assert.equal(await bConfidence.nth(4).innerText(),'—');
+  await ratingsPage.locator('#preview-summary').click();
+  await ratingsPage.frameLocator('#summary-frame').locator('h2').filter({hasText:'Confidence, trust, and ease'}).waitFor();
+  await ratingsPage.locator('#close-summary').click();
+  await ratingsPage.locator('[data-review-id="0"]').check();
+  await ratingsPage.screenshot({path:'test-results/ratings-desktop.png',fullPage:true});
+  await ratingsPage.setViewportSize({width:390,height:844});
+  await ratingsPage.screenshot({path:'test-results/ratings-mobile.png',fullPage:true});
+  assert.equal(await ratingsPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Ratings workspace overflows on mobile');
+  await ratingsPage.locator('#clear-review').click();
+  assert.equal(await ratingsPage.locator('#download-ratings').isEnabled(),false);assert.equal(await ratingsPage.locator('#download-paired-ratings').isEnabled(),false);
   assert.equal((await checkSession(fresh)).participant,'P007');
   assert.deepEqual(errors,[]);
-  console.log('Browser checks passed: study/workspace/paired regressions, coverage summaries, assignment mismatches, unplanned codes, duplicate/partial decisions, all 18 balance cells, coverage CSVs, plan regeneration, workspace round-trips, aggregate report preview/downloads/privacy/invalidation, offline print PDF, recording isolation, and desktop/mobile layout.');
+  console.log('Browser checks passed: study/workspace/paired regressions, coverage summaries, assignment mismatches, unplanned codes, duplicate/partial decisions, all 18 balance cells, coverage CSVs, plan regeneration, workspace round-trips, aggregate report preview/downloads/privacy/invalidation, submitted rating distributions and matched directions, rating CSVs and workspace round-trips, offline print PDF, recording isolation, and desktop/mobile layout.');
 } finally {
   if(browser)await browser.close();
   await new Promise(done=>server.close(done));

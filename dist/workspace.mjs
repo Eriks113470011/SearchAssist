@@ -37,6 +37,29 @@ export function reviewFiles(files) {
   return entries;
 }
 
+// Revalidate a combined batch without resuming recordings or carrying stale duplicate flags.
+// Invalid source bytes were discarded at import; preserve only their existing error messages.
+export function reviewBatchBytes(entries) {
+  return entries.reduce((n,e)=>n+(e.session ? new TextEncoder().encode(JSON.stringify(e.session)).length : 0),0);
+}
+export function appendReview(entries, files, {choices={},notes={}}={}) {
+  if (!Array.isArray(entries) || entries.some((e,i)=>e.id!==i)) throw new Error('The existing review has inconsistent file indices.');
+  if (!Array.isArray(files) || !files.length) throw new Error('Choose at least one session file to add.');
+  const combined=reviewFiles([...entries.map(e=>({name:e.name,text:e.session ? JSON.stringify(e.session) : null})),...files]);
+  for (let i=0;i<entries.length;i++) {
+    if(entries[i].session && !combined[i].session)throw new Error(`Existing recording ${i+1} is invalid. The review is unchanged.`);
+    if(!entries[i].session)combined[i].error=entries[i].error;
+  }
+  return {entries:combined,choices:Object.fromEntries(entries.filter(e=>Object.hasOwn(choices,e.id)).map(e=>[e.id,choices[e.id]])),
+    notes:Object.fromEntries(entries.filter(e=>Object.hasOwn(notes,e.id)).map(e=>[e.id,notes[e.id]]))};
+}
+// Undo removes only the latest added suffix. Keep decisions made since the addition on older files.
+export function undoReviewAddition(previousEntries, {choices={},notes={}}={}) {
+  const ids=new Set(previousEntries.map(e=>String(e.id)));
+  return {entries:previousEntries,choices:Object.fromEntries(Object.entries(choices).filter(([id])=>ids.has(id))),
+    notes:Object.fromEntries(Object.entries(notes).filter(([id])=>ids.has(id)))};
+}
+
 export function selectSessions(entries, {includePartial = false, choices = {}} = {}) {
   // A duplicate participant is excluded unless exactly one of its files is selected.
   const selected = entries.filter(e => e.session && (includePartial || e.session.phase === 'complete') && choices[e.id] !== false && (!e.duplicate || choices[e.id] === true));

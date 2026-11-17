@@ -24,6 +24,7 @@ Open http://localhost:8080. Core functionality works without external services. 
 - A guided within-subject evaluation with all six condition orders, three task-set rotations, twelve trials, saved post-block rating drafts, trial CSV, condition-summary CSV, and a restorable session JSON event log.
 - Pause/resume and reload recovery that preserve the current query, suggestion undo, completed tasks, and recorded active time. Restored sessions require an explicit Resume.
 - Reproducible aggregate survey-analysis script, source notes, and an evaluation protocol.
+- Incremental review imports that preserve earlier choices, notes, and settings, recheck duplicate codes, and support undo of the latest addition.
 - A facilitator workspace with balanced participant assignments, batch session review, explicit duplicate resolution, timing exclusions, and participant-condition and inclusion-log CSV exports.
 - Portable workspace JSON files that preserve the generated assignment plan, full review recordings, choices, filters, and optional per-file decision notes for another visit or device.
 - Within-participant comparisons for B − A, C − A, and C − B, with matched task-type timing, participant counts, and paired participant/summary CSV exports.
@@ -39,7 +40,7 @@ Open http://localhost:8080. Core functionality works without external services. 
 | `dist/styles.css` | Responsive visual design |
 | `dist/app.mjs` | Views, result rendering, recovery, and local study workflow |
 | `dist/study.mjs` | Versioned session state, timing, validation, restoration, summaries, and CSV exports |
-| `dist/workspace.mjs` | Assignment schedules, read-only batch validation, inclusion rules, and descriptive comparisons |
+| `dist/workspace.mjs` | Assignment schedules, read-only batch validation, additions/undo, inclusion rules, and descriptive comparisons |
 | `dist/workspace-view.mjs` | Facilitator workspace interface and local file controls |
 | `dist/review-project.mjs` | Versioned workspace JSON validation, saving, and reopening |
 | `dist/ratings.mjs` | Submitted ordinal rating distributions, medians, matched directions, and aggregate CSVs |
@@ -51,6 +52,7 @@ Open http://localhost:8080. Core functionality works without external services. 
 | `tests/search.test.mjs` | Matching, conditions, evidence, filters, and study-target regression checks |
 | `tests/study.test.mjs` | Timing, query recording, all 18 study assignments, restore validation, and exports |
 | `tests/workspace.test.mjs` | Balanced schedules, duplicates, partial sessions, timing exclusions, and review exports |
+| `tests/review-addition.test.mjs` | Additive imports, preserved decisions, duplicate rechecks, limits, undo, and workspace round-trips |
 | `tests/review-project.test.mjs` | Project round-trips, validation, recording isolation, decision notes, and limits |
 | `tests/ratings.test.mjs` | Submitted versus draft ratings, ordinal distributions, matched sets, inclusion rules, and exports |
 | `tests/paired.test.mjs` | Comparison signs, full-block eligibility, matched timing, equal weighting, missing data, and CSV measurements |
@@ -90,13 +92,13 @@ To restore, open **Run a study**, choose a v0.2 session JSON file under 1 MB, an
 
 ## Status
 
-Version 0.8 adds submitted post-block rating analysis and includes it in the aggregate study summary. The recording schema remains v0.2 with the same dataset, tasks, engine, and timing definition, so v0.2 recordings remain restorable and reviewable. The application version shown in navigation is independent of the recording-schema and workspace-project versions. See `docs/RELEASE-v0.8.md` for workflow and verification. Accessibility features require screen-reader and physical-device testing. Real participant evaluation, task-difficulty calibration, formal comprehension measures, and a validated usability instrument remain future work. `docs/EVALUATION.md` explains the design limits.
+Version 0.9 adds incremental review imports and undo of the latest addition while preserving earlier decisions. The recording schema remains v0.2 with the same dataset, tasks, engine, and timing definition, so v0.2 recordings remain restorable and reviewable. The application version shown in navigation is independent of the recording-schema and workspace-project versions. See `docs/RELEASE-v0.9.md` for workflow and verification. Accessibility features require screen-reader and physical-device testing. Real participant evaluation, task-difficulty calibration, formal comprehension measures, and a validated usability instrument remain future work. `docs/EVALUATION.md` explains the design limits.
 
 ## Facilitator workspace
 
 Open **Study workspace** to generate 1–180 numbered assignments. Every 18 consecutive assignments cover all six condition orders crossed with three task rotations once. Start numbering where the previous schedule stopped to continue its sequence. This is deterministic balancing; it is not randomization, a recruitment target, or a power calculation. Download the schedule to retain it. **Set up session** fills the normal study form and still requires the recording acknowledgement; export and clear an existing session before setting up another participant.
 
-Review up to 60 session JSON files at once, totaling at most 10 MB and at most 1 MB per file. A new batch replaces the current in-memory review. Invalid files are isolated with per-file messages. Only completed sessions are included by default. All files sharing a participant code (case-insensitive) are excluded until exactly one is selected. Import all candidate files in one batch when resolving duplicate exports. Reloading clears the review; source files and the current study recording are untouched.
+Review up to 60 session JSON files at once, totaling at most 10 MB and at most 1 MB per file. Use **Replace review with session JSON files** to replace the current batch, or **Add session JSON files** to extend it without losing earlier choices and notes. Invalid files are isolated with per-file messages. Only completed sessions are included by default. All files sharing a participant code (case-insensitive) are excluded until exactly one is selected. Duplicate checks always use the whole current review, including any files added later. Reloading clears the review; source files and the current study recording are untouched.
 
 The optional timing filter excludes paused, resumed, or restored trials from timing means only; success denominators still include those trials. Choose analysis rules before collecting data. Comparisons show equally weighted participant means, with contributing participant counts per condition. When incomplete sessions are included, condition groups can contain different people; the display does not perform paired or inferential tests. Empty means stay blank in CSV.
 
@@ -104,7 +106,7 @@ Download the participant-condition CSV for one row per included recording and co
 
 ## Save and reopen a workspace
 
-Choose **Download workspace JSON** in Study workspace to keep a generated assignment plan, imported recordings, duplicate decisions, inclusion choices, both analysis filters, and decision notes. Generate the assignment schedule before saving edited plan fields. The unsaved-changes message tracks workspace edits; CSV downloads do not mark the workspace as saved. Nothing is saved automatically, and reload still clears the in-memory workspace.
+Choose **Download workspace JSON** in Study workspace to keep a generated assignment plan, imported recordings, duplicate decisions, inclusion choices, all three analysis settings, and decision notes. Generate the assignment schedule before saving edited plan fields. The unsaved-changes message tracks workspace edits; CSV downloads do not mark the workspace as saved. Nothing is saved automatically, and reload still clears the in-memory workspace.
 
 On a later visit or another device, choose the saved file through **Open workspace JSON**. Validating the entire project happens before a replacement prompt or any state change. Damaged or unsupported projects leave the current workspace intact. Replacing an existing review or unsaved plan requires confirmation. Individual session JSON belongs in **Review session exports**, while workspace JSON belongs in **Open workspace JSON**. Neither opening nor reviewing projects resumes or replaces the active study recording.
 
@@ -147,7 +149,7 @@ The HTML is self-contained, has no scripts or external assets, and works offline
 
 HTML and JSON share a single timestamped snapshot until you change the workspace. Changes to the plan, imported batch, inclusion decisions, notes, or filters discard the preview and cached snapshot. Closing a preview preserves the current snapshot. Creating or downloading reports does not change recordings, inclusion choices, workspace contents, or unsaved status.
 
-The JSON uses `searchassist-study-summary`, summary version 2, application version 0.8, and explicit units: success proportions (0–1), success differences in percentage points, active times/differences in milliseconds, and ordinal rating responses from 1 to 7. HTML converts time to seconds and success to percentages. Both use the existing calculations without adding significance tests, confidence intervals, or winner labels. A missing result is `null` in JSON and “Not available” in HTML; a genuine zero remains zero.
+The JSON uses `searchassist-study-summary`, summary version 2, application version 0.9, and explicit units: success proportions (0–1), success differences in percentage points, active times/differences in milliseconds, and ordinal rating responses from 1 to 7. HTML converts time to seconds and success to percentages. Both use the existing calculations without adding significance tests, confidence intervals, or winner labels. A missing result is `null` in JSON and “Not available” in HTML; a genuine zero remains zero.
 
 These aggregate reports omit participant codes, source file names, plan prefixes, recorded queries, participant observations, reviewer notes, and individual result rows. Small-group counts can still identify people in context; this is not a guarantee of anonymity. Keep the workspace, original recordings, inclusion log, and detailed CSVs for the underlying audit. Summary JSON is an output report, not a restorable workspace file. The recording schema stays 0.2 / 2 and workspace project version stays 2 (versions 1 and 2 remain readable).
 
@@ -163,3 +165,16 @@ The matched table has nine rows for the three condition comparisons and question
 Existing inclusion choices, duplicate resolution, and incomplete-session inclusion apply. The interruption and successful-only timing settings do not affect ratings. Both rating CSVs are aggregate reports with nine rows, the rating-definition version, scale anchors, and the incomplete-session setting. They omit codes, filenames, queries, observations, and reviewer notes. They can be downloaded for an imported batch with no included recordings, showing zero counts and missing medians; an empty workspace disables their buttons.
 
 The printable summary now has a fourth section for ratings. Summary JSON version 2 adds `ratingScale`, `ratings`, `pairedRatings`, and a rating unit; previous fields keep their meanings. Old downloaded version-1 reports remain standalone outputs. Summary files are not imported as workspaces. Recording schema 0.2 / 2 and workspace project version 2 are unchanged, and reopening existing workspaces recomputes rating results from submitted ratings.
+
+
+## Add recordings to a review
+
+Choose **Add session JSON files** to extend the current review, including an initially empty one. Existing file positions, explicit inclusion/exclusion choices, decision notes, the generated assignment plan, and analysis settings are kept. New candidates are appended, validated, and checked for repeated codes across the entire review. Invalid files are isolated as before. Adding the same export again creates another candidate; the app does not silently discard it.
+
+A newly repeated code that was previously included by default becomes excluded until you explicitly choose one candidate. An earlier explicit selection is retained, while a new duplicate starts unselected. Earlier unresolved conflicts stay unresolved. Code matching remains case-insensitive. Check the inclusion table before reporting; additions can therefore change included counts, coverage, task comparisons, and ratings. Save the workspace to keep the combined review.
+
+**Undo latest addition** removes only the most recent added group and its notes. Choices and notes you edited on earlier files are kept, along with the current plan and settings. Duplicate flags return to the previous group structure, so default inclusion can change again when a repeated code becomes unique. Only one addition can be undone. A later addition becomes the new undo target; undo does not walk backward through earlier additions. Undo is available only during this visit and resets when you successfully reopen, replace, or clear a review. Downloading reports or saving a workspace does not reset it. The undo history is not stored in workspace JSON.
+
+The combined review must stay within 60 files and 10 MB. During an addition, size checks count the retained valid recording JSON plus incoming file bytes; invalid source contents from earlier imports are already discarded and are not reconstructed. Each incoming recording must still be at most 1 MB to validate. File-count, combined-size, or read failures leave the existing review and undo target intact. An oversized individual file can be isolated as invalid when the combined batch remains within its limits. Clearing, undoing, or starting a newer import cancels an older pending import's eventual state update.
+
+Additions and undo invalidate the summary preview and mark the workspace unsaved. They never resume or replace the active study recording. The recording schema, workspace project version 2, summary version 2, and all analysis definitions are unchanged.

@@ -139,3 +139,12 @@ Confidence, trust, and ease remain separate custom seven-point ordinal questions
 Matched rating directions compare the same participant's submitted ratings in both conditions. Higher/same/lower counts sum to the matched count and refer to the comparison condition. Unpaired counts cover included recordings missing either submitted rating. Retain separate denominators for each condition and pair; incomplete recordings can contribute different participant sets. These are descriptive ordinal directions, not effect sizes, significance tests, winner labels, or causal conclusions.
 
 Inclusion choices, duplicate resolution, and incomplete-session inclusion apply to ratings. Trial interruption exclusion and successful-only paired timing do not. Aggregate rating CSVs include the scale anchors, post-block-ratings-v1 definition, and incomplete-session setting. They omit individual codes, filenames, queries, and participant/reviewer notes. Summary report version 2 includes the same results, scale definitions, and a printable ratings section. Workspace and recording schemas are unchanged; retain the underlying workspace and inclusion audit.
+
+
+## Incremental review batches (v0.9)
+
+Add later session exports to an existing review when they belong to the same study batch. Retain the same assignment plan and analysis rules. Adding files preserves earlier explicit decisions and notes but recomputes duplicate groups across the combined review. A previously default-included recording becomes unselected if its code is newly repeated; an earlier explicit selection remains selected. Resolve the candidates according to the study log before interpreting reports. Identical exports are not silently deduplicated.
+
+Undo latest addition removes that added group while keeping subsequent choices and notes on earlier files, plus the current plan and settings. Default inclusion follows the restored duplicate structure. Undo is a one-step, current-visit control and is not a persistent audit history. Save workspace JSON and retain original recordings and inclusion logs to document review decisions. Successful replacement, reopening, or clearing resets undo; saving and report downloads do not.
+
+The combined 60-file / 10 MB limit still applies. Invalid individual files remain isolated; combined-limit and read failures leave existing review state intact. Report previews are discarded after additions or undo so stale results are not presented as current. No active recording, analysis definition, study task, dataset, timing rule, or data schema changes.

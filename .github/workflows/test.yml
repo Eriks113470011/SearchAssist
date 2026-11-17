@@ -32,6 +32,8 @@ jobs:
       - if: env.SEARCHASSIST_CHROMIUM_PATH == ''
         run: npx playwright install --with-deps chromium
       - run: npm run test:browser
+      - name: Verify downloaded ZIP bundles independently
+        run: python3 tests/verify-bundles.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -24,6 +24,8 @@ Open http://localhost:8080. Core functionality works without external services. 
 - A guided within-subject evaluation with all six condition orders, three task-set rotations, twelve trials, saved post-block rating drafts, trial CSV, condition-summary CSV, and a restorable session JSON event log.
 - Pause/resume and reload recovery that preserve the current query, suggestion undo, completed tasks, and recorded active time. Restored sessions require an explicit Resume.
 - Reproducible aggregate survey-analysis script, source notes, and an evaluation protocol.
+- A review ZIP bundle with aggregate reports by default, optional full workspace/individual CSVs, and a SHA-256 integrity manifest.
+- A synthetic fixture generator and acceptance guide for checking the complete workflow.
 - Incremental review imports that preserve earlier choices, notes, and settings, recheck duplicate codes, and support undo of the latest addition.
 - A facilitator workspace with balanced participant assignments, batch session review, explicit duplicate resolution, timing exclusions, and participant-condition and inclusion-log CSV exports.
 - Portable workspace JSON files that preserve the generated assignment plan, full review recordings, choices, filters, and optional per-file decision notes for another visit or device.
@@ -42,6 +44,8 @@ Open http://localhost:8080. Core functionality works without external services. 
 | `dist/study.mjs` | Versioned session state, timing, validation, restoration, summaries, and CSV exports |
 | `dist/workspace.mjs` | Assignment schedules, read-only batch validation, additions/undo, inclusion rules, and descriptive comparisons |
 | `dist/workspace-view.mjs` | Facilitator workspace interface and local file controls |
+| `dist/review-bundle.mjs` | Snapshot export, aggregate/full bundle modes, file manifest, and SHA-256 digests |
+| `dist/zip.mjs` | Bounded standard stored ZIP entries with CRC32 and fixed safe paths |
 | `dist/review-project.mjs` | Versioned workspace JSON validation, saving, and reopening |
 | `dist/ratings.mjs` | Submitted ordinal rating distributions, medians, matched directions, and aggregate CSVs |
 | `dist/paired.mjs` | Matched participant comparisons, timing eligibility, differences, and paired CSVs |
@@ -52,6 +56,8 @@ Open http://localhost:8080. Core functionality works without external services. 
 | `tests/search.test.mjs` | Matching, conditions, evidence, filters, and study-target regression checks |
 | `tests/study.test.mjs` | Timing, query recording, all 18 study assignments, restore validation, and exports |
 | `tests/workspace.test.mjs` | Balanced schedules, duplicates, partial sessions, timing exclusions, and review exports |
+| `tests/review-bundle.test.mjs` | ZIP structure, privacy omissions, snapshots, backups, digests, and error paths |
+| `tests/verify-bundles.py` | Independent ZIP/CRC/SHA and CSV/JSON verification of browser downloads in CI |
 | `tests/review-addition.test.mjs` | Additive imports, preserved decisions, duplicate rechecks, limits, undo, and workspace round-trips |
 | `tests/review-project.test.mjs` | Project round-trips, validation, recording isolation, decision notes, and limits |
 | `tests/ratings.test.mjs` | Submitted versus draft ratings, ordinal distributions, matched sets, inclusion rules, and exports |
@@ -62,6 +68,8 @@ Open http://localhost:8080. Core functionality works without external services. 
 | `docs/survey-summary.json` | Aggregated counts, denominators, source fingerprint, and quality notes |
 | `docs/analyze_survey.py` | Workbook analysis using openpyxl; raw text is not exported |
 | `docs/RESEARCH.md` | Survey findings and project-method update |
+| `scripts/generate-qa-fixtures.mjs` | Creates isolated synthetic clean and edge-case session files |
+| `docs/ACCEPTANCE-v1.0.md` | Expected synthetic results and manual release checks |
 | `docs/EVALUATION.md` | Study protocol, measurements, and interpretation limits |
 
 Run all automated tests with `npm test` (Node.js 22 or later). Run module syntax checks with `npm run check`. Neither command needs package installation.
@@ -92,7 +100,7 @@ To restore, open **Run a study**, choose a v0.2 session JSON file under 1 MB, an
 
 ## Status
 
-Version 0.9 adds incremental review imports and undo of the latest addition while preserving earlier decisions. The recording schema remains v0.2 with the same dataset, tasks, engine, and timing definition, so v0.2 recordings remain restorable and reviewable. The application version shown in navigation is independent of the recording-schema and workspace-project versions. See `docs/RELEASE-v0.9.md` for workflow and verification. Accessibility features require screen-reader and physical-device testing. Real participant evaluation, task-difficulty calibration, formal comprehension measures, and a validated usability instrument remain future work. `docs/EVALUATION.md` explains the design limits.
+Version 1.0 adds review ZIP bundles with integrity manifests and a reproducible synthetic acceptance workflow. The recording schema remains v0.2 with the same dataset, tasks, engine, and timing definition, so v0.2 recordings remain restorable and reviewable. The application version shown in navigation is independent of the recording-schema and workspace-project versions. See `docs/RELEASE-v1.0.md` for workflow and verification. Accessibility features require screen-reader and physical-device testing. Real participant evaluation, task-difficulty calibration, formal comprehension measures, and a validated usability instrument remain future work. `docs/EVALUATION.md` explains the design limits.
 
 ## Facilitator workspace
 
@@ -149,7 +157,7 @@ The HTML is self-contained, has no scripts or external assets, and works offline
 
 HTML and JSON share a single timestamped snapshot until you change the workspace. Changes to the plan, imported batch, inclusion decisions, notes, or filters discard the preview and cached snapshot. Closing a preview preserves the current snapshot. Creating or downloading reports does not change recordings, inclusion choices, workspace contents, or unsaved status.
 
-The JSON uses `searchassist-study-summary`, summary version 2, application version 0.9, and explicit units: success proportions (0–1), success differences in percentage points, active times/differences in milliseconds, and ordinal rating responses from 1 to 7. HTML converts time to seconds and success to percentages. Both use the existing calculations without adding significance tests, confidence intervals, or winner labels. A missing result is `null` in JSON and “Not available” in HTML; a genuine zero remains zero.
+The JSON uses `searchassist-study-summary`, summary version 2, application version 1.0, and explicit units: success proportions (0–1), success differences in percentage points, active times/differences in milliseconds, and ordinal rating responses from 1 to 7. HTML converts time to seconds and success to percentages. Both use the existing calculations without adding significance tests, confidence intervals, or winner labels. A missing result is `null` in JSON and “Not available” in HTML; a genuine zero remains zero.
 
 These aggregate reports omit participant codes, source file names, plan prefixes, recorded queries, participant observations, reviewer notes, and individual result rows. Small-group counts can still identify people in context; this is not a guarantee of anonymity. Keep the workspace, original recordings, inclusion log, and detailed CSVs for the underlying audit. Summary JSON is an output report, not a restorable workspace file. The recording schema stays 0.2 / 2 and workspace project version stays 2 (versions 1 and 2 remain readable).
 
@@ -178,3 +186,18 @@ A newly repeated code that was previously included by default becomes excluded u
 The combined review must stay within 60 files and 10 MB. During an addition, size checks count the retained valid recording JSON plus incoming file bytes; invalid source contents from earlier imports are already discarded and are not reconstructed. Each incoming recording must still be at most 1 MB to validate. File-count, combined-size, or read failures leave the existing review and undo target intact. An oversized individual file can be isolated as invalid when the combined batch remains within its limits. Clearing, undoing, or starting a newer import cancels an older pending import's eventual state update.
 
 Additions and undo invalidate the summary preview and mark the workspace unsaved. They never resume or replace the active study recording. The recording schema, workspace project version 2, summary version 2, and all analysis definitions are unchanged.
+
+
+## Download a review bundle
+
+Choose **Download review bundle ZIP** after importing recordings and generating any edited assignment fields. By default the archive contains nine files: manifest, instructions, offline summary HTML/JSON, and aggregate condition, paired, rating-distribution, matched-rating, and balance CSVs. Extract it before opening the HTML. Bundle CSV times use milliseconds, success proportions use 0–1, success differences use percentage points, and ratings retain their 1–7 ordinal scale. HTML uses seconds and percentages. Analysis settings and units are recorded in the manifest and summary JSON. No-data values stay null/blank.
+
+The default bundle omits individual codes, filenames, plan prefixes, queries, observations, reviewer notes, and individual rows. It is not a restorable workspace backup. Small-group counts can still identify people in context. To include a backup, explicitly check **Include the workspace backup and participant-level CSVs**. The full archive normally adds seven files under individual/, including workspace.json with complete recordings and notes. Reopen the extracted workspace JSON through the existing file control. Participant-condition and paired-participant CSVs are omitted when there are no included recordings; the manifest records those omissions. Invalid files remain in the audit and workspace without their original invalid source bytes.
+
+Each bundle captures one read-only snapshot. HTML, JSON, CSVs, and the optional workspace share its UTC date. SHA-256 digests and UTF-8 byte sizes cover every payload; manifest.json excludes itself. Digests detect changes and do not prove authenticity. ZIP files are **not encrypted**. Keep full-data archives with study data. ZIP entries are stored without compression, use standard CRC32 checks, and are limited to 32 MB. No new runtime package installation is needed. Hashing requires HTTPS or localhost; errors leave individual downloads available. If workspace inputs change during preparation, the pending download is discarded so you can retry against current data.
+
+Bundle downloads preserve review decisions, notes, undo, and the unsaved indicator. Download workspace JSON separately to clear that indicator. Bundle format version is 1; recording, workspace, and summary schemas are unchanged.
+
+## Check version 1.0 locally
+
+Run `npm run fixtures:qa` to generate 18 clean synthetic sessions and three edge cases in `qa-fixtures/`. They are ignored by git and labelled QA-only. The generator refuses to overwrite existing files. Follow `docs/ACCEPTANCE-v1.0.md` for exact expected values, the correct plan prefix, duplicate/partial/invalid checks, bundle verification, workspace restoration, and print/device checks. Keep QA records separate from participant data. All 101 automated tests can pass without establishing participant effectiveness, task calibration, or accessibility conformance.

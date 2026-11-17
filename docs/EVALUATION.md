@@ -148,3 +148,10 @@ Add later session exports to an existing review when they belong to the same stu
 Undo latest addition removes that added group while keeping subsequent choices and notes on earlier files, plus the current plan and settings. Default inclusion follows the restored duplicate structure. Undo is a one-step, current-visit control and is not a persistent audit history. Save workspace JSON and retain original recordings and inclusion logs to document review decisions. Successful replacement, reopening, or clearing resets undo; saving and report downloads do not.
 
 The combined 60-file / 10 MB limit still applies. Invalid individual files remain isolated; combined-limit and read failures leave existing review state intact. Report previews are discarded after additions or undo so stale results are not presented as current. No active recording, analysis definition, study task, dataset, timing rule, or data schema changes.
+
+
+## Reproducible export and acceptance (v1.0)
+
+Review bundles capture the current plan, batch, inclusion decisions, and analysis settings in one timestamped snapshot. The default is aggregate only; an explicit option includes the restorable workspace and individual audit/results. Keep those full-data ZIPs with the original study data. SHA-256 manifest digests can identify changed payload files but are not signatures or proof of authorship. The ZIP is unencrypted and does not record undo history. Existing schemas and analysis definitions remain unchanged.
+
+Use docs/ACCEPTANCE-v1.0.md and the isolated synthetic fixtures before a pilot. Record actual outcomes and failures on target devices, keyboard/screen-reader workflows, and print settings. Passing synthetic functional checks is separate from evaluating participant performance, matching task difficulty, validating rating questions, or establishing causal effects. Do not pool QA fixtures with participant sessions.

@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
-import {readFile, mkdir} from 'node:fs/promises';
+import {readFile, writeFile, mkdir} from 'node:fs/promises';
 import {resolve, extname} from 'node:path';
 import {chromium} from 'playwright';
+import {readStoredFiles} from './zip-reader.mjs';
 import * as study from '../dist/study.mjs';
 
 // A temporary local server and synthetic fixtures keep browser QA independent of hosting or participant data.
@@ -37,6 +38,10 @@ async function downloaded(page, selector) {
   const download = await pending;
   assert.equal(await download.failure(),null);
   return readFile(await download.path(),'utf8');
+}
+async function downloadedBytes(page,selector) {
+  const pending=page.waitForEvent('download');await page.locator(selector).click();const download=await pending;
+  assert.equal(await download.failure(),null);return readFile(await download.path());
 }
 async function visible(page, selector) {await page.locator(selector).waitFor({state:'visible'});}
 async function checkSession(page) {
@@ -460,9 +465,61 @@ try {
   await additionPage.waitForFunction(()=>document.querySelector('#add-review-files').value==='');
   assert.equal(await additionPage.locator('#review-table tbody tr').count(),0);assert.equal(await additionPage.locator('#undo-addition').isEnabled(),false);
   assert.match(await additionPage.locator('#review-status').innerText(),/Review cleared/);
+  const bundlePage=await context.newPage();bundlePage.on('pageerror',error=>errors.push(error.message));
+  await bundlePage.goto(url+'/#workspace');await visible(bundlePage,'#download-bundle');
+  assert.equal(await bundlePage.locator('#download-bundle').isEnabled(),false);assert.equal(await bundlePage.locator('#bundle-individual').isChecked(),false);
+  await bundlePage.locator('#review-files').setInputFiles([upload('PRIVATE_BUNDLE_FILE.json',fixture('BUNDLE_SECRET_001')),upload('partial.json',fixture('BUNDLE_SECRET_002',8)),upload('invalid.json','{')]);
+  await bundlePage.locator('#review-status').filter({hasText:'2 valid and 1 invalid'}).waitFor();
+  await bundlePage.locator('#include-partial').check();await bundlePage.locator('#exclude-interrupted').check();await bundlePage.locator('#paired-successful-only').uncheck();
+  await bundlePage.locator('[data-review-id="0"]').uncheck();await bundlePage.locator('[data-review-note="0"]').fill('PRIVATE_BUNDLE_NOTE');
+  const beforeBundle=JSON.parse(await downloaded(bundlePage,'#save-project'));
+  await bundlePage.locator('[data-review-note="0"]').fill('PRIVATE_BUNDLE_NOTE edited');
+  const currentSummary=JSON.parse(await downloaded(bundlePage,'#download-summary-json'));
+  const aggregateZip=await downloadedBytes(bundlePage,'#download-bundle');await writeFile('test-results/review-bundle-aggregate.zip',aggregateZip);
+  const aggregate=readStoredFiles(aggregateZip),manifest=JSON.parse(new TextDecoder().decode(aggregate.get('manifest.json')));
+  assert.equal(aggregate.size,9);assert.equal(manifest.dataScope,'aggregate-only');assert.equal(manifest.generatedAt,currentSummary.generatedAt);
+  assert.ok(![...aggregate.keys()].some(path=>path.startsWith('individual/')));
+  for(const secret of ['BUNDLE_SECRET_','PRIVATE_BUNDLE_FILE','PRIVATE_BUNDLE_NOTE','PRIVATE_RATING_OBSERVATION'])assert.ok(!aggregateZip.includes(Buffer.from(secret)));
+  assert.match(await bundlePage.locator('#project-dirty').innerText(),/Unsaved workspace changes/);
+  await bundlePage.locator('#bundle-individual').check();
+  const fullZip=await downloadedBytes(bundlePage,'#download-bundle');await writeFile('test-results/review-bundle-full.zip',fullZip);
+  const full=readStoredFiles(fullZip),fullManifest=JSON.parse(new TextDecoder().decode(full.get('manifest.json')));
+  assert.equal(full.size,16);assert.equal(fullManifest.dataScope,'includes-individual-data');assert.equal(fullManifest.generatedAt,currentSummary.generatedAt);
+  const embedded=JSON.parse(new TextDecoder().decode(full.get('individual/workspace.json')));
+  assert.equal(embedded.files[0].decisionNote,'PRIVATE_BUNDLE_NOTE edited');assert.equal(embedded.files[0].choice,false);assert.equal(embedded.analysis.includePartial,true);
+  assert.match(await bundlePage.locator('#project-dirty').innerText(),/Unsaved workspace changes/);
+  const afterBundle=JSON.parse(await downloaded(bundlePage,'#save-project'));afterBundle.files[0].decisionNote='PRIVATE_BUNDLE_NOTE';delete afterBundle.savedAt;delete beforeBundle.savedAt;assert.deepEqual(afterBundle,beforeBundle);
+  // Extracted backup reopens in the existing project workflow; ZIP itself is not an import format.
+  const acceptBundleWorkspace=new Promise(done=>bundlePage.once('dialog',async dialog=>{await dialog.accept();done();}));
+  await bundlePage.locator('#open-project').setInputFiles(upload('extracted-workspace.json',new TextDecoder().decode(full.get('individual/workspace.json'))));await acceptBundleWorkspace;
+  await bundlePage.locator('#project-status').filter({hasText:'Workspace opened'}).waitFor();
+  assert.equal(await bundlePage.locator('[data-review-note="0"]').inputValue(),'PRIVATE_BUNDLE_NOTE edited');
+  await bundlePage.locator('#plan-prefix').fill('EDITED_');await bundlePage.locator('#download-bundle').click();
+  await bundlePage.locator('#bundle-status').filter({hasText:'Generate the assignment schedule'}).waitFor();
+  await bundlePage.locator('#plan-prefix').fill('P');await bundlePage.locator('#assignment-form button').click();
+  let bundleDownloads=0;bundlePage.on('download',()=>bundleDownloads++);
+  // Hash errors cannot produce a partial archive or mark the workspace saved.
+  await bundlePage.evaluate(()=>{window.originalDigest=crypto.subtle.digest.bind(crypto.subtle);crypto.subtle.digest=()=>Promise.reject(new Error('Synthetic hash failure'));});
+  await bundlePage.locator('#download-bundle').click();await bundlePage.locator('#bundle-status').filter({hasText:'Synthetic hash failure'}).waitFor();
+  assert.equal(bundleDownloads,0);assert.equal(await bundlePage.locator('#download-bundle').isEnabled(),true);
+  await bundlePage.evaluate(()=>{let first=true;window.releaseBundleHash=null;crypto.subtle.digest=(...args)=>{if(first){first=false;return new Promise(resolve=>{window.releaseBundleHash=()=>window.originalDigest(...args).then(resolve);});}return window.originalDigest(...args);};});
+  await bundlePage.locator('#download-bundle').click();await bundlePage.waitForFunction(()=>typeof window.releaseBundleHash==='function');
+  assert.equal(await bundlePage.locator('#download-bundle').isEnabled(),false);assert.equal(await bundlePage.locator('#bundle-individual').isEnabled(),false);
+  await bundlePage.locator('#include-partial').uncheck();await bundlePage.evaluate(()=>window.releaseBundleHash());
+  await bundlePage.locator('#bundle-status').filter({hasText:'workspace changed while the bundle was being prepared'}).waitFor();
+  assert.equal(bundleDownloads,0);assert.equal(await bundlePage.locator('#download-bundle').isEnabled(),true);
+  await bundlePage.evaluate(()=>{crypto.subtle.digest=window.originalDigest;});
+  // No included data still yields explicit aggregate missing values and an omission list.
+  const emptyZip=await downloadedBytes(bundlePage,'#download-bundle');await writeFile('test-results/review-bundle-empty.zip',emptyZip);
+  const empty=readStoredFiles(emptyZip),emptyManifest=JSON.parse(new TextDecoder().decode(empty.get('manifest.json')));
+  assert.equal(emptyManifest.review.includedRecordings,0);assert.equal(emptyManifest.omittedFiles.length,2);assert.equal(empty.size,14);
+  await bundlePage.screenshot({path:'test-results/bundle-desktop.png',fullPage:true});
+  await bundlePage.setViewportSize({width:390,height:844});await bundlePage.screenshot({path:'test-results/bundle-mobile.png',fullPage:true});
+  assert.equal(await bundlePage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Bundle controls overflow on mobile');
+  await bundlePage.locator('#clear-review').click();assert.equal(await bundlePage.locator('#download-bundle').isEnabled(),false);
   assert.equal((await checkSession(fresh)).participant,'P007');
   assert.deepEqual(errors,[]);
-  console.log('Browser checks passed: study/workspace/paired regressions, coverage summaries, assignment mismatches, unplanned codes, duplicate/partial decisions, all 18 balance cells, coverage CSVs, plan regeneration, workspace round-trips, aggregate report preview/downloads/privacy/invalidation, submitted rating distributions and matched directions, rating CSVs and workspace round-trips, additive imports/undo/duplicate rechecks/limits/read failures/stale reads, offline print PDF, recording isolation, and desktop/mobile layout.');
+  console.log('Browser checks passed: study/workspace/paired regressions, coverage summaries, assignment mismatches, unplanned codes, duplicate/partial decisions, all 18 balance cells, coverage CSVs, plan regeneration, workspace round-trips, aggregate report preview/downloads/privacy/invalidation, submitted rating distributions and matched directions, rating CSVs and workspace round-trips, additive imports/undo/duplicate rechecks/limits/read failures/stale reads, aggregate/full/empty ZIP bundles, snapshot integrity and cancelled hash operations, offline print PDF, recording isolation, and desktop/mobile layout.');
 } finally {
   if(browser)await browser.close();
   await new Promise(done=>server.close(done));

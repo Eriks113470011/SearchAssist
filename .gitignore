@@ -6,3 +6,5 @@ test-results/
 *.docx
 *.zip
 *.tar.gz
+
+qa-fixtures/

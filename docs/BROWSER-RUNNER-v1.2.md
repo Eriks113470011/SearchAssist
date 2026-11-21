@@ -1,5 +1,7 @@
 # SearchAssist browser participant runner
 
+**V1.2 reference:** V1.3 adds synthetic reload/import recovery and scheduled interruptions. See [RECOVERY-v1.3.md](RECOVERY-v1.3.md); its recovery instructions supersede the V1.2 reload limitation below.
+
 V1.2 connects the seeded behavior policies to the actual guided SearchAssist interface. Playwright operates a shipped local copy of the app in Chromium, then downloads and verifies each synthetic app recording. The fast Node model remains available through `npm run simulate`.
 
 All sessions remain **SIMULATED / UNCALIBRATED**. Recorded browser time measures automation, not human performance. The runner does not infer confidence, trust or ease.

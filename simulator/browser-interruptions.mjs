@@ -23,12 +23,17 @@ export async function interruptBrowserTrial({page,entry,signal,onPaused=async()=
   const before=await syntheticCheckpoint(page);assert.equal(before.phase,'tasks');assert.equal(before.taskIndex+1,entry.taskIndex);assert.equal(before.currentTrial.runningAtSave,true);
   const queryBefore=await page.locator('#query').inputValue();assert.equal(queryBefore,before.currentTrial.query);
   const visibilityBefore=await page.evaluate(()=>document.visibilityState);assert.equal(visibilityBefore,'visible');
-  let cover,visibilityDuring=visibilityBefore,pausedStart,pausedEnd;
+  const dialogWasOpen=await page.locator('#detail-dialog').isVisible(),dialogClosedForControl=dialogWasOpen&&['manual','navigation','restore'].includes(entry.kind);
+  let cover,nativeFocus,visibilityDuring=visibilityBefore,pausedStart,pausedEnd;
   try {
+    if(dialogClosedForControl)await page.locator('#detail-dialog .dialog-close').click();
     if(entry.kind==='manual'||entry.kind==='restore')await page.locator('#pause-task').click();
     if(entry.kind==='navigation'){await page.locator('[data-view="research"]').click();await page.locator('#view-research').waitFor({state:'visible'});}
     if(entry.kind==='reload')await page.reload();
     if(entry.kind==='hidden') {
+      // Playwright enables focus emulation on pages. Disable that override temporarily
+      // so tab activation produces native document visibility rather than an emulated visible state.
+      await page.bringToFront();nativeFocus=await page.context().newCDPSession(page);await nativeFocus.send('Emulation.setFocusEmulationEnabled',{enabled:false});await page.waitForFunction(()=>!document.hidden);
       cover=await page.context().newPage();await cover.goto('about:blank');await cover.bringToFront();
       try{await page.waitForFunction(()=>document.hidden,null,{timeout:5000});}catch{throw new Error('Native hidden-tab state was not observed. Use headed Chromium with a real display or Xvfb; no visibility event is faked.');}
       visibilityDuring=await page.evaluate(()=>document.visibilityState);assert.equal(visibilityDuring,'hidden');
@@ -39,7 +44,7 @@ export async function interruptBrowserTrial({page,entry,signal,onPaused=async()=
     const expectedReason={manual:'manual',navigation:'navigation',hidden:'tab_hidden',reload:'restored',restore:'manual'}[entry.kind];assert.equal(pausedStart.currentTrial.pauseReason,expectedReason);
     assert.equal(pausedStart.currentTrial.pauseCount,before.currentTrial.pauseCount+1);
     const holdStarted=performance.now();await delay(entry.holdMs,undefined,{signal});const observedHoldMs=Math.round(performance.now()-holdStarted);
-    if(cover){await page.bringToFront();await cover.close();cover=null;await page.waitForFunction(()=>!document.hidden);}
+    if(cover){await page.bringToFront();await page.waitForFunction(()=>!document.hidden);await cover.close();cover=null;await nativeFocus.send('Emulation.setFocusEmulationEnabled',{enabled:true});await nativeFocus.detach();nativeFocus=null;}
     if(entry.kind==='navigation')await page.locator('[data-view="study"]').click();
     await page.locator('#resume-session').waitFor({state:'visible'});assert.equal(await page.locator('#pause-task').isVisible(),false,'Recovery resumed automatically.');
     pausedEnd=await downloadPaused(page);sameProgress(before,pausedEnd);
@@ -60,13 +65,13 @@ export async function interruptBrowserTrial({page,entry,signal,onPaused=async()=
     await page.locator('#resume-session').click();await page.locator('#pause-task').waitFor({state:'visible'});
     const after=await syntheticCheckpoint(page);sameProgress(before,after);assert.equal(after.currentTrial.runningAtSave,true);assert.equal(after.currentTrial.resumeCount,before.currentTrial.resumeCount+1);assert.ok(after.currentTrial.activeMs>=pausedActive);
     assert.equal(await page.locator('#query').inputValue(),queryBefore);assert.equal(await page.locator('#simulation-notice').isVisible(),true);assert.equal(await page.locator('#ratings-form').count(),0);
-    return {...entry,queryBefore,queryAfter:after.currentTrial.query,previousQueryBefore:before.currentTrial.previousQuery,previousQueryAfter:after.currentTrial.previousQuery,
+    return {...entry,dialogWasOpen,dialogClosedForControl,queryBefore,queryAfter:after.currentTrial.query,previousQueryBefore:before.currentTrial.previousQuery,previousQueryAfter:after.currentTrial.previousQuery,
       completedTrialsBefore:before.trials.length,completedTrialsAfter:after.trials.length,observedHoldMs,
       activePausedStartMs:pausedStart.currentTrial.activeMs,activePausedEndMs:pausedEnd.currentTrial.activeMs,
       wallPausedStartMs:pausedStart.currentTrial.wallElapsedMs,wallPausedEndMs:pausedEnd.currentTrial.wallElapsedMs,
       pauseCountBefore:before.currentTrial.pauseCount,pauseCountAfter:after.currentTrial.pauseCount,resumeCountBefore:before.currentTrial.resumeCount,resumeCountAfter:after.currentTrial.resumeCount,
       restoreEventsBefore:restoredEvents(before),restoreEventsAfter:restoredEvents(after),restoredAfter:after.currentTrial.restored,
-      pauseReason:expectedReason,visibilityBefore,visibilityDuring,visibilityAfter:await page.evaluate(()=>document.visibilityState),verified:true};
+      pauseReason:expectedReason,visibilityMethod:entry.kind==='hidden'?'native-tab-focus-override-disabled':'not-applicable',visibilityBefore,visibilityDuring,visibilityAfter:await page.evaluate(()=>document.visibilityState),verified:true};
   }catch(error){throw new Error(`[${entry.id} ${entry.kind}, task ${entry.taskIndex}, after action ${entry.afterAction}] ${error.message}`,{cause:error});}
-  finally{if(cover){await page.bringToFront().catch(()=>{});await cover.close().catch(()=>{});}}
+  finally{if(cover){await page.bringToFront().catch(()=>{});await cover.close().catch(()=>{});}if(nativeFocus){await nativeFocus.send('Emulation.setFocusEmulationEnabled',{enabled:true}).catch(()=>{});await nativeFocus.detach().catch(()=>{});}}
 }

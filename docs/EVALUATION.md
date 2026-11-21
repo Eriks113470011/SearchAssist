@@ -166,3 +166,7 @@ Modeled success reflects the agent's selected result, and modeled active costs s
 ## Browser simulation follow-up (V1.2)
 
 The browser runner now exercises actual guided controls and reconciles synthetic app recordings, with confidence/trust/ease kept unavailable. Recorded automation timing and modeled operator timing are distinct, and neither is measured human task performance. Synthetic mode uses separate storage and tagged exports; normal study review rejects them. See the browser-runner guide for bounded execution, partial assignment coverage, failure handling and remaining calibration/fault-injection work.
+
+## Interruption and recovery follow-up (V1.3)
+
+Scheduled native browser interruptions now verify preserved query/undo/progress state, synthetic tags, unavailable human ratings, explicit resumption, paused active timing and advancing wall time. Controlled idle and recovery evidence stay separate from the modeled search-action ledger. Recovery refreshes candidate memory as an engineering rule, not a validated model of human interruption costs. The ordinary participant validator/rating requirements remain intact. See RECOVERY-v1.3.md for methods, limits and future empirical calibration.

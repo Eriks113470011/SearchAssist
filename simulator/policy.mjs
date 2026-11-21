@@ -22,12 +22,12 @@ export function createPolicy(goal,startingQuery,profile,draw) {
     },
     decide(observation,limits) {
       update(observation);
-      if(observation.openDetail){const candidate=memory.get(observation.openDetail);return candidate&&candidate.score>=profile.threshold ? {type:'submit',handle:observation.openDetail,reason:'Submit the inspected candidate through the open detail dialog.'} : {type:'close_details',reason:'The inspected details do not justify submission.'};}
+      if(observation.openDetail){const candidate=memory.get(observation.openDetail);if(candidate&&profile.verifyDetails&&!candidate.detailsRead)return {type:'read_details',handle:observation.openDetail,reason:'Read the visible detail dialog before deciding.'};return candidate&&candidate.score>=profile.threshold ? {type:'submit',handle:observation.openDetail,reason:'Submit the inspected candidate through the open detail dialog.'} : {type:'close_details',reason:'The inspected details do not justify submission.'};}
       const best=[...memory.values()].sort((a,b)=>b.score-a.score||a.position-b.position)[0];
       if(best && (inspected>=Math.min(profile.scanLimit,observation.totalResults)||profile.scanLimit===1)) {
         if(observation.explanationsAvailable&&!best.explanationRead&&draw('read-explanation',epoch,best.position)<profile.explanationAttention)return {type:'read_explanation',handle:best.handle,reason:'Attend to the visible matching explanation.'};
         if(best.score>=profile.threshold) {
-          return {type:'open_details',handle:best.handle,read:profile.verifyDetails,reason:profile.verifyDetails?'Open and read the most plausible candidate’s details.':'Open the detail dialog for the plausible candidate without further reading.'};
+          return {type:'open_details',handle:best.handle,read:false,reason:profile.verifyDetails?'Open and read the most plausible candidate’s details.':'Open the detail dialog for the plausible candidate without further reading.'};
         }
       }
       const unread=observation.candidates.find(c=>!memory.has(c.handle));

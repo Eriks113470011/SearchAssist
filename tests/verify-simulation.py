@@ -10,7 +10,7 @@ import sys
 root = Path(sys.argv[1])
 manifest = json.loads((root / 'manifest.json').read_text())
 assert manifest['dataOrigin'] == 'synthetic' and manifest['calibrationStatus'] == 'uncalibrated'
-assert manifest['runner'] == 'model' and manifest['schemaVersion'] == 1
+assert manifest['runner'] in ['model', 'browser'] and manifest['schemaVersion'] == 1
 expected = {'manifest.json'} | {f['path'] for f in manifest['files']}
 assert expected == {str(p.relative_to(root)) for p in root.rglob('*') if p.is_file()}
 for f in manifest['files']:
@@ -26,7 +26,7 @@ config = json.loads((root / 'config.json').read_text())
 assert metadata['humanRatings'] is None and metadata['dataOrigin'] == 'synthetic'
 assert metadata['config'] == config and metadata['resolvedProfiles'] == manifest['resolvedProfiles']
 sessions = [json.loads((root / p).read_text()) for p in metadata['sessionFiles']]
-assert len(sessions) == manifest['simulatedSessions'] == len(config['profiles']) * 18 * config['replicates']
+assert len(sessions) == manifest['simulatedSessions'] == len(config['profiles']) * len(config.get('browser', {}).get('assignmentSlots', list(range(18)))) * config['replicates']
 assert len({s['participant'] for s in sessions}) == len(sessions)
 coverage = Counter()
 trials = []
@@ -34,12 +34,23 @@ for session in sessions:
     assert session['format'] == 'searchassist-simulation-session' and session['humanRatings'] is None
     assert session['participant'].startswith('SIM_') and session['dataOrigin'] == 'synthetic'
     assert len(session['trials']) == 12
+    if manifest['runner'] == 'browser':
+        recording = session['browserRecording']
+        assert recording['dataOrigin'] == 'synthetic' and recording['format'] == 'searchassist-simulation-browser-recording'
+        assert recording['runner'] == 'browser' and recording['humanRatings'] is None and recording['ratings'] == []
+        assert recording['phase'] == 'complete' and len(recording['trials']) == 12
     coverage[session['profile'], session['order'], session['setRotation']] += 1
     for t in session['trials']:
         assert t['success'] == (t['termination'] == 'submitted' and t['selectedId'] == t['expectedTargetId'])
         assert t['incorrectSelection'] == (t['termination'] == 'submitted' and t['selectedId'] != t['expectedTargetId'])
         assert t['skipped'] == (t['termination'] != 'submitted')
-        assert t['observedBrowserActiveMs'] is None and t['observedBrowserWallMs'] is None
+        if manifest['runner'] == 'browser':
+            r = session['browserRecording']['trials'][t['taskIndex'] - 1]
+            assert t['recordingVerified'] and t['observedBrowserActiveMs'] == r['activeElapsedMs'] and t['observedBrowserWallMs'] == r['wallElapsedMs']
+            assert t['selectedId'] == r['selectedId'] and t['finalQuery'] == r['finalQuery'] and t['resultOpens'] == r['resultOpens']
+            assert t['recordedQueryReformulations'] == t['modeledQueryChanges'] == r['queryReformulations']
+        else:
+            assert t['observedBrowserActiveMs'] is None and t['observedBrowserWallMs'] is None
         assert math.isfinite(t['modeledActiveMs']) and 0 <= t['modeledActiveMs'] <= config['limits']['maxModeledActiveMs']
         assert t['actions'] <= config['limits']['maxActionsPerTrial']
         assert sum(x['durationMs'] for x in t['ledger']) == t['modeledActiveMs']
@@ -50,7 +61,7 @@ for session in sessions:
         assert t['modeledQueryChanges'] == sum(x.get('queryBefore') != x.get('queryAfter') for x in t['trace'] if 'queryBefore' in x)
         trials.append(t)
 assert len(trials) == manifest['totalTrials']
-assert len(coverage) == len(config['profiles']) * 18 and set(coverage.values()) == {config['replicates']}
+assert len(coverage) == len(config['profiles']) * len(config.get('browser', {}).get('assignmentSlots', list(range(18)))) and set(coverage.values()) == {config['replicates']}
 with (root / 'trials.csv').open() as f:
     rows = list(csv.DictReader(f))
     assert len(rows) == len(trials) and all(r['dataOrigin'] == 'synthetic' and r['calibrationStatus'] == 'uncalibrated' for r in rows)
@@ -61,6 +72,9 @@ with (root / 'conditions.csv').open() as f:
         assert int(row['successes']) == sum(t['success'] for t in group)
         assert int(row['incorrectSelections']) == sum(t['incorrectSelection'] for t in group)
         assert int(row['skips']) == sum(t['skipped'] for t in group)
+        if manifest['runner'] == 'browser':
+            assert math.isclose(float(row['meanObservedBrowserActiveMs']), sum(t['observedBrowserActiveMs'] for t in group) / len(group), rel_tol=1e-12)
+            assert math.isclose(float(row['meanObservedBrowserWallMs']), sum(t['observedBrowserWallMs'] for t in group) / len(group), rel_tol=1e-12)
         assert math.isclose(float(row['meanModeledActiveMs']), sum(t['modeledActiveMs'] for t in group) / len(group), rel_tol=1e-12)
 assert 'SIMULATED / UNCALIBRATED' in (root / 'report.html').read_text()
 print(f'Verified synthetic run: {len(sessions)} sessions, {len(trials)} tasks, all coverage cells, source/payload hashes, timing ledgers, and CSV outcomes.')

@@ -1,10 +1,14 @@
 import {records,categories} from './data.mjs';
 import {search,normalize,explain,kindLabels} from './engine.mjs';
 import * as study from './study.mjs';
+import {SIMULATION_STORAGE_KEY,createSimulationSession,advanceSimulationBlock,simulationRecordingCsv} from './simulation-session.mjs';
 import {mountWorkspace} from './workspace-view.mjs';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let mode='assist',view='search',limit=12,revealApprox=false,previousQuery=null,currentMatches=[],session=null,queryTimer,announcementTimer;
+const simulationMode=new URLSearchParams(location.search).get('simulation')==='1';
+const sessionKey=simulationMode?SIMULATION_STORAGE_KEY:study.STORAGE_KEY;
+if(simulationMode){const badge=document.createElement('div');badge.id='simulation-notice';badge.className='simulation-notice';badge.textContent='SIMULATED / UNCALIBRATED — Automated software testing. No human ratings are collected. Reload starts a new simulation; export first.';document.body.prepend(badge);}
 const symbols={Tools:'⌘',Services:'◎',Resources:'▤',Places:'⌖',Forms:'▧'};
 $('#category').innerHTML=categories.map(x=>`<option>${x}</option>`).join('');
 function highlight(text,m){if(mode!=='assist'||$('#explanation-style').value==='off'||!$('#query').value.trim())return esc(text);const terms=[...new Set(m.evidence.flatMap(e=>[e.query,e.term]).filter(t=>t&&t.length>1))].sort((a,b)=>b.length-a.length);if(!terms.length)return esc(text);const rx=new RegExp('('+terms.map(x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')','ig');return String(text).split(rx).map((s,i)=>i%2?`<mark>${esc(s)}</mark>`:esc(s)).join('');}
@@ -87,7 +91,7 @@ function isRunning() {return session?.phase === 'tasks' && session.currentTrial?
 function saveSession() {
   if (!session) return;
   if (session.currentTrial && view === 'search') session.currentTrial.previousQuery = previousQuery;
-  try {sessionStorage.setItem(study.STORAGE_KEY, JSON.stringify(study.snapshot(session)));}
+  try {sessionStorage.setItem(sessionKey, JSON.stringify(study.snapshot(session)));}
   catch {storageWarning = 'This browser could not save your session. Export JSON before leaving; reload recovery is unavailable.';}
   $('#storage-warning').textContent = storageWarning;
   $('#storage-warning').hidden = !storageWarning;
@@ -103,6 +107,7 @@ function studyHeading(eyebrow, title, description) {
 }
 function seconds(value) {return value === null ? '—' : `${(value / 1000).toFixed(1)} s`;}
 function importPanel() {
+  if(simulationMode)return '';
   return `<div class="panel section-gap"><h2>Restore a saved session</h2><p>Choose a SearchAssist v0.2 session JSON export to continue on this device. Restored tasks stay paused until you choose Resume. v0.1 files use a different timing definition and remain separate.</p><label class="file-label" for="import-session">Session JSON file</label><input id="import-session" type="file" accept=".json,application/json"><p id="import-status" role="status" class="import-status" aria-live="polite"></p>${legacySession ? '<p class="small-print section-gap">A v0.1 session is still stored in this tab. Download it for your records before closing the tab.</p><button class="secondary" id="export-legacy">Download v0.1 session JSON ↓</button>' : ''}</div>`;
 }
 function bindImport() {
@@ -135,6 +140,11 @@ function bindImport() {
 }
 function studyView() {
   const root = $('#view-study');
+  if (session?.phase === 'ratings' && simulationMode) {
+    root.innerHTML=studyHeading('SIMULATED / UNCALIBRATED','Block complete','Human ratings are unavailable for automated software sessions.')+`<div class="panel"><p>No confidence, trust or ease responses will be generated.</p><button class="primary" id="continue-simulation">${session.taskIndex===12?'Finish simulation':'Continue simulation'} →</button>${exportButtons()}</div>`;
+    $('#continue-simulation').onclick=()=>{advanceSimulationBlock(session);saveSession();if(session.phase==='tasks')beginTask();else studyView();};
+    bindExports();return;
+  }
   if (session?.phase === 'ratings') {
     root.innerHTML = studyHeading(`BLOCK ${Math.floor((session.taskIndex - 1) / 4) + 1} OF 3 COMPLETE`, 'A quick reflection', 'Rate the search experience you just used. Your unfinished ratings are saved in this tab.') +
       `<form id="ratings-form" class="panel">${[['confidence','How confident were you that you found the requested entries?','Not at all confident','Very confident'], ['trust','How much did you trust this search experience?','Not at all','Very much'], ['ease','How easy was this search experience to use?','Very difficult','Very easy']].map(([id,title,low,high]) => `<fieldset class="rating-question"><legend>${title}</legend><div class="rating-row">${Array.from({length:7}, (_,i) => `<label><input type="radio" name="${id}" value="${i+1}" ${session.ratingDraft[id]===i+1?'checked':''} required> ${i+1}</label>`).join('')}</div><p class="small-print">1 = ${low} · 7 = ${high}</p></fieldset>`).join('')}<label class="small-print">Optional observation<textarea name="notes" maxlength="2000" rows="3" placeholder="What helped or got in the way?">${esc(session.ratingDraft.notes)}</textarea></label><button class="primary">${session.taskIndex === 12 ? 'Finish session' : 'Continue to next block'} →</button></form><div class="panel section-gap"><h2>Keep a copy of your progress</h2>${exportButtons()}</div>` + importPanel();
@@ -160,11 +170,11 @@ function studyView() {
   const progress = session?.phase === 'tasks';
   root.innerHTML = studyHeading('TURN A PROTOTYPE INTO EVIDENCE', progress ? 'Pick up where you left off' : 'Put search to the test', progress ? 'Your query, completed tasks, and recorded active time are preserved.' : 'A guided, within-subject comparison of three search experiences.') +
     (progress ? `<div class="panel"><div class="resume-heading"><span class="pause-pill">Ⅱ PAUSED</span><span class="study-progress">Task ${session.taskIndex + 1} of 12 · Block ${Math.floor(session.taskIndex/4)+1} of 3</span></div><h2>${activeTask().prompt}</h2><p>Current query: <strong>${esc(session.currentTrial?.query ?? activeTask().query)}</strong></p><p>Active time so far: <strong>${seconds(session.currentTrial?.activeMs ?? 0)}</strong>. ${session.currentTrial?.restored ? 'This trial is flagged as restored in the export.' : 'The clock resumes only when you choose Resume.'}</p><div class="export-actions"><button class="primary" id="resume-session">Resume task →</button></div>${exportButtons()}</div>` :
-      `<div class="study-intro"><div class="panel"><h2>The session at a glance</h2><div class="step"><span>1</span><div><h3>Choose an order and task rotation</h3><p>Balance all six condition orders and rotate the three matched task sets independently.</p></div></div><div class="step"><span>2</span><div><h3>Complete 12 directory tasks</h3><p>Four tasks per condition: spelling, abbreviation, incomplete words, and reordered words. Submit a result or skip. You can pause without resetting your query.</p></div></div><div class="step"><span>3</span><div><h3>Reflect and export</h3><p>Rate confidence, trust, and ease after each block. Download trial CSV, condition summary CSV, and session JSON. The JSON can restore your progress.</p></div></div><p class="small-print">Complete an unrecorded practice task in Explore first. Use anonymous codes and your course’s approved study and consent process.</p></div><form class="panel setup-form" id="start-study"><h2>Set up a session</h2><label for="participant-code">Anonymous participant code<input id="participant-code" maxlength="32" required placeholder="e.g. P001" pattern="[A-Za-z0-9_-]+" title="Use letters, numbers, underscores, or hyphens"></label><label for="condition-order">Condition order</label><select id="condition-order">${orders.map(o=>`<option value="${o}">${o.split('').join(' → ')}</option>`).join('')}</select><label for="set-rotation">Task set rotation</label><select id="set-rotation"><option value="0">1 → 2 → 3</option><option value="1">2 → 3 → 1</option><option value="2">3 → 1 → 2</option></select><p class="small-print">Queries, selections, task times, and ratings are recorded in this browser tab. No study responses are uploaded by the app. Export before closing the tab; exports contain what you type. Ordinary hosting access logs may still exist.</p><label class="checkline"><input type="checkbox" required><span>I agree to this local session recording and understand that I can stop and clear it.</span></label><button class="primary">Start study session →</button></form></div>`) + importPanel() +
+      `<div class="study-intro"><div class="panel"><h2>The session at a glance</h2><div class="step"><span>1</span><div><h3>Choose an order and task rotation</h3><p>Balance all six condition orders and rotate the three matched task sets independently.</p></div></div><div class="step"><span>2</span><div><h3>Complete 12 directory tasks</h3><p>Four tasks per condition: spelling, abbreviation, incomplete words, and reordered words. Submit a result or skip. You can pause without resetting your query.</p></div></div><div class="step"><span>3</span><div><h3>Reflect and export</h3><p>Rate confidence, trust, and ease after each block. Download trial CSV, condition summary CSV, and session JSON. The JSON can restore your progress.</p></div></div><p class="small-print">Complete an unrecorded practice task in Explore first. Use anonymous codes and your course’s approved study and consent process.</p></div><form class="panel setup-form" id="start-study"><h2>Set up a session</h2><label for="participant-code">Anonymous participant code<input id="participant-code" maxlength="32" required placeholder="e.g. P001" pattern="[A-Za-z0-9_-]+" title="Use letters, numbers, underscores, or hyphens"></label><label for="condition-order">Condition order</label><select id="condition-order">${orders.map(o=>`<option value="${o}">${o.split('').join(' → ')}</option>`).join('')}</select><label for="set-rotation">Task set rotation</label><select id="set-rotation"><option value="0">1 → 2 → 3</option><option value="1">2 → 3 → 1</option><option value="2">3 → 1 → 2</option></select><p class="small-print">Queries, selections, task times, and ratings are recorded in this browser tab. No study responses are uploaded by the app. Export before closing the tab; exports contain what you type. Ordinary hosting access logs may still exist.</p><label class="checkline"><input type="checkbox" required><span>${simulationMode?'I understand this is synthetic software testing, not participant consent.':'I agree to this local session recording and understand that I can stop and clear it.'}</span></label><button class="primary">Start study session →</button></form></div>`) + importPanel() +
     `<div class="panel section-gap"><h2>Reading the measurements</h2><p>The app records active time using a monotonic clock and wall time from the start of each task. Manual pauses, leaving the search view, reloads, and hidden tabs stop active timing. Returning requires an explicit Resume. Wall time still includes these interruptions. An abruptly closed browser can lose time since the last checkpoint (normally up to one second).</p><p class="section-gap">B and C use the same engine and ranking. Settings are fixed in guided tasks. C adds several interface features together. Task difficulty and custom ratings remain exploratory; this is not a validated comparison or usability scale.</p></div>`;
   if ($('#start-study')) $('#start-study').onsubmit = event => {
     event.preventDefault();
-    session = study.createSession({participant: $('#participant-code').value, order: $('#condition-order').value, setRotation: Number($('#set-rotation').value)});
+    session = (simulationMode?createSimulationSession:study.createSession)({participant: $('#participant-code').value, order: $('#condition-order').value, setRotation: Number($('#set-rotation').value)});
     beginTask();
   };
   if ($('#resume-session')) $('#resume-session').onclick = () => beginTask();
@@ -186,7 +196,7 @@ function beginTask() {
   renderResults();
   $('#examples').hidden = true; $('.mode-row').hidden = true; $('.filter-row').hidden = true;
   $('#study-banner').hidden = false; $('.bottom-note').hidden = true;
-  $('#study-banner').innerHTML = `<div class="study-task-top"><span class="tiny-cap">STUDY · TASK ${session.taskIndex+1} OF 12</span><span class="study-progress">Block ${Math.floor(session.taskIndex/4)+1} of 3 · ${session.order[Math.floor(session.taskIndex/4)]}</span></div><h2>${activeTask().prompt}</h2><p>Edit the supplied query, open a result, and submit your choice. You can pause at any time.</p><div class="study-task-actions"><button class="secondary" id="pause-task">Ⅱ Pause task</button><button class="secondary" id="skip-task">Skip task</button></div>`;
+  $('#study-banner').innerHTML = `<div class="study-task-top"><span class="tiny-cap">${simulationMode?'SIMULATION':'STUDY'} · TASK ${session.taskIndex+1} OF 12</span><span class="study-progress">Block ${Math.floor(session.taskIndex/4)+1} of 3 · ${session.order[Math.floor(session.taskIndex/4)]}</span></div><h2>${activeTask().prompt}</h2><p>Edit the supplied query, open a result, and submit your choice. You can pause at any time.</p><div class="study-task-actions"><button class="secondary" id="pause-task">Ⅱ Pause task</button><button class="secondary" id="skip-task">Skip task</button></div>`;
   $('#pause-task').onclick = () => pauseStudy('manual');
   $('#skip-task').onclick = () => finishTask(null);
   location.hash = 'search'; route(); saveSession(); $('#query').focus();
@@ -214,19 +224,19 @@ function endTaskUI() {
 function clearData() {
   if (!confirm('Clear this session and its local recordings? Export your JSON first if you need to keep them.')) return;
   clearTimeout(queryTimer); session = null;
-  try {sessionStorage.removeItem(study.STORAGE_KEY);} catch {}
+  try {sessionStorage.removeItem(sessionKey);} catch {}
   endTaskUI(); $('#query').value = ''; previousQuery = null; setMode('assist'); location.hash = 'study'; route();
 }
 function exportButtons() {
-  return `<div class="export-actions"><button class="primary" id="export-json">Export session JSON ↓</button><button class="secondary" id="export-csv">Export trials CSV ↓</button><button class="secondary" id="export-summary">Export condition summary CSV ↓</button><button class="text-btn" id="clear-session">Clear session data</button></div>`;
+  return `<div class="export-actions"><button class="primary" id="export-json">Export session JSON ↓</button><button class="secondary" id="export-csv">Export trials CSV ↓</button>${simulationMode?'':'<button class="secondary" id="export-summary">Export condition summary CSV ↓</button>'}<button class="text-btn" id="clear-session">Clear session data</button></div>`;
 }
 function download(content, name, type) {
   const link = document.createElement('a'), url = URL.createObjectURL(new Blob([content], {type}));
   link.href = url; link.download = name; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 function bindExports() {
-  if ($('#export-json')) $('#export-json').onclick = () => {flushPendingQuery(); download(JSON.stringify(study.snapshot(session), null, 2), `searchassist-v02-${session.participant}.json`, 'application/json');};
-  if ($('#export-csv')) $('#export-csv').onclick = () => download(study.trialsCsv(session), `searchassist-v02-${session.participant}-trials.csv`, 'text/csv');
+  if ($('#export-json')) $('#export-json').onclick = () => {flushPendingQuery(); download(JSON.stringify(study.snapshot(session), null, 2), simulationMode?`${session.participant}.browser-recording.simulation.json`:`searchassist-v02-${session.participant}.json`, 'application/json');};
+  if ($('#export-csv')) $('#export-csv').onclick = () => download(simulationMode?simulationRecordingCsv(session):study.trialsCsv(session), simulationMode?`${session.participant}.browser-trials.simulation.csv`:`searchassist-v02-${session.participant}-trials.csv`, 'text/csv');
   if ($('#export-summary')) $('#export-summary').onclick = () => download(study.summaryCsv(session), `searchassist-v02-${session.participant}-conditions.csv`, 'text/csv');
   if ($('#clear-session')) $('#clear-session').onclick = clearData;
 }
@@ -258,8 +268,9 @@ document.addEventListener('visibilitychange', () => {if (document.hidden) pauseS
 window.addEventListener('pagehide', () => pauseStudy('page_exit', false));
 setInterval(() => {if (isRunning()) saveSession();}, 1000);
 try {
-  legacySession = sessionStorage.getItem('searchassist-study-v1');
-  const saved = sessionStorage.getItem(study.STORAGE_KEY);
+  legacySession = simulationMode?null:sessionStorage.getItem('searchassist-study-v1');
+  const saved = simulationMode?null:sessionStorage.getItem(sessionKey);
+  if(simulationMode)sessionStorage.removeItem(sessionKey);
   if (saved) {session = study.restoreSession(saved); if (session.phase === 'tasks') location.hash = 'study';}
 } catch (error) {storageWarning = `Session recovery was unavailable: ${error.message} You can restore an exported v0.2 JSON file from Run a study.`;}
 setMode('assist'); renderResearch(); route();

@@ -1,6 +1,6 @@
 import {records as directory} from '../dist/data.mjs';
 import {search,normalize,explain} from '../dist/engine.mjs';
-export const ADAPTER_VERSION='guided-public-model-v1';
+export const ADAPTER_VERSION='guided-public-model-v2';
 export function createModelAdapter({condition,initialQuery,records=directory}) {
   if(!['A','B','C'].includes(condition))throw new Error('Unknown condition.');
   const mode={A:'exact',B:'fuzzy',C:'assist'}[condition];let query=initialQuery,previous=null,limit=12,epoch=0,openDetail=null,matchCache=null;
@@ -21,9 +21,9 @@ export function createModelAdapter({condition,initialQuery,records=directory}) {
       explanationsAvailable:condition==='C'&&!!query.trim(),suggestionAvailable:!!suggestion(),undoAvailable:previous!==null,moreAvailable:list.length>limit,openDetail};
   }
   function preview(action) {
-    if(openDetail&&!['submit','close_details'].includes(action.type))throw new Error('Close the detail dialog before using other controls.');
+    if(openDetail&&!['submit','close_details','read_details'].includes(action.type))throw new Error('Close the detail dialog before using other controls.');
     const base={readingText:'',keyCount:0,clicks:0,waits:0};
-    if(['read_card','read_explanation','open_details','submit'].includes(action.type)) {
+    if(['read_card','read_explanation','open_details','submit','read_details'].includes(action.type)) {
       const {match:m,position}=candidate(action.handle),r=m.record;
       if(action.type==='submit') {if(openDetail!==action.handle)throw new Error('Submission requires the open detail dialog.');return {...base,clicks:1};}
       if(action.type==='read_explanation') {
@@ -34,9 +34,11 @@ export function createModelAdapter({condition,initialQuery,records=directory}) {
         const text=[r.title,r.category,r.description,r.tags[0]??''].join(' ');
         return {...base,readingText:text,card:{handle:action.handle,position,kind:'card',text}};
       }
-      if(typeof action.read!=='boolean')throw new Error('Specify whether the agent reads opened details.');
-      const text=[r.title,r.category,r.description,...r.tags,'This is a synthetic entry in the SearchAssist study directory. It does not open an external service.'].join(' ');
-      return {...base,clicks:1,readingText:action.read?text:'',...(action.read?{card:{handle:action.handle,position,kind:'details',text}}:{})};
+      if(action.type==='read_details'&&openDetail!==action.handle)throw new Error('Reading details requires the open dialog.');
+      if(action.type!=='read_details'&&typeof action.read!=='boolean')throw new Error('Specify whether the agent reads opened details.');
+      const text=[r.category.toUpperCase()+' / DIRECTORY ENTRY',r.title,r.description,...r.tags,...(condition==='C'&&m.kind!=='browse'?[explain(m)]:[]),'This is a synthetic entry in the SearchAssist study directory. It does not open an external service.'].join(' ');
+      const reading=action.type==='read_details'||action.read;
+      return {...base,clicks:action.type==='read_details'?0:1,readingText:reading?text:'',...(reading?{card:{handle:action.handle,position,kind:'details',text}}:{})};
     }
     if(action.type==='read_suggestion') {const proposed=suggestion();if(!proposed)throw new Error('No suggestion is visible.');return {...base,readingText:'Did you mean '+proposed,suggestion:{query:proposed}};}
     if(action.type==='apply_suggestion') {if(!suggestion())throw new Error('No suggestion can be applied.');return {...base,clicks:1,waits:1};}

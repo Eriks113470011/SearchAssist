@@ -27,3 +27,5 @@
 
 /* v1.0 review export bundle */
 .bundle-panel{margin:28px 0;padding:20px;border:1px solid var(--line);border-radius:6px;background:#fafcf7}.bundle-panel h3{margin-bottom:12px}.bundle-panel .checkline{margin:18px 0;align-items:flex-start;line-height:1.7;font-size:12px}#bundle-status{font-size:12px;line-height:1.7;margin:12px 0}
+
+.simulation-notice{padding:14px 24px;background:#fff0cf;color:#604300;font-weight:700;border-bottom:2px solid #b68214;position:sticky;top:0;z-index:100;line-height:1.5}

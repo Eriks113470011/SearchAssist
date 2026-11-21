@@ -13,7 +13,8 @@ export async function launchNativeBrowser(chromium,{timeout,signal}) {
     signal?.removeEventListener('abort',abort);unregister?.();
     await browser?.close().catch(()=>{});
     if(child?.pid&&child.exitCode===null&&child.signalCode===null){child.kill('SIGTERM');await Promise.race([exited,delay(2000)]);if(child.exitCode===null&&child.signalCode===null){child.kill('SIGKILL');await exited;}}
-    await rm(root,{recursive:true,force:true});
+    // Chromium helpers can finish profile writes just after the main process exits.
+    await rm(root,{recursive:true,force:true,maxRetries:10,retryDelay:100});
   })();
   const abort=()=>{if(child?.pid&&child.exitCode===null&&child.signalCode===null)child.kill('SIGTERM');};
   let exited;

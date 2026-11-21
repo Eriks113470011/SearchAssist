@@ -201,3 +201,7 @@ Bundle downloads preserve review decisions, notes, undo, and the unsaved indicat
 ## Check version 1.0 locally
 
 Run `npm run fixtures:qa` to generate 18 clean synthetic sessions and three edge cases in `qa-fixtures/`. They are ignored by git and labelled QA-only. The generator refuses to overwrite existing files. Follow `docs/ACCEPTANCE-v1.0.md` for exact expected values, the correct plan prefix, duplicate/partial/invalid checks, bundle verification, workspace restoration, and print/device checks. Keep QA records separate from participant data. All 101 automated tests can pass without establishing participant effectiveness, task calibration, or accessibility conformance.
+
+## Proposed next work: simulated participants
+
+[Simulated participant design for V1.1](docs/SIMULATOR-DESIGN-v1.1.md) specifies a seeded behavior model, fast and browser runners, operator-cost timing, synthetic data separation, sensitivity checks, and a path to calibration. This is a design proposal; no simulator command or runtime is implemented yet. Simulated runs would support functional testing and model-based exploration, with outputs kept separate from actual participant evidence.

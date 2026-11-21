@@ -9,3 +9,5 @@ Recovery refreshes stale candidate handles; traces and a separate interruptions.
 Native hidden-tab checks require headed Chromium. Each assignment uses a fresh owned Chromium process/profile connected with no default emulation overrides, changes the actual active sibling tab and observes native visibility. Clocks and visibility properties are not patched. Linux CI uses Xvfb.
 
 The smoke configuration runs 3 sessions / 36 tasks / 15 interruptions; the full configuration covers every assignment with 18 sessions / 216 tasks / 90 interruptions. See `docs/RECOVERY-v1.3.md` for commands, configuration, evidence definitions, bounds, validation and limits. All behavior parameters remain SIMULATED / UNCALIBRATED; empirical human calibration is future work.
+
+Native visibility is also checked during autosave so missed visibility-change events do not leave a hidden task running indefinitely. Fallback detection depends on the autosave interval and browser timer scheduling.

@@ -74,6 +74,8 @@ A separate evaluator reads only this isolated session's synthetic storage checkp
 
 For each interruption, the evaluator checks assignment and task index, the current query and correction undo value, previously completed trial bytes, synthetic tags and absent human ratings. It verifies the paused state, expected pause reason, one pause/resume increment and the expected reload/import recovery event. Active time must remain exactly constant between the paused checkpoints while wall time includes the measured idle hold, with a small scheduling/clock tolerance. The app must remain paused until the actual Resume control is clicked.
 
+The app also rechecks native visibility in its existing one-second autosave loop. This pauses a running task if a browser exposes hidden state without delivering a visibility-change event. Detection can be delayed by the autosave interval or browser timer throttling; these checks exclude idle time after the observed pause, rather than claiming the exact instant a tab was hidden.
+
 Final recording reconciliation checks the full query-change sequence, selections, result opens, task starts/completions, pause/resume reasons/counts and restore flags. Unexpected pauses, missing injections, state changes, timing failures or browser errors abort the run; they do not become ordinary task skips.
 
 The candidate observation epoch is refreshed after recovery because the app rebuilds the visible result list and closes dialogs. This clears candidate memory and stale handles while retaining the trial's attempted-query history. Additional scanning/opening can increase modeled search costs or change bounded decisions. That reorientation rule is an engineering hypothesis, not empirical evidence of human memory or interruption costs.

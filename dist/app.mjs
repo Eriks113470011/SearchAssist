@@ -268,7 +268,8 @@ document.addEventListener('study-assignment', event => {
 window.addEventListener('hashchange',()=>{if((location.hash.slice(1)||'search')!==view)route();});
 document.addEventListener('visibilitychange', () => {if (document.hidden) pauseStudy('tab_hidden');});
 window.addEventListener('pagehide', () => pauseStudy('page_exit', false));
-setInterval(() => {if (isRunning()) saveSession();}, 1000);
+// Recheck native visibility during autosave: some browser transitions can omit the event.
+setInterval(() => {if (document.hidden) pauseStudy('tab_hidden'); else if (isRunning()) saveSession();}, 1000);
 try {
   legacySession = simulationMode?null:sessionStorage.getItem('searchassist-study-v1');
   const saved = sessionStorage.getItem(sessionKey);

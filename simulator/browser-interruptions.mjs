@@ -24,14 +24,13 @@ export async function interruptBrowserTrial({page,entry,signal,onPaused=async()=
   const visibilityBefore=await page.evaluate(()=>document.visibilityState);assert.equal(visibilityBefore,'visible');
   const dialogWasOpen=await page.locator('#detail-dialog').isVisible(),dialogClosedForControl=dialogWasOpen&&['manual','navigation','restore'].includes(entry.kind);
   let cover,windowIds=null,visibilityDuring=visibilityBefore,pausedStart,pausedEnd;
-  const recoveryErrors=[],visibilityEvents=[];const recordError=e=>recoveryErrors.push(e.message),recordVisibility=m=>{if(m.text().startsWith('SEARCHASSIST_VISIBILITY_QA '))visibilityEvents.push(m.text());};page.on('pageerror',recordError);page.on('console',recordVisibility);
+  const recoveryErrors=[];const recordError=e=>recoveryErrors.push(e.message);page.on('pageerror',recordError);
   try {
     if(dialogClosedForControl)await page.locator('#detail-dialog .dialog-close').click();
     if(entry.kind==='manual'||entry.kind==='restore')await page.locator('#pause-task').click();
     if(entry.kind==='navigation'){await page.locator('[data-view="research"]').click();await page.locator('#view-research').waitFor({state:'visible'});}
     if(entry.kind==='reload')await page.reload();
     if(entry.kind==='hidden') {
-      await page.evaluate(()=>document.addEventListener('visibilitychange',event=>console.debug('SEARCHASSIST_VISIBILITY_QA '+JSON.stringify({state:document.visibilityState,trusted:event.isTrusted,hash:location.hash}))));
       const popup=page.waitForEvent('popup');await page.evaluate(()=>{window.open('about:blank','_blank');});cover=await popup;await cover.bringToFront();
       // Browser-scoped observation does not attach/detach a renderer emulation agent.
       const browserSession=await page.context().browser().newBrowserCDPSession();
@@ -73,6 +72,6 @@ export async function interruptBrowserTrial({page,entry,signal,onPaused=async()=
       pauseCountBefore:before.currentTrial.pauseCount,pauseCountAfter:after.currentTrial.pauseCount,resumeCountBefore:before.currentTrial.resumeCount,resumeCountAfter:after.currentTrial.resumeCount,
       restoreEventsBefore:restoredEvents(before),restoreEventsAfter:restoredEvents(after),restoredAfter:after.currentTrial.restored,
       pauseReason:expectedReason,nativeWindowId:windowIds?.original??null,coverWindowId:windowIds?.cover??null,visibilityMethod:entry.kind==='hidden'?'native-sibling-tab-no-default-overrides':'not-applicable',visibilityBefore,visibilityDuring,visibilityAfter:await page.evaluate(()=>document.visibilityState),verified:true};
-  }catch(error){const diagnostic=await page.evaluate(key=>({visibility:document.visibilityState,hash:location.hash,checkpoint:JSON.parse(sessionStorage.getItem(key))?.currentTrial}),SIMULATION_STORAGE_KEY).catch(()=>null);throw new Error(`[${entry.id} ${entry.kind}, task ${entry.taskIndex}, after action ${entry.afterAction}] ${error.message}; state=${JSON.stringify(diagnostic)}; pageErrors=${JSON.stringify(recoveryErrors)}; visibilityEvents=${JSON.stringify(visibilityEvents)}`,{cause:error});}
-  finally{page.off('pageerror',recordError);page.off('console',recordVisibility);if(cover){await page.bringToFront().catch(()=>{});await cover.close().catch(()=>{});}}
+  }catch(error){const diagnostic=await page.evaluate(key=>({visibility:document.visibilityState,hash:location.hash,checkpoint:JSON.parse(sessionStorage.getItem(key))?.currentTrial}),SIMULATION_STORAGE_KEY).catch(()=>null);throw new Error(`[${entry.id} ${entry.kind}, task ${entry.taskIndex}, after action ${entry.afterAction}] ${error.message}; state=${JSON.stringify(diagnostic)}; pageErrors=${JSON.stringify(recoveryErrors)}`,{cause:error});}
+  finally{page.off('pageerror',recordError);if(cover){await page.bringToFront().catch(()=>{});await cover.close().catch(()=>{});}}
 }

@@ -35,11 +35,11 @@ export async function interruptBrowserTrial({page,entry,signal,onPaused=async()=
       // so tab activation produces native document visibility rather than an emulated visible state.
       await page.bringToFront();nativeFocus=await page.context().newCDPSession(page);await nativeFocus.send('Emulation.setFocusEmulationEnabled',{enabled:false});await page.waitForFunction(()=>!document.hidden);
       cover=await page.context().newPage();await cover.goto('about:blank');await cover.bringToFront();
-      try{await page.waitForFunction(()=>document.hidden,null,{timeout:5000});}catch{throw new Error('Native hidden-tab state was not observed. Use headed Chromium with a real display or Xvfb; no visibility event is faked.');}
+      try{await page.waitForFunction(()=>document.hidden,null,{timeout:5000,polling:50});}catch{throw new Error('Native hidden-tab state was not observed. Use headed Chromium with a real display or Xvfb; no visibility event is faked.');}
       visibilityDuring=await page.evaluate(()=>document.visibilityState);assert.equal(visibilityDuring,'hidden');
     }
     if(!['hidden','navigation'].includes(entry.kind))await page.locator('#resume-session').waitFor({state:'visible'});
-    else await page.waitForFunction(key=>{const s=JSON.parse(sessionStorage.getItem(key));return s?.currentTrial?.runningAtSave===false;},SIMULATION_STORAGE_KEY);
+    else await page.waitForFunction(key=>{const s=JSON.parse(sessionStorage.getItem(key));return s?.currentTrial?.runningAtSave===false;},SIMULATION_STORAGE_KEY,{polling:50});
     pausedStart=await syntheticCheckpoint(page);sameProgress(before,pausedStart);assert.equal(pausedStart.currentTrial.runningAtSave,false);
     const expectedReason={manual:'manual',navigation:'navigation',hidden:'tab_hidden',reload:'restored',restore:'manual'}[entry.kind];assert.equal(pausedStart.currentTrial.pauseReason,expectedReason);
     assert.equal(pausedStart.currentTrial.pauseCount,before.currentTrial.pauseCount+1);

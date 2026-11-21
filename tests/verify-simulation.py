@@ -64,7 +64,7 @@ for session in sessions:
                 assert f['visibilityBefore'] == f['visibilityAfter'] == 'visible'
                 assert f['restoreEventsAfter'] - f['restoreEventsBefore'] == int(f['kind'] in ['reload', 'restore'])
                 if f['kind'] == 'hidden':
-                    assert f['visibilityDuring'] == 'hidden'
+                    assert f['visibilityDuring'] == 'hidden' and f['visibilityMethod'] == 'native-tab-focus-override-disabled'
         else:
             assert t['observedBrowserActiveMs'] is None and t['observedBrowserWallMs'] is None
         assert math.isfinite(t['modeledActiveMs']) and 0 <= t['modeledActiveMs'] <= config['limits']['maxModeledActiveMs']

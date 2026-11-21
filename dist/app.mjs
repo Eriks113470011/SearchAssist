@@ -263,7 +263,9 @@ document.addEventListener('study-assignment', event => {
   $('#set-rotation').value = String(event.detail.setRotation);
   $('#participant-code').focus();
 });
-window.addEventListener('hashchange', route);
+// Explicit navigation handlers may already render this view before hashchange arrives.
+// Avoid replacing a live import form a second time while its file is being read.
+window.addEventListener('hashchange',()=>{if((location.hash.slice(1)||'search')!==view)route();});
 document.addEventListener('visibilitychange', () => {if (document.hidden) pauseStudy('tab_hidden');});
 window.addEventListener('pagehide', () => pauseStudy('page_exit', false));
 setInterval(() => {if (isRunning()) saveSession();}, 1000);

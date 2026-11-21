@@ -225,7 +225,7 @@ The first command runs 18 simulated sessions / 216 tasks; the second runs six pr
 
 **All results are SIMULATED / UNCALIBRATED.** Policies receive attended public text, not hidden target IDs or engine scores. Their evidence and timing parameters are explicit hypotheses. Success follows actual chosen results; human confidence/trust/ease ratings and observed browser times are unavailable. Generated simulation formats cannot be imported as ordinary participant recordings. Keep them separate from human study data.
 
-[The implementation guide](docs/SIMULATOR-v1.1.md) documents configuration, seeds, six profiles, modeled costs, sensitivity runs, bounds and verification. This is the fast model milestone. The browser runner is available in V1.2; interruption/fault scenarios and empirical calibration remain subsequent milestones. The simulator does not validate actual human effectiveness or implement a full ACT-R architecture.
+[The implementation guide](docs/SIMULATOR-v1.1.md) documents configuration, seeds, six profiles, modeled costs, sensitivity runs, bounds and verification. This is the fast model milestone. The browser runner is available in V1.2; V1.3 adds scheduled interruptions and recovery. Broader fault injection and empirical calibration remain subsequent milestones. The simulator does not validate actual human effectiveness or implement a full ACT-R architecture.
 
 
 ## Browser participants (V1.2)

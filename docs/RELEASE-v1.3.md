@@ -6,6 +6,6 @@ Synthetic recording restore reuses strict recording validation/sanitization with
 
 Recovery refreshes stale candidate handles; traces and a separate interruptions.csv describe injection points, idle durations, timing checkpoints, pause/resume counts, modal-close steps, restore events and visibility observations. Reports add recovery summaries without pooling automation times with modeled costs. Configured but unreachable scenarios fail explicitly.
 
-Native hidden-tab checks require headed Chromium. The controller temporarily removes Playwright's focus-emulation override, changes the actual active tab and observes native visibility, then restores the override after the app becomes visible. Clocks and visibility properties are not patched. Linux CI uses Xvfb.
+Native hidden-tab checks require headed Chromium. Each assignment uses a fresh owned Chromium process/profile connected with no default emulation overrides, changes the actual active sibling tab and observes native visibility. Clocks and visibility properties are not patched. Linux CI uses Xvfb.
 
 The smoke configuration runs 3 sessions / 36 tasks / 15 interruptions; the full configuration covers every assignment with 18 sessions / 216 tasks / 90 interruptions. See `docs/RECOVERY-v1.3.md` for commands, configuration, evidence definitions, bounds, validation and limits. All behavior parameters remain SIMULATED / UNCALIBRATED; empirical human calibration is future work.

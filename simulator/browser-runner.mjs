@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {setTimeout as delay} from 'node:timers/promises';
-import {readFile} from 'node:fs/promises';
+import {readBrowserDownload} from './browser-downloads.mjs';
 import {taskSets,orders} from '../dist/study.mjs';
 import {isSimulationRecording} from '../dist/simulation-session.mjs';
 import {validateBrowserConfig} from './browser-config.mjs';
@@ -11,6 +11,7 @@ import {actionCost,TIMING_VERSION} from './timing.mjs';
 import {MODEL_VERSION,SIMULATION_FORMAT} from './runner.mjs';
 import {createBrowserAdapter,BROWSER_ADAPTER_VERSION} from './browser-adapter.mjs';
 import {interruptBrowserTrial,INTERRUPTION_VERSION} from './browser-interruptions.mjs';
+import {launchNativeBrowser} from './native-browser.mjs';
 import {startBrowserServer} from './browser-server.mjs';
 export const RECONCILIATION_VERSION='recorded-browser-actions-v2';
 export async function runBrowserTrial({page,profile,config,agentKey,taskKey,signal,taskIndex,onPaused}) {
@@ -89,18 +90,21 @@ export async function simulateBrowser(input={}, {onProgress=()=>{},onPaused}={})
     const {chromium}=await import('playwright');
     server=await startBrowserServer();
     deadline=setTimeout(()=>{controller.abort(new Error('Browser run exceeded maxRunWallMs.'));void browser?.close().catch(()=>{});},config.browser.maxRunWallMs);
-    browser=await chromium.launch({headless:!config.browser.headed,timeout:config.browser.actionTimeoutMs,...(process.env.SEARCHASSIST_CHROMIUM_PATH?{executablePath:process.env.SEARCHASSIST_CHROMIUM_PATH}:{})});
-    const browserVersion=browser.version();
+    const nativeVisibility=config.browser.interruptions.some(f=>f.kind==='hidden');
+    if(!nativeVisibility)browser=await chromium.launch({headless:!config.browser.headed,timeout:config.browser.actionTimeoutMs,...(process.env.SEARCHASSIST_CHROMIUM_PATH?{executablePath:process.env.SEARCHASSIST_CHROMIUM_PATH}:{})});
+    let browserVersion=browser?.version();
     for(const profileName of config.profiles)for(let replicate=0;replicate<config.replicates;replicate++)for(const slot of config.browser.assignmentSlots) {
       controller.signal.throwIfAborted();
       const participant=`SIM_${String(sessions.length+1).padStart(5,'0')}`,order=orders[slot%6],setRotation=Math.floor(slot/6),assignment={participant,order,setRotation};
       currentAssignment={...assignment,profile:profileName,replicate:replicate+1,slot};currentTaskIndex=null;
       onProgress({participant,profile:profileName,slot,completedSessions:sessions.length});
-      const context=await browser.newContext({acceptDownloads:true,serviceWorkers:'block',viewport:{width:1440,height:1000}}),errors=[],blockedExternalOrigins=new Set();
+      const native=nativeVisibility?await launchNativeBrowser(chromium,{timeout:config.browser.actionTimeoutMs,signal:controller.signal}):null;
+      if(native){browser=native.browser;browserVersion??=browser.version();}
+      const context=native?.context??await browser.newContext({acceptDownloads:true,serviceWorkers:'block',viewport:{width:1440,height:1000}}),errors=[],blockedExternalOrigins=new Set();
       try {
         context.setDefaultTimeout(config.browser.actionTimeoutMs);context.setDefaultNavigationTimeout(config.browser.actionTimeoutMs);
         await context.route('**/*',route=>{if(new URL(route.request().url()).origin===server.origin)return route.continue();blockedExternalOrigins.add(new URL(route.request().url()).origin);return route.abort();});
-        const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
+        const page=native?(context.pages()[0]??await context.newPage()):await context.newPage();if(native)await page.setViewportSize({width:1440,height:1000});page.on('pageerror',e=>errors.push(e.message));
         await page.goto(server.origin+'/?simulation=1#study');if(config.browser.headed){await page.bringToFront();await page.waitForFunction(()=>!document.hidden);}await page.locator('#simulation-notice').waitFor({state:'visible'});
         await page.locator('#participant-code').fill(participant);await page.locator('#condition-order').selectOption(order);await page.locator('#set-rotation').selectOption(String(setRotation));
         await page.locator('#start-study input[type=checkbox]').check();await page.locator('#start-study button').click();
@@ -112,16 +116,15 @@ export async function simulateBrowser(input={}, {onProgress=()=>{},onPaused}={})
           if((i+1)%4===0){await page.locator('#continue-simulation').waitFor({state:'visible'});assert.equal(await page.locator('#ratings-form').count(),0);await page.locator('#continue-simulation').click();}
         }
         // The evaluator downloads the tagged recording only after all policy decisions.
-        const pending=page.waitForEvent('download');await page.locator('#export-json').click();const download=await pending;
-        assert.equal(await download.failure(),null);assert.ok(download.suggestedFilename().endsWith('.simulation.json'));
-        const recording=JSON.parse(await readFile(await download.path(),'utf8'));
+        const download=await readBrowserDownload(page,'#export-json');assert.ok(download.filename.endsWith('.simulation.json'));
+        const recording=JSON.parse(download.text);
         const verified=reconcileRecording(recording,trials,assignment);assert.deepEqual(errors,[]);
         sessions.push({format:'searchassist-simulation-session',schemaVersion:1,dataOrigin:'synthetic',calibrationStatus:'uncalibrated',runner:'browser',...assignment,profile:profileName,replicate:replicate+1,assignmentSlot:slot,humanRatings:null,trials:verified,browserRecording:recording,blockedExternalOrigins:[...blockedExternalOrigins].sort()});
-      } finally {await context.close();}
+      } finally {if(native)await native.close();else await context.close();}
     }
     return {format:SIMULATION_FORMAT,schemaVersion:1,applicationVersion:'1.3',dataOrigin:'synthetic',calibrationStatus:'uncalibrated',runner:'browser',modelVersion:MODEL_VERSION,adapterVersion:BROWSER_ADAPTER_VERSION,rngVersion:RNG_VERSION,timingVersion:TIMING_VERSION,
       datasetVersion:'synthetic-directory-v1',protocolVersion:'controlled-tasks-v1',measurementDefinition:'modeled-operator-time-v1',browserMeasurementDefinition:'active-time-v2-automation',browserVersion,reconciliationVersion:RECONCILIATION_VERSION,
-      interruptionVersion:INTERRUPTION_VERSION,humanRatings:null,config,resolvedProfiles:Object.fromEntries(config.profiles.map(p=>[p,resolveProfile(config,p)])),sessions};
+      browserControlMode:nativeVisibility?'owned-native-cdp-no-defaults':'playwright-isolated-context',interruptionVersion:INTERRUPTION_VERSION,humanRatings:null,config,resolvedProfiles:Object.fromEntries(config.profiles.map(p=>[p,resolveProfile(config,p)])),sessions};
   } catch(error) {
     const failure=new Error(controller.signal.aborted?'Browser run exceeded maxRunWallMs.':error.message,{cause:error});
     failure.simulationFailure={format:'searchassist-simulation-failure',schemaVersion:1,dataOrigin:'synthetic',calibrationStatus:'uncalibrated',runner:'browser',completedSessions:sessions.length,assignment:currentAssignment,taskIndex:currentTaskIndex,reason:failure.message};throw failure;

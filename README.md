@@ -24,6 +24,7 @@ Open http://localhost:8080. Core functionality works without external services. 
 - A guided within-subject evaluation with all six condition orders, three task-set rotations, twelve trials, saved post-block rating drafts, trial CSV, condition-summary CSV, and a restorable session JSON event log.
 - Pause/resume and reload recovery that preserve the current query, suggestion undo, completed tasks, and recorded active time. Restored sessions require an explicit Resume.
 - Reproducible aggregate survey-analysis script, source notes, and an evaluation protocol.
+- A seeded fast participant-behavior simulator with six configurable profiles, synthetic-only reports, action traces, and auditable timing costs.
 - A review ZIP bundle with aggregate reports by default, optional full workspace/individual CSVs, and a SHA-256 integrity manifest.
 - A synthetic fixture generator and acceptance guide for checking the complete workflow.
 - Incremental review imports that preserve earlier choices, notes, and settings, recheck duplicate codes, and support undo of the latest addition.
@@ -38,6 +39,13 @@ Open http://localhost:8080. Core functionality works without external services. 
 
 | File | Purpose |
 | --- | --- |
+| `simulator/cli.mjs` | Local synthetic-model runner, bounded output, source/payload fingerprints |
+| `simulator/policy.mjs` | Public-observation-only search decisions with no evaluator access |
+| `simulator/model-adapter.mjs` | Actual engine behind an approximate guided-interface projection |
+| `simulator/report.mjs` | Synthetic-only reports, CSVs and session artifacts |
+| `configs/simulator-smoke.json` | One-profile 18-session / 216-task configuration |
+| `configs/simulator-profiles.json` | Six-profile 108-session / 1,296-task configuration |
+| `docs/SIMULATOR-v1.1.md` | Simulator commands, parameters, definitions, limits and next steps |
 | `dist/index.html` | App shell and accessible controls |
 | `dist/styles.css` | Responsive visual design |
 | `dist/app.mjs` | Views, result rendering, recovery, and local study workflow |
@@ -56,6 +64,8 @@ Open http://localhost:8080. Core functionality works without external services. 
 | `tests/search.test.mjs` | Matching, conditions, evidence, filters, and study-target regression checks |
 | `tests/study.test.mjs` | Timing, query recording, all 18 study assignments, restore validation, and exports |
 | `tests/workspace.test.mjs` | Balanced schedules, duplicates, partial sessions, timing exclusions, and review exports |
+| `tests/simulator.test.mjs` | Config, replay, answer-key boundaries, costs, synthetic separation and CLI exports |
+| `tests/verify-simulation.py` | Independent verification of simulation artifacts in CI |
 | `tests/review-bundle.test.mjs` | ZIP structure, privacy omissions, snapshots, backups, digests, and error paths |
 | `tests/verify-bundles.py` | Independent ZIP/CRC/SHA and CSV/JSON verification of browser downloads in CI |
 | `tests/review-addition.test.mjs` | Additive imports, preserved decisions, duplicate rechecks, limits, undo, and workspace round-trips |
@@ -100,7 +110,7 @@ To restore, open **Run a study**, choose a v0.2 session JSON file under 1 MB, an
 
 ## Status
 
-Version 1.0 adds review ZIP bundles with integrity manifests and a reproducible synthetic acceptance workflow. The recording schema remains v0.2 with the same dataset, tasks, engine, and timing definition, so v0.2 recordings remain restorable and reviewable. The application version shown in navigation is independent of the recording-schema and workspace-project versions. See `docs/RELEASE-v1.0.md` for workflow and verification. Accessibility features require screen-reader and physical-device testing. Real participant evaluation, task-difficulty calibration, formal comprehension measures, and a validated usability instrument remain future work. `docs/EVALUATION.md` explains the design limits.
+Version 1.1 adds a local seeded simulated-participant baseline for behavior scenarios and functional testing. The recording schema remains v0.2 with the same dataset, tasks, engine, and timing definition, so v0.2 recordings remain restorable and reviewable. The application version shown in navigation is independent of the recording-schema and workspace-project versions. See `docs/RELEASE-v1.1.md` for workflow and verification. Accessibility features require screen-reader and physical-device testing. Real participant evaluation, task-difficulty calibration, formal comprehension measures, and a validated usability instrument remain future work. `docs/EVALUATION.md` explains the design limits.
 
 ## Facilitator workspace
 
@@ -157,7 +167,7 @@ The HTML is self-contained, has no scripts or external assets, and works offline
 
 HTML and JSON share a single timestamped snapshot until you change the workspace. Changes to the plan, imported batch, inclusion decisions, notes, or filters discard the preview and cached snapshot. Closing a preview preserves the current snapshot. Creating or downloading reports does not change recordings, inclusion choices, workspace contents, or unsaved status.
 
-The JSON uses `searchassist-study-summary`, summary version 2, application version 1.0, and explicit units: success proportions (0–1), success differences in percentage points, active times/differences in milliseconds, and ordinal rating responses from 1 to 7. HTML converts time to seconds and success to percentages. Both use the existing calculations without adding significance tests, confidence intervals, or winner labels. A missing result is `null` in JSON and “Not available” in HTML; a genuine zero remains zero.
+The JSON uses `searchassist-study-summary`, summary version 2, application version 1.1, and explicit units: success proportions (0–1), success differences in percentage points, active times/differences in milliseconds, and ordinal rating responses from 1 to 7. HTML converts time to seconds and success to percentages. Both use the existing calculations without adding significance tests, confidence intervals, or winner labels. A missing result is `null` in JSON and “Not available” in HTML; a genuine zero remains zero.
 
 These aggregate reports omit participant codes, source file names, plan prefixes, recorded queries, participant observations, reviewer notes, and individual result rows. Small-group counts can still identify people in context; this is not a guarantee of anonymity. Keep the workspace, original recordings, inclusion log, and detailed CSVs for the underlying audit. Summary JSON is an output report, not a restorable workspace file. The recording schema stays 0.2 / 2 and workspace project version stays 2 (versions 1 and 2 remain readable).
 
@@ -200,8 +210,19 @@ Bundle downloads preserve review decisions, notes, undo, and the unsaved indicat
 
 ## Check version 1.0 locally
 
-Run `npm run fixtures:qa` to generate 18 clean synthetic sessions and three edge cases in `qa-fixtures/`. They are ignored by git and labelled QA-only. The generator refuses to overwrite existing files. Follow `docs/ACCEPTANCE-v1.0.md` for exact expected values, the correct plan prefix, duplicate/partial/invalid checks, bundle verification, workspace restoration, and print/device checks. Keep QA records separate from participant data. All 101 automated tests can pass without establishing participant effectiveness, task calibration, or accessibility conformance.
+Run `npm run fixtures:qa` to generate 18 clean synthetic sessions and three edge cases in `qa-fixtures/`. They are ignored by git and labelled QA-only. The generator refuses to overwrite existing files. Follow `docs/ACCEPTANCE-v1.0.md` for exact expected values, the correct plan prefix, duplicate/partial/invalid checks, bundle verification, workspace restoration, and print/device checks. Keep QA records separate from participant data. All automated tests can pass without establishing participant effectiveness, task calibration, or accessibility conformance.
 
-## Proposed next work: simulated participants
+## Simulated participants (V1.1 fast baseline)
 
-[Simulated participant design for V1.1](docs/SIMULATOR-DESIGN-v1.1.md) specifies a seeded behavior model, fast and browser runners, operator-cost timing, synthetic data separation, sensitivity checks, and a path to calibration. This is a design proposal; no simulator command or runtime is implemented yet. Simulated runs would support functional testing and model-based exploration, with outputs kept separate from actual participant evidence.
+The first implementation of [the design](docs/SIMULATOR-DESIGN-v1.1.md) is available locally:
+
+```bash
+npm run simulate -- --config configs/simulator-smoke.json --output simulation-runs/smoke-001
+npm run simulate -- --config configs/simulator-profiles.json --output simulation-runs/profiles-001
+```
+
+The first command runs 18 simulated sessions / 216 tasks; the second runs six profiles across every order/rotation combination for 108 sessions / 1,296 tasks. No installation, API key, model download or network is needed beyond Node.js 22+. Outputs go to a new ignored simulation-runs directory and are never overwritten. Open report.html inside the output directory; inspect per-session traces, operator ledgers, CSVs and the source/payload SHA-256 manifest.
+
+**All results are SIMULATED / UNCALIBRATED.** Policies receive attended public text, not hidden target IDs or engine scores. Their evidence and timing parameters are explicit hypotheses. Success follows actual chosen results; human confidence/trust/ease ratings and observed browser times are unavailable. Generated simulation formats cannot be imported as ordinary participant recordings. Keep them separate from human study data.
+
+[The implementation guide](docs/SIMULATOR-v1.1.md) documents configuration, seeds, six profiles, modeled costs, sensitivity runs, bounds and verification. This is the fast model milestone. An isolated browser-agent runner, interruption/fault scenarios and empirical calibration remain subsequent milestones. The simulator does not validate actual human effectiveness or implement a full ACT-R architecture.

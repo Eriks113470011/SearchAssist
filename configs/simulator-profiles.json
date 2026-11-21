@@ -1,0 +1,10 @@
+{
+  "format": "searchassist-simulation-config",
+  "schemaVersion": 1,
+  "dataOrigin": "synthetic",
+  "calibrationStatus": "uncalibrated",
+  "runner": "model",
+  "masterSeed": 42,
+  "profiles": ["careful-scanner", "first-result-chooser", "frequent-reformulator", "limited-vocabulary", "explanation-reader", "cautious-suggestion-user"],
+  "replicates": 1
+}

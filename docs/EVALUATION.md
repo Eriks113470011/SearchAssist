@@ -155,3 +155,10 @@ The combined 60-file / 10 MB limit still applies. Invalid individual files remai
 Review bundles capture the current plan, batch, inclusion decisions, and analysis settings in one timestamped snapshot. The default is aggregate only; an explicit option includes the restorable workspace and individual audit/results. Keep those full-data ZIPs with the original study data. SHA-256 manifest digests can identify changed payload files but are not signatures or proof of authorship. The ZIP is unencrypted and does not record undo history. Existing schemas and analysis definitions remain unchanged.
 
 Use docs/ACCEPTANCE-v1.0.md and the isolated synthetic fixtures before a pilot. Record actual outcomes and failures on target devices, keyboard/screen-reader workflows, and print settings. Passing synthetic functional checks is separate from evaluating participant performance, matching task difficulty, validating rating questions, or establishing causal effects. Do not pool QA fixtures with participant sessions.
+
+
+## Synthetic behavior-model runs (v1.1)
+
+The local fast simulator exercises hypothetical search policies across the actual task/order/rotation structure. It uses a separate simulation format, output directory, reports and measurement definition. The normal importer rejects generated simulation envelopes and explicit synthetic-origin flags. Legacy untagged QA fixtures and manual relabelling are not authenticated by this boundary.
+
+Modeled success reflects the agent's selected result, and modeled active costs sum its configured attention/decision/motor operations. Human trust, confidence and ease ratings and real browser measurements remain unavailable. Do not pool these outputs with volunteer sessions, report agent counts as recruited participants, or interpret seeded scenario differences as empirical interface benefits. The current CLI is not the planned browser-agent or a calibrated cognitive model. See docs/SIMULATOR-v1.1.md for assumptions, limitations, accounting and independent verification.

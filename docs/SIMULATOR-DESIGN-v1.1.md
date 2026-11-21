@@ -1,6 +1,6 @@
 # SearchAssist simulated participant design — proposed V1.1
 
-Status: design proposal, not an implemented simulator. Baseline: merged SearchAssist 1.0 at 87f0515bb274c8a2ea8e1ea2dcbb5a9deffd8564. No application version, protocol, or data format changes are made by this document.
+Status: staged design roadmap. The fast model/policy/configuration and six-profile coverage baseline is implemented; see SIMULATOR-v1.1.md for the actual supported commands and schema. Browser-agent execution, fault injection and empirical calibration remain future milestones. Baseline: merged SearchAssist 1.0 at 87f0515bb274c8a2ea8e1ea2dcbb5a9deffd8564. This design document is not the executable configuration specification; its illustrative JSON below predates the implemented config shape. The implementation guide and supplied configs are authoritative for V1.1.
 
 ## Goal and evidence boundary
 

@@ -97,7 +97,7 @@ test('ratings are read-only and survive workspace round-trips without changing r
 });
 test('summary version 2 includes the same aggregate rating data and ordinal scale definitions',()=>{
   const e=entries({}),options={includePartial:true};const {summary:r,json,html}=studySummaryAssets(e,plan,options,date);
-  assert.equal(r.summaryVersion,2);assert.equal(r.applicationVersion,'1.0');assert.equal(r.ratingScale.definition,'post-block-ratings-v1');
+  assert.equal(r.summaryVersion,2);assert.equal(r.applicationVersion,'1.1');assert.equal(r.ratingScale.definition,'post-block-ratings-v1');
   assert.deepEqual(r.ratings,ratingSummary(e,options));assert.deepEqual(r.pairedRatings,pairedRatingSummary(e,options));
   assert.equal(r.ratingScale.questions.length,3);assert.equal(r.units.rating,'ordinal scale from 1 to 7');
   assert.match(html,/Confidence, trust, and ease/);assert.match(html,/Score 1 \/ 2 \/ 3 \/ 4 \/ 5 \/ 6 \/ 7 counts/);

@@ -4,6 +4,9 @@ import {readFile, writeFile, mkdir} from 'node:fs/promises';
 import {resolve, extname} from 'node:path';
 import {chromium} from 'playwright';
 import {readStoredFiles} from './zip-reader.mjs';
+import {simulate} from '../simulator/runner.mjs';
+import {renderSimulationReport} from '../simulator/report.mjs';
+import {createModelAdapter} from '../simulator/model-adapter.mjs';
 import * as study from '../dist/study.mjs';
 
 // A temporary local server and synthetic fixtures keep browser QA independent of hosting or participant data.
@@ -517,9 +520,45 @@ try {
   await bundlePage.setViewportSize({width:390,height:844});await bundlePage.screenshot({path:'test-results/bundle-mobile.png',fullPage:true});
   assert.equal(await bundlePage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Bundle controls overflow on mobile');
   await bundlePage.locator('#clear-review').click();assert.equal(await bundlePage.locator('#download-bundle').isEnabled(),false);
+  // The fast adapter is checked against public rendered content; this is not a browser-agent runner.
+  const modelPage=await context.newPage();modelPage.on('pageerror',error=>errors.push(error.message));
+  await modelPage.goto(url+'/#study');await visible(modelPage,'#start-study');
+  await modelPage.locator('#participant-code').fill('ADAPTER_QA');await modelPage.locator('#condition-order').selectOption('CBA');
+  await modelPage.locator('#start-study input[type=checkbox]').check();await modelPage.locator('#start-study button').click();await visible(modelPage,'#pause-task');
+  assert.equal(await modelPage.locator('#query').inputValue(),'calender');
+  const adapter=createModelAdapter({condition:'C',initialQuery:'calender'}),publicState=adapter.observe();
+  assert.equal(await modelPage.locator('#results .result-card').count(),publicState.candidates.length);
+  for(const [i,c] of publicState.candidates.entries()) {
+    const card=modelPage.locator('#results .result-card').nth(i);
+    const text=(await Promise.all(['.result-title','.card-category',':scope > p','.tag'].map(selector=>card.locator(selector).first().textContent()))).map(s=>s.trim()).join(' ');
+    assert.equal(adapter.preview({type:'read_card',handle:c.handle}).card.text,text);
+    assert.equal(adapter.preview({type:'read_explanation',handle:c.handle}).card.text,(await card.locator('.explanation').textContent()).trim());
+  }
+  assert.equal(adapter.preview({type:'read_suggestion'}).suggestion.query,await modelPage.locator('#suggested-query').inputValue());
+  adapter.execute({type:'apply_suggestion'});await modelPage.locator('#apply-suggestion').click();assert.equal(adapter.observe().query,await modelPage.locator('#query').inputValue());
+  adapter.execute({type:'undo_suggestion'});await modelPage.locator('#undo-query').click();assert.equal(adapter.observe().query,await modelPage.locator('#query').inputValue());
+  const simulation=simulate(),simulationText=JSON.stringify(simulation.sessions[0]);
+  await modelPage.goto(url+'/#study');await visible(modelPage,'#import-session');
+  await modelPage.locator('#import-session').setInputFiles(upload('SIM_00001.simulation.json',simulationText));
+  await modelPage.locator('#import-status').filter({hasText:'Simulated data cannot be used as participant recordings'}).waitFor();
+  assert.equal((await checkSession(modelPage)).participant,'ADAPTER_QA');
+  const syntheticReview=await context.newPage();syntheticReview.on('pageerror',error=>errors.push(error.message));
+  await syntheticReview.goto(url+'/#workspace');await visible(syntheticReview,'#review-files');
+  await syntheticReview.locator('#review-files').setInputFiles([upload('real-format-qa.json',fixture('FORMAT_QA')),upload('SIM_00001.simulation.json',simulationText)]);
+  await syntheticReview.locator('#review-status').filter({hasText:'1 valid and 1 invalid'}).waitFor();
+  assert.match(await syntheticReview.locator('#review-table').innerText(),/Simulated data cannot be used/);
+  assert.match(await syntheticReview.locator('#duplicate-status').innerText(),/1 session\(s\) included/);
+  const simReport=await context.newPage();simReport.on('pageerror',error=>errors.push(error.message));
+  const simRequests=[];simReport.on('request',request=>simRequests.push(request.url()));
+  await simReport.setContent(renderSimulationReport(simulation),{waitUntil:'load'});
+  assert.equal(await simReport.locator('.badge').innerText(),'SIMULATED / UNCALIBRATED');assert.deepEqual(simRequests,[]);
+  await simReport.screenshot({path:'test-results/simulator-desktop.png',fullPage:true});
+  await simReport.pdf({path:'test-results/simulator-report.pdf',printBackground:true,preferCSSPageSize:true});
+  await simReport.setViewportSize({width:390,height:844});await simReport.screenshot({path:'test-results/simulator-mobile.png',fullPage:true});
+  assert.equal(await simReport.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Simulator report overflows on mobile');
   assert.equal((await checkSession(fresh)).participant,'P007');
   assert.deepEqual(errors,[]);
-  console.log('Browser checks passed: study/workspace/paired regressions, coverage summaries, assignment mismatches, unplanned codes, duplicate/partial decisions, all 18 balance cells, coverage CSVs, plan regeneration, workspace round-trips, aggregate report preview/downloads/privacy/invalidation, submitted rating distributions and matched directions, rating CSVs and workspace round-trips, additive imports/undo/duplicate rechecks/limits/read failures/stale reads, aggregate/full/empty ZIP bundles, snapshot integrity and cancelled hash operations, offline print PDF, recording isolation, and desktop/mobile layout.');
+  console.log('Browser checks passed: study/workspace/paired regressions, coverage summaries, assignment mismatches, unplanned codes, duplicate/partial decisions, all 18 balance cells, coverage CSVs, plan regeneration, workspace round-trips, aggregate report preview/downloads/privacy/invalidation, submitted rating distributions and matched directions, rating CSVs and workspace round-trips, additive imports/undo/duplicate rechecks/limits/read failures/stale reads, aggregate/full/empty ZIP bundles, snapshot integrity and cancelled hash operations, model-adapter DOM projection parity, synthetic import rejection, simulator report layouts, offline print PDF, recording isolation, and desktop/mobile layout.');
 } finally {
   if(browser)await browser.close();
   await new Promise(done=>server.close(done));

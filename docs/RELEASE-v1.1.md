@@ -1,0 +1,13 @@
+# SearchAssist 1.1 — seeded simulated-participant baseline
+
+The first simulator milestone is implemented as a local Node CLI. Six bounded search policies use the actual engine through a public-content model, with seeded recognition noise, prompt-derived rewrites, optional typing slips, suggestion use/undo, detail verification, and explicit stopping budgets. Every profile covers all 18 order/rotation cells. No correctness answer key is available to the policy.
+
+Run npm run simulate -- --config configs/simulator-smoke.json --output simulation-runs/smoke-001 for 18 sessions / 216 tasks. Use configs/simulator-profiles.json for 108 sessions / 1,296 tasks. The generated report, CSVs, distinct simulation sessions, action traces, operator ledgers and source/payload SHA-256 manifest are labelled SIMULATED / UNCALIBRATED. Human confidence/trust/ease and actual browser timing stay unavailable.
+
+See docs/SIMULATOR-v1.1.md for commands, file definitions, all parameters, sensitivity examples, bounds, timing accounting, and limitations. The original design remains as a staged roadmap; this release implements the fast baseline and profile coverage, not the browser-agent or empirical-calibration milestones.
+
+The normal study importer rejects simulation envelopes and explicit synthetic-origin tags before metadata sanitization. Legacy v0.2 recordings and workspace project versions 1/2 remain readable. Participant recording schema 0.2 / 2, workspace and summary versions 2, and bundle version 1 are unchanged. UI/download version labels move to 1.1. Normal matching, tasks, timing definitions and analysis calculations are retained.
+
+122 unit tests and syntax checks pass locally. New tests exercise strict config and output bounds, keyed replay, public observation/control boundaries, hidden-target and ID invariance, independent policies, cost conservation, six-profile assignment coverage, success/error/skip/budget behavior, slip scenarios, synthetic import rejection, output labels/counts and independent CLI payload hashes. A complete 108-session run is independently verified with Python for payload/source hashes, coverage, CSV outcomes and timing ledgers.
+
+Chromium regression checks cover existing workflows plus projected-card/explanation and suggestion/undo parity with the actual guided interface, rejection of synthetic files in participant imports/reviews, and offline simulator-report desktop/mobile/print behavior. The fast runner is not an automated browser participant, a full cognitive architecture, or evidence of real human effectiveness. Its numerical behavior and time parameters remain hypotheses pending empirical calibration.

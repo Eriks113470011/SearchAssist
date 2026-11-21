@@ -21,7 +21,7 @@ export function mountWorkspace(root) {
     <div class="panel section-gap"><h2>Plan participant assignments</h2><p>Every 18 consecutive assignments cover all six condition orders and three task rotations once. Continue numbering when adding participants. This is a balancing schedule, not random assignment or a sample-size recommendation.</p>
     <form id="assignment-form" class="workspace-controls"><label>Code prefix<input id="plan-prefix" value="P" maxlength="12" required></label><label>Starting number<input id="plan-start" type="number" value="1" min="1" max="999999" required></label><label>Participants<input id="plan-count" type="number" value="18" min="1" max="180" required></label><button class="primary">Generate schedule</button></form>
     <p id="plan-status" role="status" aria-live="polite"></p><div class="export-actions"><button id="download-plan" class="secondary">Download assignment CSV ↓</button></div><div id="assignment-table" class="table-scroll" role="region" aria-label="Participant assignments" tabindex="0"></div></div>
-    <div class="panel section-gap"><h2>Review session exports</h2><p>Choose up to 60 v0.2 session JSON files, at most 1 MB each and 10 MB total. v1.0 retains the v0.2 recording schema. The review does not modify recordings or your current study session. Files stay in memory here; reload clears the review.</p>
+    <div class="panel section-gap"><h2>Review session exports</h2><p>Choose up to 60 v0.2 session JSON files, at most 1 MB each and 10 MB total. v1.1 retains the v0.2 recording schema. The review does not modify recordings or your current study session. Files stay in memory here; reload clears the review.</p>
     <label class="file-label" for="review-files">Replace review with session JSON files</label><input id="review-files" type="file" accept=".json,application/json" multiple><p id="review-status" role="status" aria-live="polite"></p>
     <div class="add-review-panel"><h3>Add to this review</h3><p class="small-print">Add session JSON files as recordings arrive. Existing choices, notes, and analysis settings are kept. The combined review is limited to 60 files and 10 MB. Repeated codes are checked across the entire review; a newly repeated code needs an explicit choice unless you already selected one of its files. Adding the same file again creates another copy.</p><label class="file-label" for="add-review-files">Add session JSON files</label><input id="add-review-files" type="file" accept=".json,application/json" multiple><div class="export-actions"><button id="undo-addition" class="secondary" disabled>Undo latest addition</button></div><p class="small-print">Undo removes the latest added files and their notes. It keeps choices and notes on earlier files, along with the current plan and settings. Only the latest addition can be undone, during this visit; reopening, replacing, or clearing a review resets undo.</p><p id="addition-status" role="status" aria-live="polite"></p></div>
     <div class="workspace-controls review-filters"><label><input id="include-partial" type="checkbox"> Include incomplete sessions</label><label><input id="exclude-interrupted" type="checkbox"> Exclude interrupted trials from timing means</label><button id="clear-review" class="text-btn">Clear review</button></div>
@@ -54,7 +54,7 @@ export function mountWorkspace(root) {
     try {
       if (JSON.stringify(readPlanFields()) !== JSON.stringify(planConfig)) throw new Error('Generate the assignment schedule before saving edited plan fields.');
       const content = exportProject({planConfig, entries, options:options(), notes});
-      download(content, 'searchassist-v1.0-workspace.json', 'application/json');
+      download(content, 'searchassist-v1.1-workspace.json', 'application/json');
       dirty = false; find('#project-status').textContent = 'Workspace JSON downloaded. Open this file to continue on another visit.'; find('#project-dirty').textContent = 'No unsaved workspace changes.';
     } catch (error) {find('#project-status').textContent = error.message;}
   };
@@ -93,7 +93,7 @@ export function mountWorkspace(root) {
     const button = event.target.closest('[data-assignment]');
     if (button) document.dispatchEvent(new CustomEvent('study-assignment', {detail: plan[Number(button.dataset.assignment)]}));
   };
-  find('#download-plan').onclick = () => download(assignmentCsv(plan), 'searchassist-v1.0-assignments.csv');
+  find('#download-plan').onclick = () => download(assignmentCsv(plan), 'searchassist-v1.1-assignments.csv');
   const options = () => ({includePartial, excludeInterrupted, pairedSuccessfulOnly, choices, notes});
   function renderCoverage() {
     const report = studyCoverage(entries, planConfig, options()), summary = report.summary;
@@ -103,9 +103,9 @@ export function mountWorkspace(root) {
     find('#coverage-checks').innerHTML = report.files.length ? `<table class="data-table"><caption>All imported files, including excluded copies</caption><thead><tr><th>File / code</th><th>Recorded order / rotation</th><th>Planned order / rotation</th><th>Included</th><th>Assignment check</th></tr></thead><tbody>${report.files.map(r=>`<tr><td>${esc(r.fileName)}<br>${esc(r.participant)}</td><td>${r.recordedOrder||'—'} / ${r.recordedTaskRotation||'—'}</td><td>${r.plannedOrder||'—'} / ${r.plannedTaskRotation||'—'}</td><td>${r.included?'Yes':'No'}</td><td>${esc(r.flags||r.status)}</td></tr>`).join('')}</tbody></table>` : '<p class="small-print">Import recordings to check their assignments.</p>';
     find('#download-checks').disabled = entries.length === 0;
   }
-  find('#download-coverage').onclick = () => download(coverageCsv(entries, planConfig, options()), 'searchassist-v1.0-coverage.csv');
-  find('#download-balance').onclick = () => download(balanceCsv(entries, planConfig, options()), 'searchassist-v1.0-balance.csv');
-  find('#download-checks').onclick = () => download(assignmentChecksCsv(entries, planConfig, options()), 'searchassist-v1.0-assignment-checks.csv');
+  find('#download-coverage').onclick = () => download(coverageCsv(entries, planConfig, options()), 'searchassist-v1.1-coverage.csv');
+  find('#download-balance').onclick = () => download(balanceCsv(entries, planConfig, options()), 'searchassist-v1.1-balance.csv');
+  find('#download-checks').onclick = () => download(assignmentChecksCsv(entries, planConfig, options()), 'searchassist-v1.1-assignment-checks.csv');
   function renderReview() {
     invalidateSummary();
     find('#undo-addition').disabled = lastAdditionBase === null;
@@ -205,8 +205,8 @@ export function mountWorkspace(root) {
     find('#summary-frame').srcdoc = assets.html; find('#summary-preview').hidden = false; find('#preview-summary').setAttribute('aria-expanded','true');
   });
   find('#close-summary').onclick = () => {closeSummary(); find('#preview-summary').focus();};
-  find('#download-summary-html').onclick = () => reportAction(assets=>download(assets.html,'searchassist-v1.0-study-summary.html','text/html;charset=utf-8'));
-  find('#download-summary-json').onclick = () => reportAction(assets=>download(assets.json,'searchassist-v1.0-study-summary.json','application/json'));
+  find('#download-summary-html').onclick = () => reportAction(assets=>download(assets.html,'searchassist-v1.1-study-summary.html','text/html;charset=utf-8'));
+  find('#download-summary-json').onclick = () => reportAction(assets=>download(assets.json,'searchassist-v1.1-study-summary.json','application/json'));
   find('#bundle-individual').onchange = () => {++bundleRequest; find('#bundle-status').textContent='';};
   find('#download-bundle').onclick = async () => {
     if(bundleBusy)return;
@@ -217,17 +217,17 @@ export function mountWorkspace(root) {
       find('#bundle-status').textContent='Preparing the current snapshot and checking bundle files…';
       const result=await createReviewBundle({entries,planConfig,options:options(),notes},{includeIndividual,generatedAt:assets.summary.generatedAt});
       if(request!==bundleRequest){find('#bundle-status').textContent='The workspace changed while the bundle was being prepared. Download again to use the current review.';return;}
-      download(result.bytes,includeIndividual?'searchassist-v1.0-review-with-individual-data.zip':'searchassist-v1.0-aggregate-review.zip','application/zip');
+      download(result.bytes,includeIndividual?'searchassist-v1.1-review-with-individual-data.zip':'searchassist-v1.1-aggregate-review.zip','application/zip');
       find('#bundle-status').textContent=includeIndividual?'Review bundle downloaded with individual study data and workspace backup. Keep the unencrypted ZIP with study data.':'Aggregate review bundle downloaded. It contains no workspace backup or individual rows.';
     } catch(error) {if(request===undefined||request===bundleRequest)find('#bundle-status').textContent=error.message;}
     finally {bundleBusy=false;find('#bundle-individual').disabled=false;find('#download-bundle').disabled=entries.length===0;}
   };
-  find('#download-ratings').onclick = () => download(ratingSummaryCsv(entries,options()), 'searchassist-v1.0-rating-distributions.csv');
-  find('#download-paired-ratings').onclick = () => download(pairedRatingSummaryCsv(entries,options()), 'searchassist-v1.0-matched-ratings.csv');
-  find('#download-paired').onclick = () => download(pairedCsv(entries, options()), 'searchassist-v1.0-paired-participants.csv');
-  find('#download-paired-summary').onclick = () => download(pairedSummaryCsv(entries, options()), 'searchassist-v1.0-paired-summary.csv');
+  find('#download-ratings').onclick = () => download(ratingSummaryCsv(entries,options()), 'searchassist-v1.1-rating-distributions.csv');
+  find('#download-paired-ratings').onclick = () => download(pairedRatingSummaryCsv(entries,options()), 'searchassist-v1.1-matched-ratings.csv');
+  find('#download-paired').onclick = () => download(pairedCsv(entries, options()), 'searchassist-v1.1-paired-participants.csv');
+  find('#download-paired-summary').onclick = () => download(pairedSummaryCsv(entries, options()), 'searchassist-v1.1-paired-summary.csv');
   find('#clear-review').onclick = () => {++importGeneration; entries = []; choices = {}; notes = {}; lastAdditionBase = null; find('#addition-status').textContent = ''; markDirty(); find('#review-status').textContent = 'Review cleared. Original files and study recordings are unchanged.'; renderReview();};
-  find('#download-review').onclick = () => download(reviewCsv(entries, options()), 'searchassist-v1.0-participant-conditions.csv');
-  find('#download-audit').onclick = () => download(auditCsv(entries, options()), 'searchassist-v1.0-inclusion-log.csv');
+  find('#download-review').onclick = () => download(reviewCsv(entries, options()), 'searchassist-v1.1-participant-conditions.csv');
+  find('#download-audit').onclick = () => download(auditCsv(entries, options()), 'searchassist-v1.1-inclusion-log.csv');
   renderPlan(); renderReview();
 }

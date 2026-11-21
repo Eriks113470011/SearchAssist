@@ -139,6 +139,7 @@ export function validateSession(input, time = now()) {
   assert(typeof input === 'string' && new TextEncoder().encode(input).length <= MAX_IMPORT_BYTES, 'Choose a session JSON file smaller than 1 MB.');
   let s;
   try { s = JSON.parse(input); } catch { throw new Error('This file is not valid JSON.'); }
+  assert(s?.dataOrigin !== 'synthetic' && !(typeof s?.format === 'string' && s.format.startsWith('searchassist-simulation-')), 'Simulated data cannot be used as participant recordings. Use the separate simulator reports.');
   assert(s?.version === VERSION && s.schemaVersion === 2 && s.timingDefinition === 'active-time-v2', 'Only SearchAssist v0.2 session exports can be restored. Keep v0.1 exports for their original analysis.');
   assert(s.datasetVersion === 'synthetic-directory-v1' && s.protocolVersion === 'controlled-tasks-v1', 'The session uses a different dataset or study protocol.');
   createSession(s, time);

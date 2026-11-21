@@ -84,10 +84,10 @@ export async function simulateBrowser(input={}, {onProgress=()=>{}}={}) {
       const participant=`SIM_${String(sessions.length+1).padStart(5,'0')}`,order=orders[slot%6],setRotation=Math.floor(slot/6),assignment={participant,order,setRotation};
       currentAssignment={...assignment,profile:profileName,replicate:replicate+1,slot};currentTaskIndex=null;
       onProgress({participant,profile:profileName,slot,completedSessions:sessions.length});
-      const context=await browser.newContext({acceptDownloads:true,serviceWorkers:'block',viewport:{width:1440,height:1000}}),errors=[];
+      const context=await browser.newContext({acceptDownloads:true,serviceWorkers:'block',viewport:{width:1440,height:1000}}),errors=[],blockedExternalOrigins=new Set();
       try {
         context.setDefaultTimeout(config.browser.actionTimeoutMs);context.setDefaultNavigationTimeout(config.browser.actionTimeoutMs);
-        await context.route('**/*',route=>{if(new URL(route.request().url()).origin===server.origin)return route.continue();errors.push('Blocked request outside the isolated app origin.');return route.abort();});
+        await context.route('**/*',route=>{if(new URL(route.request().url()).origin===server.origin)return route.continue();blockedExternalOrigins.add(new URL(route.request().url()).origin);return route.abort();});
         const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
         await page.goto(server.origin+'/?simulation=1#study');await page.locator('#simulation-notice').waitFor({state:'visible'});
         await page.locator('#participant-code').fill(participant);await page.locator('#condition-order').selectOption(order);await page.locator('#set-rotation').selectOption(String(setRotation));
@@ -104,7 +104,7 @@ export async function simulateBrowser(input={}, {onProgress=()=>{}}={}) {
         assert.equal(await download.failure(),null);assert.ok(download.suggestedFilename().endsWith('.simulation.json'));
         const recording=JSON.parse(await readFile(await download.path(),'utf8'));
         const verified=reconcileRecording(recording,trials,assignment);assert.deepEqual(errors,[]);
-        sessions.push({format:'searchassist-simulation-session',schemaVersion:1,dataOrigin:'synthetic',calibrationStatus:'uncalibrated',runner:'browser',...assignment,profile:profileName,replicate:replicate+1,assignmentSlot:slot,humanRatings:null,trials:verified,browserRecording:recording});
+        sessions.push({format:'searchassist-simulation-session',schemaVersion:1,dataOrigin:'synthetic',calibrationStatus:'uncalibrated',runner:'browser',...assignment,profile:profileName,replicate:replicate+1,assignmentSlot:slot,humanRatings:null,trials:verified,browserRecording:recording,blockedExternalOrigins:[...blockedExternalOrigins].sort()});
       } finally {await context.close();}
     }
     return {format:SIMULATION_FORMAT,schemaVersion:1,applicationVersion:'1.2',dataOrigin:'synthetic',calibrationStatus:'uncalibrated',runner:'browser',modelVersion:MODEL_VERSION,adapterVersion:BROWSER_ADAPTER_VERSION,rngVersion:RNG_VERSION,timingVersion:TIMING_VERSION,

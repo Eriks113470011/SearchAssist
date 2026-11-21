@@ -182,3 +182,7 @@ Simulation can support the course project now and make a later pilot more target
 3. Bothell, D. *ACT-R Reference Manual*, introduction. [Official manual](https://act-r.psy.cmu.edu/actr7.x/reference-manual.pdf) and [CMU project](https://hcii.cmu.edu/project/act-r). ACT-R is an actual cognitive architecture; task-specific models require assumptions and comparison with human data. We should use its name only if we implement and evaluate an ACT-R model.
 
 Repository basis: `docs/EVALUATION.md`, `docs/RESEARCH.md`, `docs/ACCEPTANCE-v1.0.md`, the current renderer and session validator. Proposed behavior/configuration choices above are engineering decisions to test, not findings supplied by these references.
+
+## V1.2 implementation status
+
+The isolated DOM browser runner and synthetic recording reconciliation are implemented. See [BROWSER-RUNNER-v1.2.md](BROWSER-RUNNER-v1.2.md). Default execution is accelerated functional testing; optional modeled pacing remains an uncalibrated assumption. Controlled browser interruption/recovery, fault injection, a full cognitive architecture and empirical calibration are still future milestones.

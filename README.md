@@ -110,7 +110,7 @@ To restore, open **Run a study**, choose a v0.2 session JSON file under 1 MB, an
 
 ## Status
 
-Version 1.1 adds a local seeded simulated-participant baseline for behavior scenarios and functional testing. The recording schema remains v0.2 with the same dataset, tasks, engine, and timing definition, so v0.2 recordings remain restorable and reviewable. The application version shown in navigation is independent of the recording-schema and workspace-project versions. See `docs/RELEASE-v1.1.md` for workflow and verification. Accessibility features require screen-reader and physical-device testing. Real participant evaluation, task-difficulty calibration, formal comprehension measures, and a validated usability instrument remain future work. `docs/EVALUATION.md` explains the design limits.
+Version 1.2 adds isolated browser execution and recorder reconciliation to the local seeded simulated-participant baseline for behavior scenarios and functional testing. The recording schema remains v0.2 with the same dataset, tasks, engine, and timing definition, so v0.2 recordings remain restorable and reviewable. The application version shown in navigation is independent of the recording-schema and workspace-project versions. See `docs/RELEASE-v1.2.md` for workflow and verification. Accessibility features require screen-reader and physical-device testing. Real participant evaluation, task-difficulty calibration, formal comprehension measures, and a validated usability instrument remain future work. `docs/EVALUATION.md` explains the design limits.
 
 ## Facilitator workspace
 
@@ -167,7 +167,7 @@ The HTML is self-contained, has no scripts or external assets, and works offline
 
 HTML and JSON share a single timestamped snapshot until you change the workspace. Changes to the plan, imported batch, inclusion decisions, notes, or filters discard the preview and cached snapshot. Closing a preview preserves the current snapshot. Creating or downloading reports does not change recordings, inclusion choices, workspace contents, or unsaved status.
 
-The JSON uses `searchassist-study-summary`, summary version 2, application version 1.1, and explicit units: success proportions (0–1), success differences in percentage points, active times/differences in milliseconds, and ordinal rating responses from 1 to 7. HTML converts time to seconds and success to percentages. Both use the existing calculations without adding significance tests, confidence intervals, or winner labels. A missing result is `null` in JSON and “Not available” in HTML; a genuine zero remains zero.
+The JSON uses `searchassist-study-summary`, summary version 2, application version 1.2, and explicit units: success proportions (0–1), success differences in percentage points, active times/differences in milliseconds, and ordinal rating responses from 1 to 7. HTML converts time to seconds and success to percentages. Both use the existing calculations without adding significance tests, confidence intervals, or winner labels. A missing result is `null` in JSON and “Not available” in HTML; a genuine zero remains zero.
 
 These aggregate reports omit participant codes, source file names, plan prefixes, recorded queries, participant observations, reviewer notes, and individual result rows. Small-group counts can still identify people in context; this is not a guarantee of anonymity. Keep the workspace, original recordings, inclusion log, and detailed CSVs for the underlying audit. Summary JSON is an output report, not a restorable workspace file. The recording schema stays 0.2 / 2 and workspace project version stays 2 (versions 1 and 2 remain readable).
 
@@ -225,4 +225,19 @@ The first command runs 18 simulated sessions / 216 tasks; the second runs six pr
 
 **All results are SIMULATED / UNCALIBRATED.** Policies receive attended public text, not hidden target IDs or engine scores. Their evidence and timing parameters are explicit hypotheses. Success follows actual chosen results; human confidence/trust/ease ratings and observed browser times are unavailable. Generated simulation formats cannot be imported as ordinary participant recordings. Keep them separate from human study data.
 
-[The implementation guide](docs/SIMULATOR-v1.1.md) documents configuration, seeds, six profiles, modeled costs, sensitivity runs, bounds and verification. This is the fast model milestone. An isolated browser-agent runner, interruption/fault scenarios and empirical calibration remain subsequent milestones. The simulator does not validate actual human effectiveness or implement a full ACT-R architecture.
+[The implementation guide](docs/SIMULATOR-v1.1.md) documents configuration, seeds, six profiles, modeled costs, sensitivity runs, bounds and verification. This is the fast model milestone. The browser runner is available in V1.2; interruption/fault scenarios and empirical calibration remain subsequent milestones. The simulator does not validate actual human effectiveness or implement a full ACT-R architecture.
+
+
+## Browser participants (V1.2)
+
+Run the seeded policies against real SearchAssist controls in an isolated local Chromium browser:
+
+```bash
+npm install
+npx playwright install chromium
+npm run simulate:browser -- --config configs/simulator-browser-smoke.json --output simulation-runs/browser-001
+```
+
+Open `simulation-runs/browser-001/report.html`. Add `--headed` to watch accelerated execution; use `configs/simulator-browser-demo.json` for a visible, modeled-paced single-session demo. `configs/simulator-browser-profiles.json` exercises all six profiles and all 18 assignment cells.
+
+[The browser-runner guide](docs/BROWSER-RUNNER-v1.2.md) explains pacing, configuration, real-recording checks, synthetic storage/exports, timing, failure diagnostics and limits. Browser times measure automation. Human ratings remain unavailable. The ordinary study importer rejects synthetic recordings, and normal participant workflows retain their recording schema and rating requirements.

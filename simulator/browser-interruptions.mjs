@@ -24,6 +24,7 @@ export async function interruptBrowserTrial({page,entry,signal,onPaused=async()=
   const visibilityBefore=await page.evaluate(()=>document.visibilityState);assert.equal(visibilityBefore,'visible');
   const dialogWasOpen=await page.locator('#detail-dialog').isVisible(),dialogClosedForControl=dialogWasOpen&&['manual','navigation','restore'].includes(entry.kind);
   let cover,windowIds=null,visibilityDuring=visibilityBefore,pausedStart,pausedEnd;
+  const recoveryErrors=[];const recordError=e=>recoveryErrors.push(e.message);page.on('pageerror',recordError);
   try {
     if(dialogClosedForControl)await page.locator('#detail-dialog .dialog-close').click();
     if(entry.kind==='manual'||entry.kind==='restore')await page.locator('#pause-task').click();
@@ -42,7 +43,7 @@ export async function interruptBrowserTrial({page,entry,signal,onPaused=async()=
     const expectedReason={manual:'manual',navigation:'navigation',hidden:'tab_hidden',reload:'restored',restore:'manual'}[entry.kind];assert.equal(pausedStart.currentTrial.pauseReason,expectedReason);
     assert.equal(pausedStart.currentTrial.pauseCount,before.currentTrial.pauseCount+1);
     const holdStarted=performance.now();await delay(entry.holdMs,undefined,{signal});const observedHoldMs=Math.round(performance.now()-holdStarted);
-    if(cover){await page.bringToFront();await page.waitForFunction(()=>!document.hidden);await cover.close();cover=null;}
+    if(cover){await page.bringToFront();await page.waitForFunction(()=>!document.hidden,null,{polling:50});await cover.close();cover=null;}
     if(entry.kind==='navigation')await page.locator('[data-view="study"]').click();
     await page.locator('#resume-session').waitFor({state:'visible'});assert.equal(await page.locator('#pause-task').isVisible(),false,'Recovery resumed automatically.');
     pausedEnd=await downloadPaused(page);sameProgress(before,pausedEnd);
@@ -70,6 +71,6 @@ export async function interruptBrowserTrial({page,entry,signal,onPaused=async()=
       pauseCountBefore:before.currentTrial.pauseCount,pauseCountAfter:after.currentTrial.pauseCount,resumeCountBefore:before.currentTrial.resumeCount,resumeCountAfter:after.currentTrial.resumeCount,
       restoreEventsBefore:restoredEvents(before),restoreEventsAfter:restoredEvents(after),restoredAfter:after.currentTrial.restored,
       pauseReason:expectedReason,nativeWindowId:windowIds?.original??null,coverWindowId:windowIds?.cover??null,visibilityMethod:entry.kind==='hidden'?'native-sibling-tab-no-default-overrides':'not-applicable',visibilityBefore,visibilityDuring,visibilityAfter:await page.evaluate(()=>document.visibilityState),verified:true};
-  }catch(error){throw new Error(`[${entry.id} ${entry.kind}, task ${entry.taskIndex}, after action ${entry.afterAction}] ${error.message}`,{cause:error});}
-  finally{if(cover){await page.bringToFront().catch(()=>{});await cover.close().catch(()=>{});}}
+  }catch(error){const diagnostic=await page.evaluate(key=>({visibility:document.visibilityState,hash:location.hash,checkpoint:JSON.parse(sessionStorage.getItem(key))?.currentTrial}),SIMULATION_STORAGE_KEY).catch(()=>null);throw new Error(`[${entry.id} ${entry.kind}, task ${entry.taskIndex}, after action ${entry.afterAction}] ${error.message}; state=${JSON.stringify(diagnostic)}; pageErrors=${JSON.stringify(recoveryErrors)}`,{cause:error});}
+  finally{page.off('pageerror',recordError);if(cover){await page.bringToFront().catch(()=>{});await cover.close().catch(()=>{});}}
 }

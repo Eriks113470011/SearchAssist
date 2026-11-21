@@ -49,6 +49,22 @@ for session in sessions:
             assert t['recordingVerified'] and t['observedBrowserActiveMs'] == r['activeElapsedMs'] and t['observedBrowserWallMs'] == r['wallElapsedMs']
             assert t['selectedId'] == r['selectedId'] and t['finalQuery'] == r['finalQuery'] and t['resultOpens'] == r['resultOpens']
             assert t['recordedQueryReformulations'] == t['modeledQueryChanges'] == r['queryReformulations']
+            faults = t.get('interruptions', [])
+            assert len(faults) == sum(f['taskIndex'] == t['taskIndex'] for f in config['browser'].get('interruptions', []))
+            assert r['pauseCount'] == r['resumeCount'] == len(faults)
+            assert r['restored'] == any(f['kind'] in ['reload', 'restore'] for f in faults)
+            for f in faults:
+                assert f['verified'] and f['taskIndex'] == t['taskIndex']
+                assert f['queryBefore'] == f['queryAfter'] and f['previousQueryBefore'] == f['previousQueryAfter']
+                assert f['completedTrialsBefore'] == f['completedTrialsAfter'] == t['taskIndex'] - 1
+                assert f['activePausedStartMs'] == f['activePausedEndMs']
+                assert f['observedHoldMs'] >= f['holdMs'] - 20
+                assert f['wallPausedEndMs'] - f['wallPausedStartMs'] >= f['observedHoldMs'] - 50
+                assert f['pauseCountAfter'] == f['pauseCountBefore'] + 1 and f['resumeCountAfter'] == f['resumeCountBefore'] + 1
+                assert f['visibilityBefore'] == f['visibilityAfter'] == 'visible'
+                assert f['restoreEventsAfter'] - f['restoreEventsBefore'] == int(f['kind'] in ['reload', 'restore'])
+                if f['kind'] == 'hidden':
+                    assert f['visibilityDuring'] == 'hidden'
         else:
             assert t['observedBrowserActiveMs'] is None and t['observedBrowserWallMs'] is None
         assert math.isfinite(t['modeledActiveMs']) and 0 <= t['modeledActiveMs'] <= config['limits']['maxModeledActiveMs']
@@ -76,5 +92,10 @@ with (root / 'conditions.csv').open() as f:
             assert math.isclose(float(row['meanObservedBrowserActiveMs']), sum(t['observedBrowserActiveMs'] for t in group) / len(group), rel_tol=1e-12)
             assert math.isclose(float(row['meanObservedBrowserWallMs']), sum(t['observedBrowserWallMs'] for t in group) / len(group), rel_tol=1e-12)
         assert math.isclose(float(row['meanModeledActiveMs']), sum(t['modeledActiveMs'] for t in group) / len(group), rel_tol=1e-12)
+with (root / 'interruptions.csv').open() as f:
+    faults = list(csv.DictReader(f))
+    assert len(faults) == sum(len(t.get('interruptions', [])) for t in trials)
+    assert all(f['verified'] == 'true' and f['dataOrigin'] == 'synthetic' and f['runner'] == 'browser' for f in faults)
+assert metadata['summary']['interruptionCount'] == metadata['summary']['verifiedInterruptions'] == len(faults)
 assert 'SIMULATED / UNCALIBRATED' in (root / 'report.html').read_text()
 print(f'Verified synthetic run: {len(sessions)} sessions, {len(trials)} tasks, all coverage cells, source/payload hashes, timing ledgers, and CSV outcomes.')

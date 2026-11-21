@@ -26,7 +26,7 @@ export async function runBrowserCli(args) {
   try {
     const run=await simulateBrowser(config,{onProgress:p=>process.stderr.write(`[synthetic browser] ${p.participant}: ${p.profile}, assignment ${p.slot+1}/18\n`)});
     await writeRunArtifacts(run,destination);
-    process.stdout.write(JSON.stringify({dataOrigin:'synthetic',calibrationStatus:'uncalibrated',runner:'browser',pacing:config.browser.pacing,output:destination.output,simulatedSessions:run.sessions.length,totalTrials:run.sessions.length*12,recordingVerified:true,humanRatings:null},null,2)+'\n');
+    process.stdout.write(JSON.stringify({dataOrigin:'synthetic',calibrationStatus:'uncalibrated',runner:'browser',pacing:config.browser.pacing,output:destination.output,simulatedSessions:run.sessions.length,totalTrials:run.sessions.length*12,recordingVerified:true,verifiedInterruptions:run.sessions.flatMap(s=>s.trials).reduce((n,t)=>n+(t.interruptions?.length??0),0),humanRatings:null},null,2)+'\n');
   }catch(error){if(error.simulationFailure)await writeBrowserFailure(error.simulationFailure,destination);throw error;}
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href)runBrowserCli(process.argv.slice(2)).catch(error=>{process.stderr.write('Browser simulator: '+error.message+'\n');process.exitCode=1;});

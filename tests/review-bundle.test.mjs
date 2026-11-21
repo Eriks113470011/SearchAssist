@@ -67,7 +67,7 @@ test('all-excluded and invalid-only batches keep aggregate missing data and list
 test('bundles preserve a single versioned snapshot, analysis settings and row counts',async()=>{
   const s=state([file(),file('SECRET_002',8)],{includePartial:true,excludeInterrupted:true,pairedSuccessfulOnly:false});
   const {bytes,manifest}=await createReviewBundle(s,{generatedAt:date}),files=unzip(bytes),summary=json(files,'study-summary.json');
-  assert.equal(summary.applicationVersion,'1.2');assert.equal(summary.summaryVersion,2);assert.equal(manifest.generatedAt,summary.generatedAt);
+  assert.equal(summary.applicationVersion,'1.3');assert.equal(summary.summaryVersion,2);assert.equal(manifest.generatedAt,summary.generatedAt);
   assert.deepEqual(manifest.settings,summary.settings);assert.deepEqual(manifest.review,summary.review);
   assert.match(decoder.decode(files.get('study-summary.html')),new RegExp(summary.generatedAt.replaceAll('.','\\.')));
   for(const [path,rows] of [['condition-summary.csv',3],['paired-summary.csv',3],['rating-distributions.csv',9],['matched-ratings.csv',9],['balance.csv',18]])assert.equal(decoder.decode(files.get(path)).split('\r\n').length,rows+1);

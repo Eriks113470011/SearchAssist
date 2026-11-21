@@ -73,3 +73,31 @@ jobs:
             test-results/
             simulation-runs/
           if-no-files-found: ignore
+  recovery-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-package-lock --ignore-scripts
+      - name: Use an installed Chromium browser when available
+        run: |
+          searchassist_chromium_path="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [ -n "$searchassist_chromium_path" ]; then
+            printf 'SEARCHASSIST_CHROMIUM_PATH=%s\n' "$searchassist_chromium_path" >> "$GITHUB_ENV"
+          fi
+      - if: env.SEARCHASSIST_CHROMIUM_PATH == ''
+        run: npx playwright install --with-deps chromium
+      - run: xvfb-run -a npm run test:recovery-browser
+      - run: python3 tests/verify-simulation.py simulation-runs/ci-recovery-full
+      - run: python3 tests/verify-simulation.py simulation-runs/ci-recovery-profiles
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: recovery-qa-${{ github.run_id }}
+          path: |
+            test-results/
+            simulation-runs/
+          if-no-files-found: ignore

@@ -16,6 +16,7 @@ export const taskSets=[[
 export const orders=['ABC','ACB','BAC','BCA','CAB','CBA'],conditionModes={A:'exact',B:'fuzzy',C:'assist'};
 
 export const VERSION = '0.2';
+export const SIMULATION_RECORDING_FORMAT = 'searchassist-simulation-browser-recording';
 export const STORAGE_KEY = 'searchassist-study-v2';
 export const MAX_IMPORT_BYTES = 1024 * 1024;
 const ids = new Set(records.map(r => r.id));
@@ -135,18 +136,21 @@ function checkTrial(t, s, i) {
   for (const key of ['pauseCount','resumeCount','queryReformulations','resultOpens','incorrectResultOpens']) assert(Number.isInteger(t[key]), 'Trial counts must be whole numbers.');
   assert(t.elapsedMs === t.activeElapsedMs && text(t.finalQuery) && typeof t.restored === 'boolean', 'The trial data are incomplete.');
 }
-export function validateSession(input, time = now()) {
+export function validateSession(input, time = now()) {return validateRecording(input,time,false);}
+export function validateSimulationSession(input,time=now()){return validateRecording(input,time,true);}
+function validateRecording(input,time,synthetic) {
   assert(typeof input === 'string' && new TextEncoder().encode(input).length <= MAX_IMPORT_BYTES, 'Choose a session JSON file smaller than 1 MB.');
   let s;
   try { s = JSON.parse(input); } catch { throw new Error('This file is not valid JSON.'); }
-  assert(s?.dataOrigin !== 'synthetic' && !(typeof s?.format === 'string' && s.format.startsWith('searchassist-simulation-')), 'Simulated data cannot be used as participant recordings. Use the separate simulator reports.');
+  if(synthetic)assert(s?.format===SIMULATION_RECORDING_FORMAT&&s.dataOrigin==='synthetic'&&s.runner==='browser'&&s.calibrationStatus==='uncalibrated'&&s.humanRatings===null,'Only tagged synthetic browser recordings can be restored in simulation mode.');
+  else assert(s?.dataOrigin !== 'synthetic' && !(typeof s?.format === 'string' && s.format.startsWith('searchassist-simulation-')), 'Simulated data cannot be used as participant recordings. Use the separate simulator reports.');
   assert(s?.version === VERSION && s.schemaVersion === 2 && s.timingDefinition === 'active-time-v2', 'Only SearchAssist v0.2 session exports can be restored. Keep v0.1 exports for their original analysis.');
   assert(s.datasetVersion === 'synthetic-directory-v1' && s.protocolVersion === 'controlled-tasks-v1', 'The session uses a different dataset or study protocol.');
   createSession(s, time);
   assert(['tasks', 'ratings', 'complete'].includes(s.phase) && Number.isInteger(s.taskIndex) && s.taskIndex >= 0 && s.taskIndex <= 12, 'The session has an invalid study state.');
   assert(typeof s.startedAt === 'string' && Number.isFinite(Date.parse(s.startedAt)), 'The session start date is invalid.');
   assert(Array.isArray(s.trials) && s.trials.length === s.taskIndex && Array.isArray(s.ratings) && Array.isArray(s.events) && s.events.length <= 10000, 'The session has incomplete or oversized records.');
-  const ratingsExpected = s.phase === 'ratings' ? s.taskIndex / 4 - 1 : Math.floor(s.taskIndex / 4);
+  const ratingsExpected = synthetic?0:s.phase === 'ratings' ? s.taskIndex / 4 - 1 : Math.floor(s.taskIndex / 4);
   assert((s.phase !== 'ratings' || s.taskIndex > 0 && s.taskIndex % 4 === 0) && (s.phase !== 'complete' || s.taskIndex === 12) && (s.phase !== 'tasks' || s.taskIndex < 12) && s.ratings.length === ratingsExpected, 'The session block progress is inconsistent.');
   s.trials.forEach((t, i) => checkTrial(t, s, i));
   s.ratings.forEach((r, i) => {
@@ -161,6 +165,7 @@ export function validateSession(input, time = now()) {
   }
   assert(s.ratingDraft && text(s.ratingDraft.notes, 2000), 'The saved rating draft is invalid.');
   for (const key of ['confidence','trust','ease']) assert(s.ratingDraft[key] === null || Number.isInteger(s.ratingDraft[key]) && s.ratingDraft[key] >= 1 && s.ratingDraft[key] <= 7, 'A saved draft rating is invalid.');
+  if(synthetic)assert(s.ratings.length===0&&['confidence','trust','ease'].every(k=>s.ratingDraft[k]===null)&&s.ratingDraft.notes==='', 'Synthetic recordings cannot contain human ratings or observations.');
   const c = s.currentTrial;
   assert(s.phase === 'tasks' || c === null, 'Only a task can have unfinished trial data.');
   if (c) {
@@ -179,10 +184,15 @@ export function validateSession(input, time = now()) {
   if(c) s.currentTrial = pick(c, ['initialQuery','query','lastRecordedQuery','pendingSource','previousQuery','activeMs','wallElapsedMs','wallStartedAt','activeSince','pauseReason','pauseCount','resumeCount','restored','queryReformulations','runningAtSave']);
   // Drop unknown top-level fields so an imported file cannot alter application settings.
   const keys = ['version','schemaVersion','datasetVersion','protocolVersion','timingDefinition','participant','order','setRotation','startedAt','finishedAt','phase','taskIndex','trials','ratings','events','currentTrial','ratingDraft'];
+  if(synthetic)keys.push('format','dataOrigin','calibrationStatus','runner','humanRatings');
   return Object.fromEntries(keys.filter(k => k in s).map(k => [k, s[k]]));
 }
 export function restoreSession(input, time = now()) {
-  const s = validateSession(input, time), c = s.currentTrial;
+  return restoreValidated(validateSession(input,time),time);
+}
+export function restoreSimulationSession(input,time=now()){return restoreValidated(validateSimulationSession(input,time),time);}
+function restoreValidated(s,time){
+  const c = s.currentTrial;
   if (c) {
     c.restored = true;
     if (c.runningAtSave) c.pauseCount++;

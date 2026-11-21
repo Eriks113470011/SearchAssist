@@ -1,0 +1,64 @@
+{
+  "runner": "browser",
+  "masterSeed": 42,
+  "profiles": [
+    "careful-scanner"
+  ],
+  "browser": {
+    "assignmentSlots": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17
+    ],
+    "headed": true,
+    "pacing": "none",
+    "interruptions": [
+      {
+        "taskIndex": 1,
+        "afterAction": 1,
+        "kind": "manual",
+        "holdMs": 300
+      },
+      {
+        "taskIndex": 2,
+        "afterAction": 1,
+        "kind": "navigation",
+        "holdMs": 300
+      },
+      {
+        "taskIndex": 5,
+        "afterAction": 0,
+        "kind": "reload",
+        "holdMs": 300
+      },
+      {
+        "taskIndex": 6,
+        "afterAction": 1,
+        "kind": "restore",
+        "holdMs": 300
+      },
+      {
+        "taskIndex": 9,
+        "afterAction": 0,
+        "kind": "hidden",
+        "holdMs": 300
+      }
+    ],
+    "maxRunWallMs": 900000
+  }
+}

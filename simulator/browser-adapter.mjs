@@ -1,4 +1,4 @@
-export const BROWSER_ADAPTER_VERSION='guided-dom-v1';
+export const BROWSER_ADAPTER_VERSION='guided-dom-v2';
 // This adapter reads visible DOM content and operates controls. It never reads app globals,
 // engine modules, the task key, or browser storage. IDs are resolved only after submission.
 export function createBrowserAdapter(page) {
@@ -49,5 +49,5 @@ export function createBrowserAdapter(page) {
     if(action.type==='show_more')await page.locator('[data-action="more"]').click();
     return result;
   }
-  return {observe,preview,execute,selectionId:()=>selectedId};
+  return {observe,preview,execute,resetAfterRecovery(){epoch++;openDetail=null;},selectionId:()=>selectedId};
 }

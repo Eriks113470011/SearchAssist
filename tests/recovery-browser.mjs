@@ -1,0 +1,40 @@
+import assert from 'node:assert/strict';
+import {readFile,writeFile,mkdir} from 'node:fs/promises';
+import {chromium} from 'playwright';
+import {startBrowserServer} from '../simulator/browser-server.mjs';
+import {createBrowserAdapter} from '../simulator/browser-adapter.mjs';
+import {simulateBrowser} from '../simulator/browser-runner.mjs';
+import {interruptBrowserTrial,syntheticCheckpoint} from '../simulator/browser-interruptions.mjs';
+import {prepareOutput,writeRunArtifacts} from '../simulator/artifacts.mjs';
+import {renderSimulationReport} from '../simulator/report.mjs';
+import {PROFILES} from '../simulator/config.mjs';
+import {STORAGE_KEY,validateSession} from '../dist/study.mjs';
+await mkdir('test-results',{recursive:true});
+const launch=headless=>chromium.launch({headless,...(process.env.SEARCHASSIST_CHROMIUM_PATH?{executablePath:process.env.SEARCHASSIST_CHROMIUM_PATH}:{})});
+let browser,server;
+try{
+ server=await startBrowserServer();browser=await launch(false);const context=await browser.newContext({acceptDownloads:true,viewport:{width:1440,height:1000}});context.setDefaultTimeout(10000);
+ await context.route('**/*',r=>new URL(r.request().url()).origin===server.origin?r.continue():r.abort());
+ const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto(server.origin+'/#study');await page.bringToFront();await page.locator('#participant-code').fill('NORMAL_RECOVERY_QA');await page.locator('#start-study input[type=checkbox]').check();await page.locator('#start-study button').click();await page.locator('#pause-task').click();const normal=await page.evaluate(key=>sessionStorage.getItem(key),STORAGE_KEY);
+ await page.goto(server.origin+'/?simulation=1#study');await page.locator('#participant-code').fill('SIM_RECOVERY_QA');await page.locator('#condition-order').selectOption('CBA');await page.locator('#start-study input[type=checkbox]').check();await page.locator('#start-study button').click();
+ const adapter=createBrowserAdapter(page);await adapter.execute({type:'read_suggestion'});await adapter.execute({type:'apply_suggestion'});
+ const reload=await interruptBrowserTrial({page,entry:{id:'TEST_RELOAD',kind:'reload',taskIndex:1,afterAction:0,holdMs:300},onPaused:async p=>{await p.screenshot({path:'test-results/recovery-desktop.png',fullPage:true});await p.setViewportSize({width:390,height:844});await p.screenshot({path:'test-results/recovery-mobile.png',fullPage:true});assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await p.setViewportSize({width:1440,height:1000});}});
+ assert.equal(reload.previousQueryAfter,'calender');assert.equal(reload.queryAfter,'calendar');adapter.resetAfterRecovery();assert.equal((await adapter.observe()).undoAvailable,true);await adapter.execute({type:'undo_suggestion'});assert.equal((await adapter.observe()).query,'calender');
+ const handle=(await adapter.observe()).candidates[0].handle;await adapter.execute({type:'open_details',handle,read:false});await interruptBrowserTrial({page,entry:{id:'TEST_MANUAL',kind:'manual',taskIndex:1,afterAction:0,holdMs:300}});assert.equal(await page.locator('#detail-dialog').isVisible(),false);adapter.resetAfterRecovery();await assert.rejects(()=>adapter.preview({type:'read_card',handle}),/stale/);
+ await interruptBrowserTrial({page,entry:{id:'TEST_RESTORE',kind:'restore',taskIndex:1,afterAction:0,holdMs:300}});assert.equal(await page.evaluate(key=>sessionStorage.getItem(key),STORAGE_KEY),normal);
+ await page.locator('#pause-task').click();const before=await syntheticCheckpoint(page);
+ await page.locator('#import-simulation').setInputFiles({name:'human-qa.json',mimeType:'application/json',buffer:Buffer.from(normal)});await page.locator('#import-simulation-status').filter({hasText:'Only tagged synthetic'}).waitFor();assert.deepEqual(await syntheticCheckpoint(page),before);
+ const bad=structuredClone(before);bad.currentTrial.activeMs=-1;await page.locator('#import-simulation').setInputFiles({name:'malformed.simulation.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(bad))});await page.locator('#import-simulation-status').filter({hasText:'invalid'}).waitFor();assert.deepEqual(await syntheticCheckpoint(page),before);assert.throws(()=>validateSession(JSON.stringify(before)),/Simulated data/);
+ assert.deepEqual(errors,[]);await context.close();await browser.close();browser=null;await server.close();server=null;
+ const config=JSON.parse(await readFile('configs/simulator-recovery-full.json','utf8'));
+ const full=await simulateBrowser(config,{onProgress:p=>console.log(`Recovery ${p.completedSessions+1}/18: slot ${p.slot}`)});
+ assert.equal(full.sessions.length,18);assert.equal(full.sessions.flatMap(s=>s.trials).flatMap(t=>t.interruptions).length,90);
+ await writeRunArtifacts(full,await prepareOutput('simulation-runs/ci-recovery-full'));
+ const profiles=await simulateBrowser({...config,profiles:Object.keys(PROFILES),browser:{...config.browser,assignmentSlots:[0]}});
+ assert.equal(profiles.sessions.length,6);assert.equal(profiles.sessions.flatMap(s=>s.trials).flatMap(t=>t.interruptions).length,30);await writeRunArtifacts(profiles,await prepareOutput('simulation-runs/ci-recovery-profiles'));
+ // A schedule is a required test, never silently dropped when a policy terminates early.
+ await assert.rejects(()=>simulateBrowser({profiles:['careful-scanner'],limits:{maxRewrites:0},browser:{assignmentSlots:[0],interruptions:[{taskIndex:1,afterAction:3,kind:'manual',holdMs:200}]}}),e=>/not reached/.test(e.message)&&e.simulationFailure?.completedSessions===0);
+ browser=await launch(true);const report=await browser.newPage({viewport:{width:1440,height:1000}});await report.setContent(renderSimulationReport(profiles));await report.screenshot({path:'test-results/recovery-report-desktop.png',fullPage:true});await report.pdf({path:'test-results/recovery-report.pdf',printBackground:true,preferCSSPageSize:true});await report.setViewportSize({width:390,height:844});await report.screenshot({path:'test-results/recovery-report-mobile.png',fullPage:true});assert.equal(await report.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+ console.log('Recovery checks passed: 24 sessions, 288 reconciled tasks, 120 native interruptions, every order/rotation and every profile, native hidden tabs, paused timing, reload/import provenance, undo state, modal recovery, invalid import isolation, unreachable schedules and report layouts.');
+}finally{await browser?.close();await server?.close();}

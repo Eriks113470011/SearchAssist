@@ -1,14 +1,14 @@
 import {records,categories} from './data.mjs';
 import {search,normalize,explain,kindLabels} from './engine.mjs';
 import * as study from './study.mjs';
-import {SIMULATION_STORAGE_KEY,createSimulationSession,advanceSimulationBlock,simulationRecordingCsv} from './simulation-session.mjs';
+import {SIMULATION_STORAGE_KEY,createSimulationSession,advanceSimulationBlock,simulationRecordingCsv,restoreSimulationRecording} from './simulation-session.mjs';
 import {mountWorkspace} from './workspace-view.mjs';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let mode='assist',view='search',limit=12,revealApprox=false,previousQuery=null,currentMatches=[],session=null,queryTimer,announcementTimer;
 const simulationMode=new URLSearchParams(location.search).get('simulation')==='1';
 const sessionKey=simulationMode?SIMULATION_STORAGE_KEY:study.STORAGE_KEY;
-if(simulationMode){const badge=document.createElement('div');badge.id='simulation-notice';badge.className='simulation-notice';badge.textContent='SIMULATED / UNCALIBRATED — Automated software testing. No human ratings are collected. Reload starts a new simulation; export first.';document.body.prepend(badge);}
+if(simulationMode){const badge=document.createElement('div');badge.id='simulation-notice';badge.className='simulation-notice';badge.textContent='SIMULATED / UNCALIBRATED — Automated software testing. No human ratings are collected. Reload restores this synthetic session paused. Choose Resume to continue; export a copy to retain it.';document.body.prepend(badge);}
 const symbols={Tools:'⌘',Services:'◎',Resources:'▤',Places:'⌖',Forms:'▧'};
 $('#category').innerHTML=categories.map(x=>`<option>${x}</option>`).join('');
 function highlight(text,m){if(mode!=='assist'||$('#explanation-style').value==='off'||!$('#query').value.trim())return esc(text);const terms=[...new Set(m.evidence.flatMap(e=>[e.query,e.term]).filter(t=>t&&t.length>1))].sort((a,b)=>b.length-a.length);if(!terms.length)return esc(text);const rx=new RegExp('('+terms.map(x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')','ig');return String(text).split(rx).map((s,i)=>i%2?`<mark>${esc(s)}</mark>`:esc(s)).join('');}
@@ -107,19 +107,19 @@ function studyHeading(eyebrow, title, description) {
 }
 function seconds(value) {return value === null ? '—' : `${(value / 1000).toFixed(1)} s`;}
 function importPanel() {
-  if(simulationMode)return '';
+  if(simulationMode)return `<div class="panel section-gap"><h2>Restore a synthetic recording</h2><p>Only tagged synthetic browser recordings are accepted here. Restored tasks remain paused until Resume; human ratings stay unavailable.</p><label for="import-simulation">Synthetic recording JSON</label><input id="import-simulation" type="file" accept=".json,application/json"><p id="import-simulation-status" role="status" aria-live="polite"></p></div>`;
   return `<div class="panel section-gap"><h2>Restore a saved session</h2><p>Choose a SearchAssist v0.2 session JSON export to continue on this device. Restored tasks stay paused until you choose Resume. v0.1 files use a different timing definition and remain separate.</p><label class="file-label" for="import-session">Session JSON file</label><input id="import-session" type="file" accept=".json,application/json"><p id="import-status" role="status" class="import-status" aria-live="polite"></p>${legacySession ? '<p class="small-print section-gap">A v0.1 session is still stored in this tab. Download it for your records before closing the tab.</p><button class="secondary" id="export-legacy">Download v0.1 session JSON ↓</button>' : ''}</div>`;
 }
 function bindImport() {
   if ($('#export-legacy')) $('#export-legacy').onclick = () => download(legacySession, 'searchassist-v01-original-session.json', 'application/json');
-  const picker = $('#import-session');
+  const picker = $(simulationMode?'#import-simulation':'#import-session');
   if (!picker) return;
   picker.onchange = async () => {
-    const file = picker.files?.[0], status = $('#import-status');
+    const file = picker.files?.[0], status = $(simulationMode?'#import-simulation-status':'#import-status');
     if (!file) return;
     try {
       if (file.size > study.MAX_IMPORT_BYTES) throw new Error('Choose a session JSON file smaller than 1 MB.');
-      const restored = study.restoreSession(await file.text());
+      const restored = (simulationMode?restoreSimulationRecording:study.restoreSession)(await file.text());
       if (session && !confirm('Replace the current session with this saved session? Export your current JSON first if you need to keep it.')) {picker.value = ''; return;}
       clearTimeout(queryTimer);
       session = restored;
@@ -269,10 +269,9 @@ window.addEventListener('pagehide', () => pauseStudy('page_exit', false));
 setInterval(() => {if (isRunning()) saveSession();}, 1000);
 try {
   legacySession = simulationMode?null:sessionStorage.getItem('searchassist-study-v1');
-  const saved = simulationMode?null:sessionStorage.getItem(sessionKey);
-  if(simulationMode)sessionStorage.removeItem(sessionKey);
-  if (saved) {session = study.restoreSession(saved); if (session.phase === 'tasks') location.hash = 'study';}
-} catch (error) {storageWarning = `Session recovery was unavailable: ${error.message} You can restore an exported v0.2 JSON file from Run a study.`;}
+  const saved = sessionStorage.getItem(sessionKey);
+  if (saved) {session = (simulationMode?restoreSimulationRecording:study.restoreSession)(saved); if (session.phase === 'tasks') location.hash = 'study';}
+} catch (error) {storageWarning = `Session recovery was unavailable: ${error.message} ${simulationMode?'Restore a tagged synthetic recording or start a new simulation.':'You can restore an exported v0.2 JSON file from Run a study.'}`;}
 setMode('assist'); renderResearch(); route();
 if (session) saveSession();
 $('#storage-warning').textContent = storageWarning; $('#storage-warning').hidden = !storageWarning;

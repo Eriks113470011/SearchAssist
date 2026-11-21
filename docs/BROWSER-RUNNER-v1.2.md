@@ -61,7 +61,7 @@ Browser configuration adds a `browser` object:
 
 Assignment slots are unique integers 0–17. Slot `i` uses order `orders[i % 6]` and rotation `floor(i / 6)`, exactly as the fast runner. Omit the list to request every slot. A reduced list is partial engineering coverage; the HTML counts only requested cells, while coverage.csv lists all 18 cells per profile with zero expected sessions for omitted cells. Session IDs restart for each run; seed keys use the assignment slot, not the generated session ID, so selecting fewer slots does not change the retained sessions' policy randomness.
 
-`actionTimeoutMs` is 1,000–60,000 ms; `maxRunWallMs` is 1,000–3,600,000 ms (default 10 minutes). Long paced runs need a small assignment list and an appropriate wall limit. Per-trial modeled-time, action and rewrite limits and all profile/timing overrides retain the documented fast-runner bounds. A modeled budget stop uses the public Skip task control to complete the recorded trial. Any required modal close/skip cleanup is explicitly identified in the trace; its real overhead is observed rather than added to the modeled policy ledger.
+`actionTimeoutMs` is 1,000–60,000 ms; `maxRunWallMs` is 1,000–3,600,000 ms (default 10 minutes; the supplied full six-profile configuration allows 15 minutes). Long paced runs need a small assignment list and an appropriate wall limit. Per-trial modeled-time, action and rewrite limits and all profile/timing overrides retain the documented fast-runner bounds. A modeled budget stop uses the public Skip task control to complete the recorded trial. Any required modal close/skip cleanup is explicitly identified in the trace; its real overhead is observed rather than added to the modeled policy ledger.
 
 ## Observation and action boundary
 

@@ -5,7 +5,18 @@
   "calibrationStatus": "uncalibrated",
   "runner": "browser",
   "masterSeed": 42,
-  "profiles": ["careful-scanner", "first-result-chooser", "frequent-reformulator", "limited-vocabulary", "explanation-reader", "cautious-suggestion-user"],
+  "profiles": [
+    "careful-scanner",
+    "first-result-chooser",
+    "frequent-reformulator",
+    "limited-vocabulary",
+    "explanation-reader",
+    "cautious-suggestion-user"
+  ],
   "replicates": 1,
-  "browser": {"pacing": "none", "headed": false}
+  "browser": {
+    "pacing": "none",
+    "headed": false,
+    "maxRunWallMs": 900000
+  }
 }

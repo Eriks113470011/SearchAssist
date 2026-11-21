@@ -25,7 +25,7 @@ try {
  await adapter.execute({type:'read_explanation',handle});await adapter.execute({type:'read_suggestion'});await adapter.execute({type:'apply_suggestion'});
  assert.equal((await adapter.observe()).query,'calendar');await assert.rejects(()=>adapter.preview({type:'read_card',handle}),/stale/);
  await adapter.execute({type:'undo_suggestion'});assert.equal((await adapter.observe()).query,'calender');
- const current=(await adapter.observe()).candidates[0].handle;await adapter.execute({type:'open_details',handle:current,read:false});await adapter.execute({type:'read_details',handle:current});await assert.rejects(()=>adapter.preview({type:'rewrite',query:'account'}),/Close/);
+ const current=(await adapter.observe()).candidates[0].handle;await adapter.execute({type:'open_details',handle:current,read:false});await adapter.execute({type:'read_details',handle:current});assert.equal(await page.locator('#detail-dialog .simulation-detail-label').innerText(),'SIMULATED / UNCALIBRATED');await assert.rejects(()=>adapter.preview({type:'rewrite',query:'account'}),/Close/);
  await page.screenshot({path:'test-results/browser-runner-desktop.png',fullPage:true});await page.setViewportSize({width:390,height:844});await page.screenshot({path:'test-results/browser-runner-mobile.png',fullPage:true});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await page.setViewportSize({width:1440,height:1000});
  await adapter.execute({type:'close_details'});await adapter.execute({type:'rewrite',query:'zzzznothing'});assert.equal((await adapter.observe()).totalResults,0);await adapter.execute({type:'skip'});
  // Paging on public controls and a real incorrect submission are valid synthetic actions.

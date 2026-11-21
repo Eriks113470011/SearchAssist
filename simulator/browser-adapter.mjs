@@ -23,7 +23,7 @@ export function createBrowserAdapter(page) {
       if(action.type==='read_explanation'){if(!await card.locator('.explanation').isVisible())throw new Error('No explanation is visible.');text=(await card.locator('.explanation').textContent()).trim();}
       if(action.type==='read_details'){
         if(openDetail!==action.handle||!await page.locator('#detail-dialog').isVisible())throw new Error('Reading details requires the open dialog.');
-        text=(await page.locator('#detail-content').locator('.eyebrow,h2,:scope > p,.detail-meta .tag,.detail-section p').allTextContents()).map(s=>s.trim()).join(' ');
+        text=(await page.locator('#detail-content').locator('.eyebrow,h2,:scope > p:not(.simulation-detail-label),.detail-meta .tag,.detail-section p').allTextContents()).map(s=>s.trim()).join(' ');
       }
       return {...base,readingText:text,card:{handle:action.handle,position,kind:{read_card:'card',read_explanation:'explanation',read_details:'details'}[action.type],text}};
     }

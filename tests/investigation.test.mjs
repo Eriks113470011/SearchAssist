@@ -44,10 +44,10 @@ test('diagnostics distinguish unavailable, unattended, rejected and budget-stopp
 });
 test('investigation validation is strict, bounded and its resolved configuration replays',()=>{
  const c=validateInvestigation({seeds:[42],simulation:{profiles:['careful-scanner']},variants:['baseline']});assert.deepEqual(validateInvestigation(c),c);
- for(const bad of [{seeds:[]},{seeds:[42,42]},{seeds:[-1]},{extra:true},{variants:['unknown']},{variants:['no-typing-errors']},{simulation:{policyVersion:'v2'}},{variants:['baseline','no-interruptions']},{seeds:Array.from({length:11},(_,i)=>i)},{seeds:[1,2],simulation:{runner:'browser'},variants:['baseline']}])assert.throws(()=>validateInvestigation(bad));
+ for(const bad of [{policyVersions:['v3','v3']},{policyVersions:['v1','v4']},{policyVersions:['v2','v3','v4']},{seeds:[]},{seeds:[42,42]},{seeds:[-1]},{extra:true},{variants:['unknown']},{variants:['no-typing-errors']},{simulation:{policyVersion:'v2'}},{variants:['baseline','no-interruptions']},{seeds:Array.from({length:11},(_,i)=>i)},{seeds:[1,2],simulation:{runner:'browser'},variants:['baseline']}])assert.throws(()=>validateInvestigation(bad));
 });
 test('paired policy/control comparisons retain all outcomes and isolate each requested override',async()=>{
- const r=await investigate({seeds:[42],simulation:{profiles:['careful-scanner']},variants:['baseline','no-recognition-noise','no-typing-errors']});
+ const r=await investigate({seeds:[42],simulation:{profiles:['careful-scanner']},policyVersions:['v2','v3'],variants:['baseline','no-recognition-noise','no-typing-errors']});
  assert.equal(r.runs.length,6);assert.equal(r.observations.length,1296);assert.equal(r.pairs.length,1512);assert.equal(r.benchmark.length,60);
  assert.deepEqual(r.runs.map(run=>run.config.policyVersion),['v2','v2','v2','v3','v3','v3']);
  for(const run of r.runs){const p=run.config.profileOverrides['careful-scanner'];if(run.variant==='no-recognition-noise')assert.deepEqual(p,{recognitionNoise:0});if(run.variant==='no-typing-errors')assert.deepEqual(p,{typingErrorRate:0});}

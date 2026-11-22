@@ -1,5 +1,19 @@
 {
-  "seeds": [42],
-  "simulation": {"profiles": ["careful-scanner"]},
-  "variants": ["baseline", "no-recognition-noise", "no-typing-errors"]
+  "seeds": [
+    42
+  ],
+  "simulation": {
+    "profiles": [
+      "careful-scanner"
+    ]
+  },
+  "variants": [
+    "baseline",
+    "no-recognition-noise",
+    "no-typing-errors"
+  ],
+  "policyVersions": [
+    "v3",
+    "v4"
+  ]
 }

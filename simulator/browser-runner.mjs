@@ -124,7 +124,7 @@ export async function simulateBrowser(input={}, {onProgress=()=>{},onPaused}={})
         sessions.push({format:'searchassist-simulation-session',schemaVersion:1,dataOrigin:'synthetic',calibrationStatus:'uncalibrated',runner:'browser',...assignment,profile:profileName,replicate:replicate+1,assignmentSlot:slot,humanRatings:null,trials:verified,browserRecording:recording,blockedExternalOrigins:[...blockedExternalOrigins].sort()});
       } finally {if(native)await native.close();else await context.close();}
     }
-    return {format:SIMULATION_FORMAT,schemaVersion:1,applicationVersion:'1.4',dataOrigin:'synthetic',calibrationStatus:'uncalibrated',runner:'browser',modelVersion:MODEL_VERSIONS[config.policyVersion],adapterVersion:BROWSER_ADAPTER_VERSION,rngVersion:RNG_VERSION,timingVersion:TIMING_VERSION,
+    return {format:SIMULATION_FORMAT,schemaVersion:1,applicationVersion:'1.5',dataOrigin:'synthetic',calibrationStatus:'uncalibrated',runner:'browser',modelVersion:MODEL_VERSIONS[config.policyVersion],adapterVersion:BROWSER_ADAPTER_VERSION,rngVersion:RNG_VERSION,timingVersion:TIMING_VERSION,
       datasetVersion:'synthetic-directory-v1',protocolVersion:'controlled-tasks-v1',measurementDefinition:'modeled-operator-time-v1',browserMeasurementDefinition:'active-time-v2-automation',browserVersion,reconciliationVersion:RECONCILIATION_VERSION,
       browserControlMode:nativeVisibility?'owned-native-cdp-no-defaults':'playwright-isolated-context',interruptionVersion:INTERRUPTION_VERSION,humanRatings:null,config,resolvedProfiles:Object.fromEntries(config.profiles.map(p=>[p,resolveProfile(config,p)])),sessions};
   } catch(error) {

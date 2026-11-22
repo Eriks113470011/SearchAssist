@@ -1,6 +1,6 @@
 import {records as directory} from '../dist/data.mjs';
 import {search,normalize,explain} from '../dist/engine.mjs';
-export const ADAPTER_VERSION='guided-public-model-v2';
+export const ADAPTER_VERSION='guided-public-model-v3';
 export function createModelAdapter({condition,initialQuery,records=directory}) {
   if(!['A','B','C'].includes(condition))throw new Error('Unknown condition.');
   const mode={A:'exact',B:'fuzzy',C:'assist'}[condition];let query=initialQuery,previous=null,limit=12,epoch=0,openDetail=null,matchCache=null;
@@ -32,13 +32,13 @@ export function createModelAdapter({condition,initialQuery,records=directory}) {
       }
       if(action.type==='read_card') {
         const text=[r.title,r.category,r.description,r.tags[0]??''].join(' ');
-        return {...base,readingText:text,card:{handle:action.handle,position,kind:'card',text}};
+        return {...base,readingText:text,card:{handle:action.handle,position,kind:'card',title:r.title,text}};
       }
       if(action.type==='read_details'&&openDetail!==action.handle)throw new Error('Reading details requires the open dialog.');
       if(action.type!=='read_details'&&typeof action.read!=='boolean')throw new Error('Specify whether the agent reads opened details.');
       const text=[r.category.toUpperCase()+' / DIRECTORY ENTRY',r.title,r.description,...r.tags,...(condition==='C'&&m.kind!=='browse'?[explain(m)]:[]),'This is a synthetic entry in the SearchAssist study directory. It does not open an external service.'].join(' ');
       const reading=action.type==='read_details'||action.read;
-      return {...base,clicks:action.type==='read_details'?0:1,readingText:reading?text:'',...(reading?{card:{handle:action.handle,position,kind:'details',text}}:{})};
+      return {...base,clicks:action.type==='read_details'?0:1,readingText:reading?text:'',...(reading?{card:{handle:action.handle,position,kind:'details',title:r.title,text}}:{})};
     }
     if(action.type==='read_suggestion') {const proposed=suggestion();if(!proposed)throw new Error('No suggestion is visible.');return {...base,readingText:'Did you mean '+proposed,suggestion:{query:proposed}};}
     if(action.type==='apply_suggestion') {if(!suggestion())throw new Error('No suggestion can be applied.');return {...base,clicks:1,waits:1};}

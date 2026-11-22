@@ -1,18 +1,62 @@
 {
-  "seeds": [42],
+  "seeds": [
+    42
+  ],
   "simulation": {
     "runner": "browser",
-    "profiles": ["careful-scanner"],
+    "profiles": [
+      "careful-scanner"
+    ],
     "browser": {
-      "assignmentSlots": [0, 7, 14], "headed": true,
+      "assignmentSlots": [
+        3,
+        5,
+        10,
+        15
+      ],
+      "headed": true,
       "interruptions": [
-        {"taskIndex":1,"afterAction":1,"kind":"manual","holdMs":300},
-        {"taskIndex":2,"afterAction":1,"kind":"navigation","holdMs":300},
-        {"taskIndex":5,"afterAction":0,"kind":"reload","holdMs":300},
-        {"taskIndex":6,"afterAction":1,"kind":"restore","holdMs":300},
-        {"taskIndex":9,"afterAction":0,"kind":"hidden","holdMs":300}
+        {
+          "taskIndex": 1,
+          "afterAction": 1,
+          "kind": "manual",
+          "holdMs": 300
+        },
+        {
+          "taskIndex": 2,
+          "afterAction": 1,
+          "kind": "navigation",
+          "holdMs": 300
+        },
+        {
+          "taskIndex": 5,
+          "afterAction": 0,
+          "kind": "reload",
+          "holdMs": 300
+        },
+        {
+          "taskIndex": 6,
+          "afterAction": 1,
+          "kind": "restore",
+          "holdMs": 300
+        },
+        {
+          "taskIndex": 9,
+          "afterAction": 0,
+          "kind": "hidden",
+          "holdMs": 300
+        }
       ]
     }
   },
-  "variants": ["baseline", "no-interruptions", "no-recognition-noise", "no-typing-errors"]
+  "variants": [
+    "baseline",
+    "no-interruptions",
+    "no-recognition-noise",
+    "no-typing-errors"
+  ],
+  "policyVersions": [
+    "v3",
+    "v4"
+  ]
 }

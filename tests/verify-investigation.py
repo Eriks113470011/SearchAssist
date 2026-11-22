@@ -43,10 +43,26 @@ for run in r['runs']:
         assert condition['successes'] == sum(t['outcome'] == 'correct' for t in ts)
         assert condition['incorrectSelections'] == sum(t['outcome'] == 'wrong' for t in ts)
         assert condition['skips'] == sum(t['outcome'] == 'skipped' for t in ts)
+    recordings = {(s['profile'],s['replicate'],s['order'],s['setRotation']):s['recording'] for s in run['browserRecordings']}
+    if c['simulation']['runner'] == 'browser':
+        assert len(recordings) == len(c['simulation']['profiles'])*c['simulation']['replicates']*slots
+        for recording in recordings.values():
+            assert recording['format'] == 'searchassist-simulation-browser-recording' and recording['dataOrigin'] == 'synthetic'
+            assert recording['runner'] == 'browser' and recording['calibrationStatus'] == 'uncalibrated'
+            assert recording['humanRatings'] is None and recording['ratings'] == [] and len(recording['trials']) == 12
+    else:
+        assert not recordings
     for t in group:
         assert t['outcome'] in ['correct','wrong','skipped']
         if c['simulation']['runner'] == 'browser':
             assert t['recordingVerified'] is True and t['observedBrowserActiveMs'] >= 0
+            recording = recordings[(t['profile'],t['replicate'],t['order'],t['setRotation'])]
+            raw = recording['trials'][t['taskIndex']-1]
+            assert raw['selectedId'] == t['selectedId'] and raw['finalQuery'] == t['finalQuery'] and raw['condition'] == t['condition']
+            assert raw['activeElapsedMs'] == t['observedBrowserActiveMs'] and raw['wallElapsedMs'] == t['observedBrowserWallMs']
+            assert raw['success'] == (t['outcome'] == 'correct') and raw['skipped'] == (t['outcome'] == 'skipped')
+            assert raw['incorrectFinalSelection'] == (t['outcome'] == 'wrong')
+            assert raw['pauseCount'] == raw['resumeCount'] == t['interruptionCount']
             expected_faults = sum(f['taskIndex'] == t['taskIndex'] for f in run['config']['browser']['interruptions'])
             assert t['interruptionCount'] == t['verifiedInterruptions'] == expected_faults
         else:

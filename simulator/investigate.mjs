@@ -34,10 +34,10 @@ export async function investigate(input={}, {onProgress=()=>{},browserRunner}={}
   const resolved=runConfig(config,seed,policyVersion,variant);onProgress({seed,policyVersion,variant});
   const run=resolved.runner==='browser'?await (browserRunner??(await import('./browser-runner.mjs')).simulateBrowser)(resolved):simulate(resolved);
   const rows=run.sessions.flatMap(s=>s.trials.map(t=>({profile:s.profile,replicate:s.replicate,order:s.order,setRotation:s.setRotation,taskIndex:t.taskIndex,condition:t.condition,taskType:t.taskType,
-   outcome:outcome(t),category:t.diagnosis.category,modeledActiveMs:t.modeledActiveMs,manualRewrites:t.manualRewrites,observedBrowserActiveMs:t.observedBrowserActiveMs,observedBrowserWallMs:t.observedBrowserWallMs,
+   selectedId:t.selectedId,finalQuery:t.finalQuery,outcome:outcome(t),category:t.diagnosis.category,modeledActiveMs:t.modeledActiveMs,manualRewrites:t.manualRewrites,observedBrowserActiveMs:t.observedBrowserActiveMs,observedBrowserWallMs:t.observedBrowserWallMs,
    interruptionCount:t.interruptions?.length??0,verifiedInterruptions:(t.interruptions??[]).filter(f=>f.verified).length,recordingVerified:t.recordingVerified??null})));
   const digest=createHash('sha256').update(JSON.stringify(run.sessions)).digest('hex');
-  runs.push({seed,policyVersion,variant,config:run.config,modelVersion:run.modelVersion,summary:summarizeRun(run),sessionSha256:digest});
+  runs.push({seed,policyVersion,variant,config:run.config,modelVersion:run.modelVersion,summary:summarizeRun(run),browserRecordings:run.runner==='browser'?run.sessions.map(s=>({profile:s.profile,replicate:s.replicate,order:s.order,setRotation:s.setRotation,recording:s.browserRecording})):[],sessionSha256:digest});
   observations.push(...rows.map(t=>({seed,policyVersion,variant,...t})));
  }
  // Fixed cases are evaluated separately from the controlled study tasks. Acceptable IDs never reach the policy.

@@ -9,6 +9,7 @@ import {renderFailureInspector} from '../simulator/diagnostics.mjs';
 await mkdir('test-results',{recursive:true});
 const config=JSON.parse(await readFile('configs/investigation-browser.json','utf8'));
 const result=await investigate(config,{onProgress:p=>console.log('Browser investigation:',p.seed,p.policyVersion,p.variant)});
+const legacy=result.runs.find(r=>r.policyVersion==='v2'&&r.variant==='baseline');assert.deepEqual(legacy.summary.conditions.map(c=>[c.successes,c.incorrectSelections,c.skips]),[[9,1,2],[12,0,0],[12,0,0]]);
 assert.equal(result.runs.length,8);assert.equal(result.observations.length,288);assert.equal(result.pairs.length,360);
 assert.ok(result.observations.every(t=>t.recordingVerified&&t.interruptionCount===t.verifiedInterruptions));
 assert.equal(result.observations.reduce((n,t)=>n+t.verifiedInterruptions,0),90);

@@ -65,7 +65,7 @@ Outputs:
 - groups.csv: seed/profile/condition/task-type counts, mean modeled cost and rewrites.
 - comparisons.csv: every matched policy/control pair, outcome/category transition and cost/rewrite delta.
 - benchmark.csv: separate development/held-out cases with declared acceptable-selection or abstention checks.
-- investigation.json: all resolved run configurations, condition summaries, per-task rows, pairs, sanity results and hashes of full in-memory synthetic sessions. Full sweep action traces are not retained to keep output bounded; rerun a resolved configuration with simulate or simulate:browser to inspect its full failure timeline.
+- investigation.json: all resolved run configurations, condition summaries, per-task rows, pairs, sanity results, raw tagged app recordings for browser investigations, and hashes of full in-memory synthetic sessions. Full sweep action traces are not retained to keep output bounded; rerun a resolved configuration with simulate or simulate:browser to inspect its full failure timeline.
 - config.json: rerunnable investigation configuration.
 - manifest.json: source/payload SHA-256, versions and runtime/source identity. Hashes are not signatures.
 

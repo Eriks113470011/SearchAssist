@@ -1,0 +1,49 @@
+{
+  "runner": "browser",
+  "masterSeed": 42,
+  "profiles": [
+    "careful-scanner"
+  ],
+  "browser": {
+    "assignmentSlots": [
+      0,
+      7,
+      14
+    ],
+    "headed": true,
+    "pacing": "none",
+    "interruptions": [
+      {
+        "taskIndex": 1,
+        "afterAction": 1,
+        "kind": "manual",
+        "holdMs": 300
+      },
+      {
+        "taskIndex": 2,
+        "afterAction": 1,
+        "kind": "navigation",
+        "holdMs": 300
+      },
+      {
+        "taskIndex": 5,
+        "afterAction": 0,
+        "kind": "reload",
+        "holdMs": 300
+      },
+      {
+        "taskIndex": 6,
+        "afterAction": 1,
+        "kind": "restore",
+        "holdMs": 300
+      },
+      {
+        "taskIndex": 9,
+        "afterAction": 0,
+        "kind": "hidden",
+        "holdMs": 300
+      }
+    ]
+  },
+  "policyVersion": "v2"
+}

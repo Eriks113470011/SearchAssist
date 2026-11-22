@@ -1,0 +1,18 @@
+{
+  "sourceCommit": "dbc0993c4c52dd0cd3a9c475cd546832a7ee71ee",
+  "definition": "SHA-256 of recursively key-sorted session profile/order/setRotation/trials, before V1.4 instrumentation.",
+  "cases": [
+    {
+      "seed": 42,
+      "sessions": 108,
+      "trials": 1296,
+      "sha256": "e89c14728ff5aa6925a50bd0c61edb58b46d3611bb4993f7144756e053fec763"
+    },
+    {
+      "seed": 57,
+      "sessions": 108,
+      "trials": 1296,
+      "sha256": "f13129d251b9c82aa9e974a0e31c4ee7e7efeafe38ff91fb2ffad5d0bb043c50"
+    }
+  ]
+}

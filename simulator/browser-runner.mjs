@@ -1,3 +1,4 @@
+import {diagnoseTrial} from './diagnostics.mjs';
 import assert from 'node:assert/strict';
 import {setTimeout as delay} from 'node:timers/promises';
 import {readBrowserDownload} from './browser-downloads.mjs';
@@ -5,7 +6,7 @@ import {taskSets,orders} from '../dist/study.mjs';
 import {isSimulationRecording} from '../dist/simulation-session.mjs';
 import {validateBrowserConfig} from './browser-config.mjs';
 import {resolveProfile} from './config.mjs';
-import {createPolicy} from './policy.mjs';
+import {createPolicy,MODEL_VERSIONS} from './policy.mjs';
 import {randomUnit,RNG_VERSION} from './random.mjs';
 import {actionCost,TIMING_VERSION} from './timing.mjs';
 import {MODEL_VERSION,SIMULATION_FORMAT} from './runner.mjs';
@@ -16,7 +17,7 @@ import {startBrowserServer} from './browser-server.mjs';
 export const RECONCILIATION_VERSION='recorded-browser-actions-v2';
 export async function runBrowserTrial({page,profile,config,agentKey,taskKey,signal,taskIndex,onPaused}) {
   const adapter=createBrowserAdapter(page),goal=(await page.locator('#study-banner h2').textContent()).trim(),initialQuery=await page.locator('#query').inputValue();
-  const draw=(...keys)=>randomUnit(config.masterSeed,agentKey,taskKey,...keys),policy=createPolicy(goal,initialQuery,profile,draw),trace=[],ledger=[],occurrences={};
+  const draw=(...keys)=>randomUnit(config.masterSeed,agentKey,taskKey,...keys),policy=createPolicy(goal,initialQuery,profile,draw,config.policyVersion),trace=[],ledger=[],occurrences={};
   const planned=(config.browser.interruptions??[]).map((f,i)=>({...f,id:`INT_${String(i+1).padStart(3,'0')}`})).filter(f=>f.taskIndex===taskIndex),interruptions=[];
   async function recoverAt(step){for(const entry of planned.filter(f=>f.afterAction===step)){interruptions.push(await interruptBrowserTrial({page,entry,signal,onPaused}));adapter.resetAfterRecovery();}}
   let active=0,termination='action-budget',finalQuery=initialQuery;
@@ -36,9 +37,10 @@ export async function runBrowserTrial({page,profile,config,agentKey,taskKey,sign
     if(!await page.locator('#pause-task').isVisible())throw new Error('The browser trial is unexpectedly paused or unavailable.');
     const observation=await adapter.observe(),action=policy.decide(structuredClone(observation),config.limits),preview=await adapter.preview(action),cost=await spend(action,preview);
     if(!cost){termination='time-budget';trace.push({type:'budget_stop',reason:'The next action would exceed the modeled-time limit.',attemptedAction:action.type,modeledAtMs:active,durationMs:0});break;}
+    const decisionEvidence=policy.inspect(action.handle);
     const result=await adapter.execute(action);policy.receive(structuredClone(result));
     finalQuery=['submit','skip'].includes(action.type)?observation.query:(await adapter.observe()).query;
-    trace.push({...action,queryBefore:observation.query,queryAfter:finalQuery,modeledAtMs:active,durationMs:cost.durationMs,...(result.card?{attendedText:result.card.text}:{}),...(result.suggestion?{attendedSuggestion:result.suggestion.query}:{})});
+    trace.push({...action,decisionEvidence,...(result.card?{evidenceAfter:policy.inspect(result.card.handle)}:{}),queryBefore:observation.query,queryAfter:finalQuery,modeledAtMs:active,durationMs:cost.durationMs,...(result.card?{attendedText:result.card.text}:{}),...(result.suggestion?{attendedSuggestion:result.suggestion.query}:{})});
     ledger.push(cost);active+=cost.durationMs;occurrences[action.type]=(occurrences[action.type]??0)+1;
     if(action.type==='submit'){termination='submitted';break;}
     if(action.type==='skip'){termination='agent-skip';break;}
@@ -79,8 +81,8 @@ export function reconcileRecording(recording,trials,{participant,order,setRotati
     for(const key of ['activeElapsedMs','wallElapsedMs'])assert.ok(Number.isFinite(r[key])&&r[key]>=0);
     if(!faults.length)assert.ok(Math.abs(r.activeElapsedMs-r.wallElapsedMs)<1000,'Unexpected browser clock divergence.');
     else assert.ok(r.wallElapsedMs-r.activeElapsedMs>=faults.reduce((n,f)=>n+f.observedHoldMs-50,0),'Controlled idle leaked into active timing.');
-    return {...t,taskIndex:i+1,condition:r.condition,taskSet:r.taskSet,taskType:task.type,expectedTargetId:task.target,success:r.success,skipped:r.skipped,incorrectSelection:r.incorrectFinalSelection,
-      pauseCount:r.pauseCount,resumeCount:r.resumeCount,restored:r.restored,incorrectResultOpens:r.incorrectResultOpens,observedBrowserActiveMs:r.activeElapsedMs,observedBrowserWallMs:r.wallElapsedMs,recordedQueryReformulations:r.queryReformulations,recordingVerified:true};
+    const trial={...t,taskIndex:i+1,condition:r.condition,taskSet:r.taskSet,taskType:task.type,expectedTargetId:task.target,success:r.success,skipped:r.skipped,incorrectSelection:r.incorrectFinalSelection,
+      pauseCount:r.pauseCount,resumeCount:r.resumeCount,restored:r.restored,incorrectResultOpens:r.incorrectResultOpens,observedBrowserActiveMs:r.activeElapsedMs,observedBrowserWallMs:r.wallElapsedMs,recordedQueryReformulations:r.queryReformulations,recordingVerified:true};return {...trial,diagnosis:diagnoseTrial(trial)};
   });
   return output;
 }
@@ -122,7 +124,7 @@ export async function simulateBrowser(input={}, {onProgress=()=>{},onPaused}={})
         sessions.push({format:'searchassist-simulation-session',schemaVersion:1,dataOrigin:'synthetic',calibrationStatus:'uncalibrated',runner:'browser',...assignment,profile:profileName,replicate:replicate+1,assignmentSlot:slot,humanRatings:null,trials:verified,browserRecording:recording,blockedExternalOrigins:[...blockedExternalOrigins].sort()});
       } finally {if(native)await native.close();else await context.close();}
     }
-    return {format:SIMULATION_FORMAT,schemaVersion:1,applicationVersion:'1.3',dataOrigin:'synthetic',calibrationStatus:'uncalibrated',runner:'browser',modelVersion:MODEL_VERSION,adapterVersion:BROWSER_ADAPTER_VERSION,rngVersion:RNG_VERSION,timingVersion:TIMING_VERSION,
+    return {format:SIMULATION_FORMAT,schemaVersion:1,applicationVersion:'1.4',dataOrigin:'synthetic',calibrationStatus:'uncalibrated',runner:'browser',modelVersion:MODEL_VERSIONS[config.policyVersion],adapterVersion:BROWSER_ADAPTER_VERSION,rngVersion:RNG_VERSION,timingVersion:TIMING_VERSION,
       datasetVersion:'synthetic-directory-v1',protocolVersion:'controlled-tasks-v1',measurementDefinition:'modeled-operator-time-v1',browserMeasurementDefinition:'active-time-v2-automation',browserVersion,reconciliationVersion:RECONCILIATION_VERSION,
       browserControlMode:nativeVisibility?'owned-native-cdp-no-defaults':'playwright-isolated-context',interruptionVersion:INTERRUPTION_VERSION,humanRatings:null,config,resolvedProfiles:Object.fromEntries(config.profiles.map(p=>[p,resolveProfile(config,p)])),sessions};
   } catch(error) {

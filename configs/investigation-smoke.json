@@ -1,0 +1,5 @@
+{
+  "seeds": [42],
+  "simulation": {"profiles": ["careful-scanner"]},
+  "variants": ["baseline", "no-recognition-noise", "no-typing-errors"]
+}

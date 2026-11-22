@@ -2,6 +2,12 @@
 
 A working first HCI prototype based on Erik Swanson’s project abstract and 26 survey responses. The app explores whether transparent approximate matching and recovery controls can improve directory search. No participant evaluation results are claimed.
 
+## V1.4: investigate failures and compare volunteer policies
+
+Run `npm run investigate -- --config configs/investigation-smoke.json --output simulation-runs/investigation-001`, then open `simulation-runs/investigation-001/report.html`. Ordinary simulation reports now link to `failure-inspector.html` and export `failures.csv`. Set `policyVersion` to `v2` for legacy replay; new runs default to `v3`.
+
+The investigation compares legacy/revised policies, noise/typing controls and (in the browser configuration) interruption controls while retaining wrong answers, skips and modeled effort. Separate synthetic sanity cases cover absent, ambiguous and misleading results. See [the V1.4 guide](docs/INVESTIGATION-v1.4.md) for full-profile/browser commands, definitions and limitations. All behavior assumptions remain uncalibrated; these are software checks, not volunteer observations.
+
 ## Run locally
 
 No build, package installation, API key, or database is required. Use an HTTP server because browser ES modules do not run reliably from file URLs.

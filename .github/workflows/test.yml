@@ -16,10 +16,12 @@ jobs:
       - run: npm test
       - run: npm run simulate -- --config configs/simulator-profiles.json --output simulation-runs/ci-profiles
       - run: python3 tests/verify-simulation.py simulation-runs/ci-profiles
+      - run: npm run investigate -- --config configs/investigation-profiles.json --output simulation-runs/ci-investigation-profiles
+      - run: python3 tests/verify-investigation.py simulation-runs/ci-investigation-profiles
       - uses: actions/upload-artifact@v4
         with:
           name: simulator-qa-${{ github.run_id }}
-          path: simulation-runs/ci-profiles/
+          path: simulation-runs/
   browser:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -97,6 +99,35 @@ jobs:
         if: always()
         with:
           name: recovery-qa-${{ github.run_id }}
+          path: |
+            test-results/
+            simulation-runs/
+          if-no-files-found: ignore
+
+  investigation-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-package-lock --ignore-scripts
+      - name: Use an installed Chromium browser when available
+        run: |
+          searchassist_chromium_path="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [ -n "$searchassist_chromium_path" ]; then
+            printf 'SEARCHASSIST_CHROMIUM_PATH=%s\n' "$searchassist_chromium_path" >> "$GITHUB_ENV"
+          fi
+      - if: env.SEARCHASSIST_CHROMIUM_PATH == ''
+        run: npx playwright install --with-deps chromium
+      - run: xvfb-run -a npm run test:investigation-browser
+      - run: python3 tests/verify-investigation.py simulation-runs/ci-investigation-browser
+      - run: python3 tests/verify-simulation.py simulation-runs/ci-failure-inspector
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: investigation-qa-${{ github.run_id }}
           path: |
             test-results/
             simulation-runs/

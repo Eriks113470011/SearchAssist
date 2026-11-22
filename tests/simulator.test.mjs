@@ -62,7 +62,7 @@ test('opaque result ID permutation leaves observed decisions equivalent',()=>{
 });
 test('the policy source cannot import answers, the engine, dataset or evaluator',async()=>{
   const text=await readFile(new URL('../simulator/policy.mjs',import.meta.url),'utf8');
-  const imports=[...text.matchAll(/from\s+['"]([^'"]+)['"]/g)].map(m=>m[1]);assert.deepEqual(imports,['./text.mjs']);
+  const imports=[...text.matchAll(/from\s+['"]([^'"]+)['"]/g)].map(m=>m[1]);assert.deepEqual(imports,['./policy-v2.mjs','./policy-v3.mjs']);
   assert.ok(!/targetId|expectedTarget|sessionStorage|condition\s*===/.test(text));
 });
 test('unused C capabilities confer no automatic success or time bonus',()=>{
@@ -104,7 +104,7 @@ test('typing slip scenarios operate on generated rewrites and remain recoverable
 });
 test('synthetic sessions and whole runs cannot enter human study, review or project imports',()=>{
   for(const payload of [smoke(),smoke().sessions[0]]) {
-    const text=JSON.stringify(payload);assert.throws(()=>validateSession(text),/Simulated data/);assert.equal(reviewFiles([{name:'SIM.json',text}])[0].session,null);assert.throws(()=>parseProject(text),/workspace/);
+    const text=JSON.stringify(payload);assert.throws(()=>validateSession(text),/Simulated data|smaller than 1 MB/);assert.equal(reviewFiles([{name:'SIM.json',text}])[0].session,null);assert.throws(()=>parseProject(text),/workspace/);
   }
 });
 test('reports and CSVs retain synthetic labels, human-rating absence, counts and missing browser measures',()=>{

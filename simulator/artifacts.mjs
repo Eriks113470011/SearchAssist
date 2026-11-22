@@ -21,7 +21,7 @@ export async function writeRunArtifacts(run,{root,output}) {
   let sourceCommit=null,workingTreeDirty=null;
   try {sourceCommit=execFileSync('git',['rev-parse','HEAD'],{cwd:sourceRoot,stdio:['ignore','pipe','ignore'],encoding:'utf8'}).trim();workingTreeDirty=!!execFileSync('git',['status','--porcelain'],{cwd:sourceRoot,stdio:['ignore','pipe','ignore'],encoding:'utf8'}).trim();}catch{}
   const sourceFiles=await Promise.all((await sourcePaths()).map(async path=>({path,sha256:hash(await readFile(resolve(sourceRoot,path)))})));
-  const manifest={format:'searchassist-simulation-manifest',schemaVersion:1,applicationVersion:'1.3',dataOrigin:'synthetic',calibrationStatus:'uncalibrated',runner:run.runner,browserVersion:run.browserVersion??null,browserMeasurementDefinition:run.browserMeasurementDefinition??null,reconciliationVersion:run.reconciliationVersion??null,pacing:run.config.browser?.pacing??null,interruptionVersion:run.interruptionVersion??null,browserControlMode:run.browserControlMode??null,runtime:{node:process.version,platform:process.platform,architecture:process.arch,icu:process.versions.icu},
+  const manifest={format:'searchassist-simulation-manifest',schemaVersion:1,applicationVersion:'1.4',dataOrigin:'synthetic',calibrationStatus:'uncalibrated',runner:run.runner,browserVersion:run.browserVersion??null,browserMeasurementDefinition:run.browserMeasurementDefinition??null,reconciliationVersion:run.reconciliationVersion??null,diagnosticsVersion:'post-trial-engine-replay-v1',policyVersion:run.config.policyVersion,pacing:run.config.browser?.pacing??null,interruptionVersion:run.interruptionVersion??null,browserControlMode:run.browserControlMode??null,runtime:{node:process.version,platform:process.platform,architecture:process.arch,icu:process.versions.icu},
     sourceCommit,workingTreeDirty,sourceIdentity:sourceCommit?'git-commit-plus-file-sha256':'file-sha256-no-git-commit-available',sourceFiles,
     configSha256:hash(files.get('config.json')),modelVersion:run.modelVersion,adapterVersion:run.adapterVersion,rngVersion:run.rngVersion,timingVersion:run.timingVersion,
     datasetVersion:run.datasetVersion,protocolVersion:run.protocolVersion,measurementDefinition:run.measurementDefinition,seed:run.config.masterSeed,
@@ -37,4 +37,16 @@ export async function writeRunArtifacts(run,{root,output}) {
 }
 export async function writeBrowserFailure(failure,{root,output}) {
   await mkdir(root,{recursive:true});if((await lstat(root)).isSymbolicLink())throw new Error('The simulation-runs root must not be a symlink.');await mkdir(output);await writeFile(resolve(output,'failure.json'),JSON.stringify(failure,null,2)+'\n',{flag:'wx'});
+}
+export async function writeInvestigationArtifacts(result,destination){
+  const {investigationPayloads}=await import('./investigation-report.mjs'),files=investigationPayloads(result);
+  const sourceFiles=await Promise.all((await sourcePaths()).map(async path=>({path,sha256:hash(await readFile(resolve(sourceRoot,path)))})));
+  let sourceCommit=null,workingTreeDirty=null;
+  try{sourceCommit=execFileSync('git',['rev-parse','HEAD'],{cwd:sourceRoot,stdio:['ignore','pipe','ignore'],encoding:'utf8'}).trim();workingTreeDirty=!!execFileSync('git',['status','--porcelain'],{cwd:sourceRoot,stdio:['ignore','pipe','ignore'],encoding:'utf8'}).trim();}catch{}
+  files.set('manifest.json',JSON.stringify({format:'searchassist-investigation-manifest',schemaVersion:1,applicationVersion:'1.4',dataOrigin:'synthetic',calibrationStatus:'uncalibrated',humanRatings:null,
+    investigationVersion:result.investigationVersion,benchmarkVersion:result.benchmarkVersion,sourceCommit,workingTreeDirty,sourceFiles,configSha256:hash(files.get('config.json')),hashAlgorithm:'SHA-256',
+    runtime:{node:process.version,platform:process.platform},files:[...files].map(([path,content])=>({path,bytes:Buffer.byteLength(content),sha256:hash(content)}))},null,2)+'\n');
+  if([...files.values()].reduce((n,s)=>n+Buffer.byteLength(s),0)>MAX_OUTPUT_BYTES)throw new Error('Investigation output exceeds 64 MB; use fewer seeds/profiles.');
+  const {root,output}=destination;await mkdir(root,{recursive:true});if((await lstat(root)).isSymbolicLink())throw new Error('The simulation-runs root must not be a symlink.');await mkdir(output);
+  for(const [path,content] of files)await writeFile(resolve(output,path),content,{flag:'wx'});
 }

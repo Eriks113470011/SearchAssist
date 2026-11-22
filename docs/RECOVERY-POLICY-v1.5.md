@@ -41,6 +41,8 @@ That differs from the 24 A skips in the same run, where none of the issued liter
 
 Title comparison is modeled as part of the existing decision operator. No extra word-reading cost is invented: the title is already part of the charged card/detail text. Opening/reading details and typing a rewritten title are charged through their ordinary operators. Geometry, human memory, acronym knowledge and decision timing have not been empirically calibrated.
 
+Browser startup has its own bounded launchTimeoutMs (default 30,000 ms, permitted 1,000–120,000), separate from the unchanged per-action/download timeout and run deadline. Native startup failures retain the captured Chromium stderr tail for diagnosis.
+
 The adapters expose title only when a card or detail is attended. They do not expose it in the uninspected candidate list. Adapter versions advance to guided-public-model-v3 / guided-dom-v3; observed automation overhead can change while modeled reading text remains identical for legacy policies.
 
 ## Versioned comparisons and references

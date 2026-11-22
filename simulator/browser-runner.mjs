@@ -93,14 +93,14 @@ export async function simulateBrowser(input={}, {onProgress=()=>{},onPaused}={})
     server=await startBrowserServer();
     deadline=setTimeout(()=>{controller.abort(new Error('Browser run exceeded maxRunWallMs.'));void browser?.close().catch(()=>{});},config.browser.maxRunWallMs);
     const nativeVisibility=config.browser.interruptions.some(f=>f.kind==='hidden');
-    if(!nativeVisibility)browser=await chromium.launch({headless:!config.browser.headed,timeout:config.browser.actionTimeoutMs,...(process.env.SEARCHASSIST_CHROMIUM_PATH?{executablePath:process.env.SEARCHASSIST_CHROMIUM_PATH}:{})});
+    if(!nativeVisibility)browser=await chromium.launch({headless:!config.browser.headed,timeout:config.browser.launchTimeoutMs,...(process.env.SEARCHASSIST_CHROMIUM_PATH?{executablePath:process.env.SEARCHASSIST_CHROMIUM_PATH}:{})});
     let browserVersion=browser?.version();
     for(const profileName of config.profiles)for(let replicate=0;replicate<config.replicates;replicate++)for(const slot of config.browser.assignmentSlots) {
       controller.signal.throwIfAborted();
       const participant=`SIM_${String(sessions.length+1).padStart(5,'0')}`,order=orders[slot%6],setRotation=Math.floor(slot/6),assignment={participant,order,setRotation};
       currentAssignment={...assignment,profile:profileName,replicate:replicate+1,slot};currentTaskIndex=null;
       onProgress({participant,profile:profileName,slot,completedSessions:sessions.length});
-      const native=nativeVisibility?await launchNativeBrowser(chromium,{timeout:config.browser.actionTimeoutMs,signal:controller.signal}):null;
+      const native=nativeVisibility?await launchNativeBrowser(chromium,{timeout:config.browser.launchTimeoutMs,downloadTimeout:config.browser.actionTimeoutMs,signal:controller.signal}):null;
       if(native){browser=native.browser;browserVersion??=browser.version();}
       const context=native?.context??await browser.newContext({acceptDownloads:true,serviceWorkers:'block',viewport:{width:1440,height:1000}}),errors=[],blockedExternalOrigins=new Set();
       try {

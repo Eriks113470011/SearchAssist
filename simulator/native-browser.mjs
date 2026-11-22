@@ -6,7 +6,7 @@ import {setTimeout as delay} from 'node:timers/promises';
 import {registerNativeDownloads} from './browser-downloads.mjs';
 // Own process/profile only. No caller-supplied CDP endpoint or personal data directory.
 // noDefaults on the fresh default context prevents focus emulation from being enabled.
-export async function launchNativeBrowser(chromium,{timeout,signal}) {
+export async function launchNativeBrowser(chromium,{timeout,downloadTimeout=timeout,signal}) {
   const root=await mkdtemp(join(tmpdir(),'searchassist-native-')),profile=join(root,'profile'),downloads=join(root,'downloads');
   await mkdir(profile);await mkdir(downloads);let browser,child,closePromise,unregister,stderr='';
   const close=()=>closePromise??=(async()=>{
@@ -34,10 +34,10 @@ export async function launchNativeBrowser(chromium,{timeout,signal}) {
       try{const value=(await readFile(join(profile,'DevToolsActivePort'),'utf8')).split('\n')[0];if(/^\d+$/.test(value)&&Number(value)>0&&Number(value)<65536){port=Number(value);break;}}catch(e){if(e.code!=='ENOENT')throw e;}
       await delay(50,undefined,{signal});
     }
-    if(!port)throw new Error('Native Chromium did not expose its owned loopback debugging port before the startup limit.');
+    if(!port)throw new Error('Native Chromium did not expose its owned loopback debugging port before the startup limit. '+stderr);
     browser=await chromium.connectOverCDP(`http://127.0.0.1:${port}`,{noDefaults:true,isLocal:true,artifactsDir:downloads,timeout});
     const context=browser.contexts()[0];if(!context)throw new Error('Native Chromium did not expose its fresh default context.');
-    const client=await browser.newBrowserCDPSession();await client.send('Browser.setDownloadBehavior',{behavior:'allowAndName',downloadPath:downloads,eventsEnabled:true});unregister=registerNativeDownloads(context,client,downloads,timeout);
+    const client=await browser.newBrowserCDPSession();await client.send('Browser.setDownloadBehavior',{behavior:'allowAndName',downloadPath:downloads,eventsEnabled:true});unregister=registerNativeDownloads(context,client,downloads,downloadTimeout);
     return {browser,context,close};
   }catch(error){await close();throw error;}
 }

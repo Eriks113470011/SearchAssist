@@ -27,6 +27,8 @@ def key(t):
 index = {key(t):t for t in rows}
 assert len(index) == len(rows)
 for run in r['runs']:
+    assert run['provenance']['adapterVersion'] and run['provenance']['rngVersion'] and run['provenance']['timingVersion']
+    if c['simulation']['runner'] == 'browser': assert run['provenance']['browserVersion'] and run['provenance']['reconciliationVersion']
     group = [t for t in rows if (t['seed'],t['policyVersion'],t['variant']) == (run['seed'],run['policyVersion'],run['variant'])]
     assert len(group) == per_run
     assert run['config']['masterSeed'] == run['seed'] and run['config']['policyVersion'] == run['policyVersion']
@@ -76,6 +78,7 @@ for p in r['pairs']:
     after_key = (p['seed'],p['afterPolicy'],p['afterVariant'],p['profile'],p['replicate'],p['order'],p['setRotation'],p['taskIndex'])
     before_key = (p['seed'],p['beforePolicy'],p['beforeVariant'],*after_key[3:])
     before, after = index[before_key],index[after_key]
+    assert p['condition'] == before['condition'] == after['condition'] and p['taskType'] == before['taskType'] == after['taskType']
     assert p['beforeOutcome'] == before['outcome'] and p['afterOutcome'] == after['outcome']
     assert p['beforeCategory'] == before['category'] and p['afterCategory'] == after['category']
     assert p['deltaModeledActiveMs'] == after['modeledActiveMs']-before['modeledActiveMs']

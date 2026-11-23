@@ -21,7 +21,7 @@ export function createStudySummary(entries, planConfig, options={}, generatedAt=
   const codes=new Map();
   for(const e of entries)if(e.session){const code=e.session.participant.toUpperCase();codes.set(code,(codes.get(code)??0)+1);}
   const valid=entries.filter(e=>e.session).length;
-  return {format:SUMMARY_FORMAT,summaryVersion:SUMMARY_VERSION,applicationVersion:'1.3',generatedAt:new Date(generatedAt).toISOString(),scope:'Current generated plan and imported review batch',
+  return {format:SUMMARY_FORMAT,summaryVersion:SUMMARY_VERSION,applicationVersion:'1.4',generatedAt:new Date(generatedAt).toISOString(),scope:'Current generated plan and imported review batch',
     protocol:{recordingVersion:VERSION,recordingSchemaVersion:2,datasetVersion:'synthetic-directory-v1',protocolVersion:'controlled-tasks-v1',timingDefinition:'active-time-v2'},
     units:{successRate:'proportion from 0 to 1',successDifference:'percentage points',activeTime:'milliseconds',activeDifference:'milliseconds',rating:'ordinal scale from 1 to 7'},
     ratingScale:{definition:RATING_DEFINITION,min:1,max:7,questions:RATING_ITEMS.map(item=>pick(item,['measure','label','low','high']))},

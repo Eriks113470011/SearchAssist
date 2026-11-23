@@ -76,6 +76,19 @@ for session in sessions:
             assert sum(x[k] for k in ['readingMs', 'decisionMs', 'typingMs', 'pointClickMs', 'systemWaitMs']) == x['durationMs']
         assert t['manualRewrites'] == sum(x['type'] == 'rewrite' for x in t['trace'])
         assert t['modeledQueryChanges'] == sum(x.get('queryBefore') != x.get('queryAfter') for x in t['trace'] if 'queryBefore' in x)
+        d=t['diagnosis']
+        assert d['category'] == ('correct' if t['success'] else 'wrong-selection' if t['incorrectSelection'] else t['termination'] if t['termination'] in ['action-budget','time-budget'] else 'target-not-returned' if not d['targetEverReturned'] else 'target-not-inspected' if not d['targetInspected'] else 'target-inspected-not-selected')
+        assert d['targetEverReturned'] == any(q['targetRank'] is not None for q in d['queries'])
+        for a in t['trace']:
+            for k in ['decisionEvidence','evidenceAfter']:
+                e=a.get(k)
+                if e:
+                    assert math.isclose(e['score'],e['overlap']+e['rankBoost']+e['noise'],abs_tol=1e-12)
+                    if e['version']=='topic-overlap-v1' and e['eligible']:
+                        assert e['matchedTopicTerms'] and e['overlap']>=e['minimumOverlap']
+            if a['type']=='submit' and config['policyVersion']=='v3':
+                assert a['decisionEvidence']['eligible']
+                assert a['decisionEvidence']['score']>=a['decisionEvidence']['threshold']
         trials.append(t)
 assert len(trials) == manifest['totalTrials']
 assert len(coverage) == len(config['profiles']) * len(config.get('browser', {}).get('assignmentSlots', list(range(18)))) and set(coverage.values()) == {config['replicates']}
@@ -98,5 +111,9 @@ with (root / 'interruptions.csv').open() as f:
     assert len(faults) == sum(len(t.get('interruptions', [])) for t in trials)
     assert all(f['verified'] == 'true' and f['dataOrigin'] == 'synthetic' and f['runner'] == 'browser' for f in faults)
 assert metadata['summary']['interruptionCount'] == metadata['summary']['verifiedInterruptions'] == len(faults)
+with (root / 'failures.csv').open() as f:
+    failures=list(csv.DictReader(f))
+assert len(failures)==sum(not t['success'] for t in trials)
+assert 'SIMULATED / UNCALIBRATED' in (root/'failure-inspector.html').read_text()
 assert 'SIMULATED / UNCALIBRATED' in (root / 'report.html').read_text()
 print(f'Verified synthetic run: {len(sessions)} sessions, {len(trials)} tasks, all coverage cells, source/payload hashes, timing ledgers, and CSV outcomes.')

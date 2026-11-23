@@ -1,0 +1,5 @@
+{
+  "seeds": [42, 43, 44],
+  "simulation": {},
+  "variants": ["baseline", "no-recognition-noise", "no-typing-errors"]
+}

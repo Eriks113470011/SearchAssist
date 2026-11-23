@@ -1,0 +1,25 @@
+{
+  "seeds": [
+    101,
+    102
+  ],
+  "policyVersions": [
+    "v3",
+    "v4"
+  ],
+  "simulation": {
+    "profiles": [
+      "careful-scanner",
+      "first-result-chooser",
+      "frequent-reformulator",
+      "limited-vocabulary",
+      "explanation-reader",
+      "cautious-suggestion-user"
+    ]
+  },
+  "variants": [
+    "baseline",
+    "no-recognition-noise",
+    "no-typing-errors"
+  ]
+}

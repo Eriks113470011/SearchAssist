@@ -132,3 +132,53 @@ jobs:
             test-results/
             simulation-runs/
           if-no-files-found: ignore
+
+  broad-model:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm run validate:broad -- --config configs/validation-challenges.json --output simulation-runs/ci-broad-challenges
+      - run: python3 tests/verify-validation.py simulation-runs/ci-broad-challenges
+      - run: npm run investigate -- --config configs/investigation-broad-model.json --output simulation-runs/ci-broad-model
+      - run: python3 tests/verify-investigation.py simulation-runs/ci-broad-model
+      - run: npm run investigate -- --config configs/investigation-broad-controls.json --output simulation-runs/ci-broad-controls
+      - run: python3 tests/verify-investigation.py simulation-runs/ci-broad-controls
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: broad-model-qa-${{ github.run_id }}
+          path: simulation-runs/
+          if-no-files-found: ignore
+
+  broad-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-package-lock --ignore-scripts
+      - name: Use an installed Chromium browser when available
+        run: |
+          searchassist_chromium_path="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [ -n "$searchassist_chromium_path" ]; then
+            printf 'SEARCHASSIST_CHROMIUM_PATH=%s\n' "$searchassist_chromium_path" >> "$GITHUB_ENV"
+          fi
+      - if: env.SEARCHASSIST_CHROMIUM_PATH == ''
+        run: npx playwright install --with-deps chromium
+      - run: npm run test:validation-browser
+      - run: python3 tests/verify-investigation.py simulation-runs/ci-broad-browser
+      - run: python3 tests/verify-validation.py simulation-runs/ci-challenge-layout
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: broad-browser-qa-${{ github.run_id }}
+          path: |
+            test-results/
+            simulation-runs/
+          if-no-files-found: ignore

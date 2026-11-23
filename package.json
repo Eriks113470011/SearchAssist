@@ -14,7 +14,9 @@
     "test:simulator-browser": "node tests/simulator-browser.mjs",
     "test:recovery-browser": "node tests/recovery-browser.mjs",
     "investigate": "node simulator/investigate-cli.mjs",
-    "test:investigation-browser": "node tests/investigation-browser.mjs"
+    "test:investigation-browser": "node tests/investigation-browser.mjs",
+    "validate:broad": "node simulator/validation-cli.mjs",
+    "test:validation-browser": "node tests/validation-browser.mjs"
   },
   "engines": {
     "node": ">=22"

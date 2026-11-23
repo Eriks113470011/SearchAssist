@@ -17,7 +17,9 @@ r = json.loads((root/'investigation.json').read_text())
 c = json.loads((root/'config.json').read_text())
 assert r['format'] == 'searchassist-simulator-investigation' and r['config'] == c
 assert r['dataOrigin'] == 'synthetic' and r['calibrationStatus'] == 'uncalibrated' and r['humanRatings'] is None
+assert len(c['policyVersions'])==2 and len(set(c['policyVersions']))==2
 assert len(r['runs']) == len(c['seeds'])*2*len(c['variants'])
+assert {(x['seed'],x['policyVersion'],x['variant']) for x in r['runs']} == {(seed,version,variant) for seed in c['seeds'] for version in c['policyVersions'] for variant in c['variants']}
 rows = r['observations']
 slots = len(c['simulation'].get('browser', {}).get('assignmentSlots', range(18)))
 per_run = len(c['simulation']['profiles'])*c['simulation']['replicates']*slots*12
@@ -27,6 +29,7 @@ def key(t):
 index = {key(t):t for t in rows}
 assert len(index) == len(rows)
 for run in r['runs']:
+    assert run['policyVersion'] in c['policyVersions']
     assert run['provenance']['adapterVersion'] and run['provenance']['rngVersion'] and run['provenance']['timingVersion']
     if c['simulation']['runner'] == 'browser': assert run['provenance']['browserVersion'] and run['provenance']['reconciliationVersion']
     group = [t for t in rows if (t['seed'],t['policyVersion'],t['variant']) == (run['seed'],run['policyVersion'],run['variant'])]
@@ -71,10 +74,14 @@ for run in r['runs']:
             assert t['recordingVerified'] is None and t['observedBrowserActiveMs'] is None
 expected_pairs = set()
 for t in rows:
-    if t['policyVersion'] == 'v3': expected_pairs.add(('policy',key(t)))
+    if t['policyVersion'] == c['policyVersions'][1]: expected_pairs.add(('policy',key(t)))
     if t['variant'] != 'baseline': expected_pairs.add(('control',key(t)))
 actual_pairs = set()
 for p in r['pairs']:
+    if p['comparison']=='policy':
+        assert p['beforePolicy']==c['policyVersions'][0] and p['afterPolicy']==c['policyVersions'][1] and p['beforeVariant']==p['afterVariant']
+    else:
+        assert p['comparison']=='control' and p['beforePolicy']==p['afterPolicy'] and p['beforeVariant']=='baseline' and p['afterVariant']!='baseline'
     after_key = (p['seed'],p['afterPolicy'],p['afterVariant'],p['profile'],p['replicate'],p['order'],p['setRotation'],p['taskIndex'])
     before_key = (p['seed'],p['beforePolicy'],p['beforeVariant'],*after_key[3:])
     before, after = index[before_key],index[after_key]

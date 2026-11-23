@@ -1,0 +1,18 @@
+{
+  "sourceCommit": "b1389cf49ad55f140f161d61c0513cd588d4b573",
+  "definition": "SHA-256 of JSON.stringify(sessions), including V1.4 diagnostics and costs.",
+  "cases": [
+    {
+      "seed": 42,
+      "sessions": 108,
+      "trials": 1296,
+      "sha256": "20a96f72bed9e9012ff125adfed283df37b8af07bb20ff55f25768337fa9db39"
+    },
+    {
+      "seed": 57,
+      "sessions": 108,
+      "trials": 1296,
+      "sha256": "d04c38504504661a8891daca60a2268d2f27bc4c8f638c40ae5b4fcbe0e9d75a"
+    }
+  ]
+}

@@ -2,9 +2,15 @@
 
 A working first HCI prototype based on Erik Swanson’s project abstract and 26 survey responses. The app explores whether transparent approximate matching and recovery controls can improve directory search. No participant evaluation results are claimed.
 
-## V1.4: investigate failures and compare volunteer policies
+## V1.5: reduce unnecessary skips
 
-Run `npm run investigate -- --config configs/investigation-smoke.json --output simulation-runs/investigation-001`, then open `simulation-runs/investigation-001/report.html`. Ordinary simulation reports now link to `failure-inspector.html` and export `failures.csv`. Set `policyVersion` to `v2` for legacy replay; new runs default to `v3`.
+New runs default to volunteer policy V4. It inspects plausible candidates before giving up, derives query cues from attended titles, and uses topical prompt/title rewrites while preserving the rejection of unrelated results. A remains literal search; the earlier V2/V3 policies remain selectable.
+
+Run `npm run investigate -- --config configs/investigation-smoke.json --output simulation-runs/recovery-comparison-001`, then open its `report.html`. The supplied comparisons now pin V3/V4 and show skip reasons as well as outcomes. See [the V1.5 recovery-policy guide](docs/RECOVERY-POLICY-v1.5.md) for full-profile/browser reruns and historical replay instructions. All results remain synthetic and uncalibrated.
+
+## V1.4 investigation tools (historical defaults)
+
+Run `npm run investigate -- --config configs/investigation-smoke.json --output simulation-runs/investigation-001`, then open `simulation-runs/investigation-001/report.html`. Ordinary simulation reports now link to `failure-inspector.html` and export `failures.csv`. Set `policyVersion` to `v2` or `v3` for historical replay; V1.5 runs default to `v4`.
 
 The investigation compares legacy/revised policies, noise/typing controls and (in the browser configuration) interruption controls while retaining wrong answers, skips and modeled effort. Separate synthetic sanity cases cover absent, ambiguous and misleading results. See [the V1.4 guide](docs/INVESTIGATION-v1.4.md) for full-profile/browser commands, definitions and limitations. All behavior assumptions remain uncalibrated; these are software checks, not volunteer observations.
 

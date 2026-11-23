@@ -7,7 +7,7 @@ import {createPolicy,MODEL_VERSIONS} from './policy.mjs';
 import {createModelAdapter,ADAPTER_VERSION} from './model-adapter.mjs';
 import {actionCost,TIMING_VERSION} from './timing.mjs';
 export const SIMULATION_FORMAT='searchassist-simulation-run';
-export const MODEL_VERSION=MODEL_VERSIONS.v3;
+export const MODEL_VERSION=MODEL_VERSIONS.v4;
 export function simulateTrial({task,condition,profile,config,agentKey,taskKey,records=directory}) {
   const draw=(...keys)=>randomUnit(config.masterSeed,agentKey,taskKey,...keys),adapter=createModelAdapter({condition,initialQuery:task.query,records});
   const policy=createPolicy(task.prompt,task.query,profile,draw,config.policyVersion),trace=[],ledger=[];let active=0,selectedId=null,reason='action-budget',rewrites=0,queryChanges=0,opens=0;
@@ -48,7 +48,7 @@ export function simulate(input={}) {
     sessions.push({format:'searchassist-simulation-session',schemaVersion:1,dataOrigin:'synthetic',calibrationStatus:'uncalibrated',participant:`SIM_${String(sessions.length+1).padStart(5,'0')}`,
       profile:profileName,replicate:replicate+1,order,setRotation,humanRatings:null,trials});
   }
-  return {format:SIMULATION_FORMAT,schemaVersion:1,applicationVersion:'1.4',dataOrigin:'synthetic',calibrationStatus:'uncalibrated',runner:'model',modelVersion:MODEL_VERSIONS[config.policyVersion],adapterVersion:ADAPTER_VERSION,
+  return {format:SIMULATION_FORMAT,schemaVersion:1,applicationVersion:'1.5',dataOrigin:'synthetic',calibrationStatus:'uncalibrated',runner:'model',modelVersion:MODEL_VERSIONS[config.policyVersion],adapterVersion:ADAPTER_VERSION,
     rngVersion:RNG_VERSION,timingVersion:TIMING_VERSION,datasetVersion:'synthetic-directory-v1',protocolVersion:'controlled-tasks-v1',
     measurementDefinition:'modeled-operator-time-v1',humanRatings:null,config,resolvedProfiles:Object.fromEntries(config.profiles.map(p=>[p,resolveProfile(config,p)])),sessions};
 }

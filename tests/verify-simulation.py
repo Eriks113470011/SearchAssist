@@ -84,9 +84,12 @@ for session in sessions:
                 e=a.get(k)
                 if e:
                     assert math.isclose(e['score'],e['overlap']+e['rankBoost']+e['noise'],abs_tol=1e-12)
-                    if e['version']=='topic-overlap-v1' and e['eligible']:
-                        assert e['matchedTopicTerms'] and e['overlap']>=e['minimumOverlap']
-            if a['type']=='submit' and config['policyVersion']=='v3':
+                    if e['version']=='topic-query-evidence-v1':
+                        assert e['querySupport'] in [0,1] and e['queryWeight']==0.4
+                        assert math.isclose(e['overlap'],e['goalOverlap']+(1-e['goalOverlap'])*e['queryWeight']*e['querySupport'],abs_tol=1e-12)
+                    if e['version'] in ['topic-overlap-v1','topic-query-evidence-v1'] and e['eligible']:
+                        assert e['matchedTopicTerms'] and e.get('goalOverlap',e['overlap'])>=e['minimumOverlap']
+            if a['type']=='submit' and config['policyVersion'] in ['v3','v4']:
                 assert a['decisionEvidence']['eligible']
                 assert a['decisionEvidence']['score']>=a['decisionEvidence']['threshold']
         trials.append(t)

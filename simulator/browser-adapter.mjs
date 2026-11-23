@@ -1,4 +1,4 @@
-export const BROWSER_ADAPTER_VERSION='guided-dom-v2';
+export const BROWSER_ADAPTER_VERSION='guided-dom-v3';
 // This adapter reads visible DOM content and operates controls. It never reads app globals,
 // engine modules, the task key, or browser storage. IDs are resolved only after submission.
 export function createBrowserAdapter(page) {
@@ -25,7 +25,8 @@ export function createBrowserAdapter(page) {
         if(openDetail!==action.handle||!await page.locator('#detail-dialog').isVisible())throw new Error('Reading details requires the open dialog.');
         text=(await page.locator('#detail-content').locator('.eyebrow,h2,:scope > p:not(.simulation-detail-label),.detail-meta .tag,.detail-section p').allTextContents()).map(s=>s.trim()).join(' ');
       }
-      return {...base,readingText:text,card:{handle:action.handle,position,kind:{read_card:'card',read_explanation:'explanation',read_details:'details'}[action.type],text}};
+      const title=action.type==='read_card'?(await card.locator('.result-title').textContent()).trim():action.type==='read_details'?(await page.locator('#detail-title').textContent()).trim():undefined;
+      return {...base,readingText:text,card:{...(title?{title}:{}),handle:action.handle,position,kind:{read_card:'card',read_explanation:'explanation',read_details:'details'}[action.type],text}};
     }
     const state=await observe();
     if(action.type==='read_suggestion'){if(!state.suggestionAvailable)throw new Error('No suggestion is visible.');const query=await page.locator('#suggested-query').inputValue();return {...base,readingText:'Did you mean '+query,suggestion:{query}};}

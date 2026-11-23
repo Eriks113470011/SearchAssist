@@ -16,7 +16,7 @@ Use a different output name for each execution. Existing folders are never overw
 The controlled model baseline and control batch share some baseline cases. Do not pool them as independent samples. The control batch is separate to stay within the existing 64 MB per-output cap. Each investigation also reports the ten historical sanity fixtures separately; these reused fixtures are not fresh validation cases.
 
 ```bash
-npm ci
+npm install --no-package-lock --ignore-scripts
 npm test
 
 npm run investigate -- --config configs/investigation-broad-model.json --output simulation-runs/broad-model-001

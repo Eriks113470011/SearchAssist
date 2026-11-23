@@ -1,0 +1,7 @@
+{
+  "seeds": [101, 102, 103, 104, 105],
+  "policyVersions": ["v3", "v4"],
+  "profiles": ["careful-scanner", "first-result-chooser", "frequent-reformulator", "limited-vocabulary", "explanation-reader", "cautious-suggestion-user"],
+  "conditions": ["A", "B", "C"],
+  "recordOrders": ["original", "reversed"]
+}

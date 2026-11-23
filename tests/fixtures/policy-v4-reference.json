@@ -1,0 +1,87 @@
+{
+  "sourceCommit": "a83b40f53c47d61c0e70c1c94bae84bfe3e0571c",
+  "purpose": "Freeze V1.5 V4 before inspecting challenge-set outcomes; no tuning in broad validation.",
+  "cases": [
+    {
+      "seed": 42,
+      "sha256": "c436dfba4406870cee14557b8b723d0089f90b6d490fc76494c3883d66795039",
+      "sessions": 108
+    },
+    {
+      "seed": 101,
+      "sha256": "54d9e9c539cd1f93be3a023ffda1ba3b3bb74552d7ad54eea82e0b21dbc4b3bb",
+      "sessions": 108
+    }
+  ],
+  "sourceFiles": [
+    {
+      "path": "simulator/browser-adapter.mjs",
+      "sha256": "427aa13f664d2236c3bfed704be6f2337400f0935c344f2bbce0227b7835d4fb"
+    },
+    {
+      "path": "simulator/browser-runner.mjs",
+      "sha256": "54687908c06666ae4d3ba629cfc31d22ff71f9096130bbda784ef5b10789958c"
+    },
+    {
+      "path": "simulator/config.mjs",
+      "sha256": "9552f317a21b77f6f3500d497fa94a33479eb739b399f13852c693d0150a4971"
+    },
+    {
+      "path": "simulator/model-adapter.mjs",
+      "sha256": "b4191a0a277f7c5344b39eeaae0019be44ca384c087ca47826ce3dd2eac309d4"
+    },
+    {
+      "path": "simulator/policy-v2.mjs",
+      "sha256": "0159b25ec7c4115bf96eaf91edc4de541e346ed7b4f5b4e14e1eb93001471516"
+    },
+    {
+      "path": "simulator/policy-v3.mjs",
+      "sha256": "96735b0ea07fbeba356d89204f76f16b4aa83cfec3d6f2c5eeab43db60d0ddc5"
+    },
+    {
+      "path": "simulator/policy-v4.mjs",
+      "sha256": "4dcc8841ea24d0125287060d26d88a21c807f0962dff49fc1dd3f950eff290bf"
+    },
+    {
+      "path": "simulator/policy.mjs",
+      "sha256": "33be34a5c6cd912537a74dce6d4e515d1dc5a5d2eab944e72b6a970de3ccbf54"
+    },
+    {
+      "path": "simulator/random.mjs",
+      "sha256": "68275695e3340742538faa46e5d53cf72500f578fd5134eabef6909eed167336"
+    },
+    {
+      "path": "simulator/recovery.mjs",
+      "sha256": "2e613cb220316107c45b4f7e992d47c282d2fb0f1fa5b9babd3501c0d6f5f12d"
+    },
+    {
+      "path": "simulator/relevance.mjs",
+      "sha256": "b2768f13a53910376c6f67894a19c3312a04b74eaee5b7b7ad20fdebd5746b8c"
+    },
+    {
+      "path": "simulator/runner.mjs",
+      "sha256": "23cb432813580ff564664647c8e6500b0ee1280c576d63cad8f4acb5090986d6"
+    },
+    {
+      "path": "simulator/text.mjs",
+      "sha256": "41e811e85fa032bfa08f02de152dea6f113a97aaf60bab34670570d4450f3150"
+    },
+    {
+      "path": "simulator/timing.mjs",
+      "sha256": "bceb086e01e4b3062ebcb5990451c7f433cdd7d12b0b78949ca88494b91c9fdd"
+    },
+    {
+      "path": "dist/engine.mjs",
+      "sha256": "4864b4831f5953752966be807696dca5c54e47342f51c7f11b7ada5c0cc9f4cc"
+    },
+    {
+      "path": "dist/data.mjs",
+      "sha256": "1de0bdbd676f7348c18365b204abb0a59a5bce26a9f6120de1c7ba39ab67977e"
+    },
+    {
+      "path": "dist/study.mjs",
+      "sha256": "61ca6d55fbfc1c1a4ea6387e88ebc38c17b6e89ad12189d34a72cc191f0553cd"
+    }
+  ],
+  "challengeSuiteSha256": "1fd111781d636fc0df51fbee623563bc4d3f7b59ca401fb534f32aaa20f00d59"
+}

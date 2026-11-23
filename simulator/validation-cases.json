@@ -1,0 +1,753 @@
+{
+  "format": "searchassist-validation-cases",
+  "schemaVersion": 1,
+  "version": "broad-challenge-cases-v1",
+  "provenance": "New hand-authored synthetic challenge fixtures created after V4 was frozen; no policy or engine tuning against these outcomes. Not independently collected human data.",
+  "cases": [
+    {
+      "id": "positive-bicycle",
+      "family": "positive-control",
+      "prompt": "Find secure bicycle parking locations.",
+      "query": "bicycle",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Bicycle Parking",
+          "description": "Secure bicycle parking locations with covered racks.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Vehicle Permits",
+          "description": "Car parking permits for employees.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r1"
+      ],
+      "rationale": "The bicycle entry directly supplies the requested locations."
+    },
+    {
+      "id": "positive-spelling",
+      "family": "positive-control",
+      "prompt": "Find telescope observation reservations.",
+      "query": "telescpoe",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Telescope Reservations",
+          "description": "Telescope observation reservations for evening visits.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Laboratory Reservations",
+          "description": "Chemistry laboratory space bookings.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r1"
+      ],
+      "rationale": "The spelling slip still refers to telescope reservations."
+    },
+    {
+      "id": "positive-reordered",
+      "family": "positive-control",
+      "prompt": "Find evening shuttle departure schedules.",
+      "query": "schedules shuttle",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Shuttle Schedules",
+          "description": "Evening shuttle departure schedules and stops.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Lecture Schedules",
+          "description": "Morning lecture start times.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r1"
+      ],
+      "rationale": "The reordered query refers to shuttle schedules."
+    },
+    {
+      "id": "positive-acronym",
+      "family": "positive-control",
+      "prompt": "Find assistance with rental housing deposits.",
+      "query": "RHS",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Rental Housing Support",
+          "description": "Assistance with rental housing deposits.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": [
+            {
+              "term": "RHS",
+              "type": "alias"
+            }
+          ]
+        },
+        {
+          "id": "r2",
+          "title": "Meal Plans",
+          "description": "Dining account balances and menus.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r1"
+      ],
+      "rationale": "The acronym resolves to a topically matching entry."
+    },
+    {
+      "id": "similar-north",
+      "family": "similar-title",
+      "prompt": "Find current parking permits for north campus.",
+      "query": "Parking Permits",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Parking Permits",
+          "description": "Current parking permits for south campus only.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Parking Permits",
+          "description": "Current parking permits for north campus only.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r2"
+      ],
+      "rationale": "Only the north campus entry satisfies the location constraint; identical titles tie."
+    },
+    {
+      "id": "similar-current",
+      "family": "similar-title",
+      "prompt": "Find the current application for a student travel grant.",
+      "query": "Travel Grant Application",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Travel Grant Application",
+          "description": "Archived student travel grant application from a closed funding year.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Travel Grant Application",
+          "description": "Current student travel grant application for the open funding year.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r2"
+      ],
+      "rationale": "An archived application is not a current application."
+    },
+    {
+      "id": "similar-evening",
+      "family": "similar-title",
+      "prompt": "Find evening laboratory access registration.",
+      "query": "Laboratory Access",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Laboratory Access",
+          "description": "Morning laboratory access registration; evening access is unavailable.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Laboratory Access",
+          "description": "Evening laboratory access registration for supervised sessions.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r2"
+      ],
+      "rationale": "Only the second entry permits evening access."
+    },
+    {
+      "id": "similar-international",
+      "family": "similar-title",
+      "prompt": "Find graduate scholarship applications for international students.",
+      "query": "Scholarship Applications",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Scholarship Applications",
+          "description": "Graduate scholarship applications for domestic students only; international students are ineligible.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Scholarship Applications",
+          "description": "Graduate scholarship applications for international students.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r2"
+      ],
+      "rationale": "The first entry explicitly excludes the requested applicants."
+    },
+    {
+      "id": "collision-cas",
+      "family": "acronym-collision",
+      "prompt": "Find campus building access badge replacements.",
+      "query": "CAS",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Career Advice Services",
+          "description": "Career planning and appointment assistance; no building access badge replacements.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": [
+            {
+              "term": "CAS",
+              "type": "alias"
+            }
+          ]
+        },
+        {
+          "id": "r2",
+          "title": "Campus Access Services",
+          "description": "Campus building access badge replacements and access permissions.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": [
+            {
+              "term": "CAS",
+              "type": "alias"
+            }
+          ]
+        }
+      ],
+      "acceptableIds": [
+        "r2"
+      ],
+      "rationale": "Both titles share CAS, but only campus access replaces badges."
+    },
+    {
+      "id": "collision-sss",
+      "family": "acronym-collision",
+      "prompt": "Find student statistics tutoring appointments.",
+      "query": "SSS",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Student Statistics Support",
+          "description": "Student statistics tutoring appointments and coursework help.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": [
+            {
+              "term": "SSS",
+              "type": "alias"
+            }
+          ]
+        },
+        {
+          "id": "r2",
+          "title": "Student Safety Services",
+          "description": "Student safety training; statistics tutoring appointments are not provided.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": [
+            {
+              "term": "SSS",
+              "type": "alias"
+            }
+          ]
+        }
+      ],
+      "acceptableIds": [
+        "r1"
+      ],
+      "rationale": "The acronym alone cannot distinguish statistics from safety."
+    },
+    {
+      "id": "collision-mrc",
+      "family": "acronym-collision",
+      "prompt": "Find musical rehearsal room bookings.",
+      "query": "MRC",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Medical Records Center",
+          "description": "Medical records requests; no musical rehearsal room bookings.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": [
+            {
+              "term": "MRC",
+              "type": "alias"
+            }
+          ]
+        },
+        {
+          "id": "r2",
+          "title": "Music Rehearsal Center",
+          "description": "Musical rehearsal room bookings for ensembles.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": [
+            {
+              "term": "MRC",
+              "type": "alias"
+            }
+          ]
+        }
+      ],
+      "acceptableIds": [
+        "r2"
+      ],
+      "rationale": "Only the music center provides rehearsal bookings."
+    },
+    {
+      "id": "collision-hsa",
+      "family": "acronym-collision",
+      "prompt": "Find housing security deposit appeal forms.",
+      "query": "HSA",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Health Services Administration",
+          "description": "Health appointment billing; housing security deposit appeal forms are not handled.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": [
+            {
+              "term": "HSA",
+              "type": "alias"
+            }
+          ]
+        },
+        {
+          "id": "r2",
+          "title": "Housing Support Appeals",
+          "description": "Housing security deposit appeal forms and review procedures.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": [
+            {
+              "term": "HSA",
+              "type": "alias"
+            }
+          ]
+        }
+      ],
+      "acceptableIds": [
+        "r2"
+      ],
+      "rationale": "Similar acronyms do not establish the requested housing function."
+    },
+    {
+      "id": "misleading-closed",
+      "family": "misleading-summary",
+      "prompt": "Find an open emergency housing application.",
+      "query": "Emergency Housing Application",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Emergency Housing Application",
+          "description": "Emergency housing application information. Applications are closed and no new applications are accepted.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Housing Intake",
+          "description": "Open emergency housing application intake and submission instructions.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r2"
+      ],
+      "rationale": "An entry describing a closed application cannot fulfill an open application request."
+    },
+    {
+      "id": "misleading-negation",
+      "family": "misleading-summary",
+      "prompt": "Find walk in passport renewal appointments.",
+      "query": "Passport Renewal",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Passport Renewal",
+          "description": "Passport renewal information. Walk in passport renewal appointments are not offered.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Passport Walk In Desk",
+          "description": "Walk in passport renewal appointments are available each weekday.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r2"
+      ],
+      "rationale": "Negated service availability must not count as a positive answer."
+    },
+    {
+      "id": "misleading-example",
+      "family": "misleading-summary",
+      "prompt": "Find a working equipment loan request form.",
+      "query": "Equipment Loan Form",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Equipment Loan Form",
+          "description": "Example equipment loan request form for training only. This is not a working request form.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Equipment Checkout",
+          "description": "Working equipment loan request form for active borrowers.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r2"
+      ],
+      "rationale": "A training example is not a working request form."
+    },
+    {
+      "id": "misleading-referral",
+      "family": "misleading-summary",
+      "prompt": "Find onsite hearing test booking.",
+      "query": "Hearing Test Booking",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Hearing Test Booking",
+          "description": "Hearing test booking information. Onsite hearing tests are unavailable; referrals only.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Audiology Booking",
+          "description": "Onsite hearing test booking and local appointment availability.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r2"
+      ],
+      "rationale": "A referral-only entry does not provide onsite testing."
+    },
+    {
+      "id": "missing-unrelated",
+      "family": "missing-answer",
+      "prompt": "Find volcano evacuation transport reservations.",
+      "query": "evacuation",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Library Hours",
+          "description": "Library opening hours and study rooms.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Meal Reservations",
+          "description": "Restaurant table reservations.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [],
+      "rationale": "No entry provides the requested evacuation transport."
+    },
+    {
+      "id": "missing-negated",
+      "family": "missing-answer",
+      "prompt": "Find emergency boiler repairs available tonight.",
+      "query": "boiler repairs",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Boiler Repairs",
+          "description": "Emergency boiler repairs are not available tonight. This service is permanently closed.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Repair Archive",
+          "description": "Historic boiler repairs and maintenance reports.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [],
+      "rationale": "Neither closed services nor historical reports can supply tonight's repairs."
+    },
+    {
+      "id": "missing-location",
+      "family": "missing-answer",
+      "prompt": "Find west campus wheelchair transport bookings.",
+      "query": "Wheelchair Transport",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Wheelchair Transport",
+          "description": "Wheelchair transport bookings for east campus only. West campus is not served.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Campus Map",
+          "description": "West campus building locations.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [],
+      "rationale": "The only transport entry explicitly excludes west campus."
+    },
+    {
+      "id": "missing-eligibility",
+      "family": "missing-answer",
+      "prompt": "Find housing grants available to visiting students.",
+      "query": "Housing Grants",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Housing Grants",
+          "description": "Housing grants for permanent staff only. Visiting students are ineligible.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Student Housing Guide",
+          "description": "Information about housing costs for visiting students; no grants.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [],
+      "rationale": "No available grant covers visiting students."
+    },
+    {
+      "id": "ambiguous-cafe",
+      "family": "multiple-answers",
+      "prompt": "Find a campus cafe serving coffee.",
+      "query": "coffee",
+      "records": [
+        {
+          "id": "r1",
+          "title": "North Cafe",
+          "description": "Campus cafe serving coffee and snacks.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "South Cafe",
+          "description": "Campus cafe serving coffee and lunch.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r3",
+          "title": "Tea Cart",
+          "description": "Tea and hot chocolate.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r1",
+        "r2"
+      ],
+      "rationale": "Either cafe satisfies the request; no single winner is assumed."
+    },
+    {
+      "id": "ambiguous-printer",
+      "family": "multiple-answers",
+      "prompt": "Find public color printing locations.",
+      "query": "color printing",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Library Printing",
+          "description": "Public color printing locations and payment instructions.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Student Center Printing",
+          "description": "Public color printing locations near the help desk.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r3",
+          "title": "Office Printer",
+          "description": "Private staff printer, unavailable to visitors.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r1",
+        "r2"
+      ],
+      "rationale": "Both public printing entries are valid."
+    },
+    {
+      "id": "ambiguous-repair",
+      "family": "multiple-answers",
+      "prompt": "Find bicycle repair appointment bookings.",
+      "query": "bicycle repair",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Bicycle Repair Desk",
+          "description": "Bicycle repair appointment bookings at the north workshop.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Cycle Workshop",
+          "description": "Bicycle repair appointment bookings at the south workshop.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r3",
+          "title": "Vehicle Workshop",
+          "description": "Car servicing appointments.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r1",
+        "r2"
+      ],
+      "rationale": "Either bicycle repair workshop is an acceptable answer."
+    },
+    {
+      "id": "ambiguous-water",
+      "family": "multiple-answers",
+      "prompt": "Find drinking water refill stations.",
+      "query": "water refill",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Library Water Refill",
+          "description": "Drinking water refill stations on the ground floor.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Gym Water Refill",
+          "description": "Drinking water refill stations by reception.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r3",
+          "title": "Laboratory Water",
+          "description": "Non potable laboratory water.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r1",
+        "r2"
+      ],
+      "rationale": "Both potable refill locations satisfy the request."
+    }
+  ]
+}

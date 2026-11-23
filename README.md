@@ -1,5 +1,10 @@
 # SearchAssist
 
+## Broad validation of V1.5
+
+The new `validate:broad` command evaluates frozen V3/V4 policies on 24 fresh synthetic challenges. Separate configurations expand the controlled model and browser coverage across profiles and seeds. Read [the validation guide](docs/BROAD-VALIDATION.md) for commands, findings, artifacts and limits. Wrong selections and correct-to-wrong regressions remain visible; this milestone does not tune the policies.
+
+
 A working first HCI prototype based on Erik Swanson’s project abstract and 26 survey responses. The app explores whether transparent approximate matching and recovery controls can improve directory search. No participant evaluation results are claimed.
 
 ## V1.5: reduce unnecessary skips

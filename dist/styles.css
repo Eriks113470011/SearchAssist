@@ -31,3 +31,6 @@
 .simulation-notice{padding:14px 24px;background:#fff0cf;color:#604300;font-weight:700;border-bottom:2px solid #b68214;position:sticky;top:0;z-index:100;line-height:1.5}
 
 .simulation-detail-label{background:#fff0cf;color:#604300;padding:8px 12px;font-weight:700;font-size:12px;letter-spacing:.5px;margin:0 0 16px}
+
+/* Keep the fixed desktop navigation below the dynamically wrapped simulation banner. */
+@media(min-width:801px){.simulation-notice~.shell .sidebar{top:var(--simulation-notice-height,0px)}}

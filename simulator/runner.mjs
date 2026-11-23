@@ -45,7 +45,7 @@ export function simulate(input={}) {
     sessions.push({format:'searchassist-simulation-session',schemaVersion:1,dataOrigin:'synthetic',calibrationStatus:'uncalibrated',participant:`SIM_${String(sessions.length+1).padStart(5,'0')}`,
       profile:profileName,replicate:replicate+1,order,setRotation,humanRatings:null,trials});
   }
-  return {format:SIMULATION_FORMAT,schemaVersion:1,applicationVersion:'1.2',dataOrigin:'synthetic',calibrationStatus:'uncalibrated',runner:'model',modelVersion:MODEL_VERSION,adapterVersion:ADAPTER_VERSION,
+  return {format:SIMULATION_FORMAT,schemaVersion:1,applicationVersion:'1.3',dataOrigin:'synthetic',calibrationStatus:'uncalibrated',runner:'model',modelVersion:MODEL_VERSION,adapterVersion:ADAPTER_VERSION,
     rngVersion:RNG_VERSION,timingVersion:TIMING_VERSION,datasetVersion:'synthetic-directory-v1',protocolVersion:'controlled-tasks-v1',
     measurementDefinition:'modeled-operator-time-v1',humanRatings:null,config,resolvedProfiles:Object.fromEntries(config.profiles.map(p=>[p,resolveProfile(config,p)])),sessions};
 }

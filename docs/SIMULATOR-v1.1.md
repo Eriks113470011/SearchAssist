@@ -131,3 +131,7 @@ python3 tests/verify-simulation.py simulation-runs/profiles-001
 The Python checker is an optional verification tool; the simulator itself requires only Node. Browser regression checks also verify the normal app, synthetic-import rejection, projected content parity, and the offline model report's desktop/mobile/print layouts.
 
 Next: implement an isolated browser-agent adapter using the same policies and preserved synthetic provenance, then add controlled interruption/recovery scenarios. Later empirical calibration needs development and held-out participant/task data, documented parameter sources, and comparison of action/error/timing distributions. A large uncalibrated simulation does not replace that work.
+
+## V1.2 follow-up
+
+Browser execution is now implemented; see [the browser-runner guide](BROWSER-RUNNER-v1.2.md). V1.2 separates opening/reading details and includes C detail explanations in the fast projection, advancing the policy and adapter version identifiers. Retain V1.1 manifests when interpreting the earlier baseline; V1.2 outputs are not identical numerical replays of V1.1.

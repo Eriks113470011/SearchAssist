@@ -66,7 +66,7 @@ test('the policy source cannot import answers, the engine, dataset or evaluator'
   assert.ok(!/targetId|expectedTarget|sessionStorage|condition\s*===/.test(text));
 });
 test('unused C capabilities confer no automatic success or time bonus',()=>{
-  const p={...profile,threshold:0,recognitionNoise:0,scanLimit:1,explanationAttention:0,suggestionAcceptance:0};
+  const p={...profile,threshold:0,recognitionNoise:0,scanLimit:1,verifyDetails:false,explanationAttention:0,suggestionAcceptance:0};
   const b=trial({condition:'B',profile:p}),c=trial({condition:'C',profile:p});assert.deepEqual(b,c);
 });
 test('additional explanation reading has a cost when the outcome does not change',()=>{

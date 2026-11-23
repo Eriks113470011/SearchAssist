@@ -1,0 +1,11 @@
+{
+  "runner": "browser",
+  "masterSeed": 42,
+  "profiles": ["careful-scanner"],
+  "browser": {
+    "assignmentSlots": [0],
+    "pacing": "modeled",
+    "headed": true,
+    "maxRunWallMs": 3600000
+  }
+}

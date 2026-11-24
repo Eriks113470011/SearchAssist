@@ -35,5 +35,5 @@ test('browser reports preserve observed zero, unavailable model timing and reque
 });
 test('DOM adapter has no engine, evaluator or storage dependency; policy still has only text helpers',async()=>{
  const adapter=await readFile(new URL('../simulator/browser-adapter.mjs',import.meta.url),'utf8');assert.ok(!/from\s+['"]|sessionStorage|localStorage|targetId|expectedTarget|\.record\.id/.test(adapter));
- const policy=await readFile(new URL('../simulator/policy.mjs',import.meta.url),'utf8');assert.deepEqual([...policy.matchAll(/from\s+['"]([^'"]+)['"]/g)].map(m=>m[1]),['./policy-v2.mjs','./policy-v3.mjs','./policy-v4.mjs','./policy-v5.mjs']);
+ const policy=await readFile(new URL('../simulator/policy.mjs',import.meta.url),'utf8');assert.deepEqual([...policy.matchAll(/from\s+['"]([^'"]+)['"]/g)].map(m=>m[1]),['./policy-v2.mjs','./policy-v3.mjs','./policy-v4.mjs','./policy-v5.mjs','./policy-v5-1.mjs']);
 });

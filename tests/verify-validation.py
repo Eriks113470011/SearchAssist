@@ -2,6 +2,7 @@
 These checks validate artifacts, not human behavior or policy effectiveness.
 """
 from pathlib import Path
+from frozen_source import without_v51_registration
 from itertools import product
 from collections import Counter
 import csv, hashlib, json, math, sys
@@ -23,7 +24,7 @@ for f in m['sourceFiles']:
 frozen=json.loads(Path('tests/fixtures/policy-v4-reference.json').read_text())
 assert m['sourcePolicyCommit']==frozen['sourceCommit']=='a83b40f53c47d61c0e70c1c94bae84bfe3e0571c'
 for f in frozen['sourceFiles']:
-    source=Path(f['path']).read_text()
+    source=without_v51_registration(f['path'],Path(f['path']).read_text())
     # Preserve the original reference hash; remove only additive V5 registry/config entries.
     if f['path']=='simulator/config.mjs':source=source.replace("['v2','v3','v4','v5']","['v2','v3','v4']")
     if f['path']=='simulator/policy.mjs':source=source.replace("import {createPolicyV5} from './policy-v5.mjs';\n",'').replace(",v5:'bounded-search-policies-v5'",'').replace(',v5:createPolicyV5','')

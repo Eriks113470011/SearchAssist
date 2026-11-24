@@ -1,0 +1,11 @@
+{
+  "splits": [
+    "regression",
+    "development",
+    "evaluation"
+  ],
+  "policyVersions": [
+    "v5",
+    "v5.1"
+  ]
+}

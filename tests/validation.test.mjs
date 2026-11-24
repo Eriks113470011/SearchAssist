@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {withoutV51Registration} from './frozen-source.mjs';
 import assert from 'node:assert/strict';
 import {readFile,mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
@@ -12,7 +13,7 @@ test('V4 implementation remains frozen with additive V5 registration and replays
  const ref=JSON.parse(await readFile(new URL('./fixtures/policy-v4-reference.json',import.meta.url),'utf8'));
  assert.equal(ref.sourceCommit,'a83b40f53c47d61c0e70c1c94bae84bfe3e0571c');
  for(const f of ref.sourceFiles){
-  let source=await readFile(new URL('../'+f.path,import.meta.url),'utf8');
+  let source=withoutV51Registration(f.path,await readFile(new URL('../'+f.path,import.meta.url),'utf8'));
   if(f.path==='simulator/config.mjs')source=source.replace("['v2','v3','v4','v5']","['v2','v3','v4']");
   if(f.path==='simulator/policy.mjs')source=source.replace("import {createPolicyV5} from './policy-v5.mjs';\n",'').replace(",v5:'bounded-search-policies-v5'",'').replace(',v5:createPolicyV5','');
   assert.equal(sha256(source),f.sha256,f.path);

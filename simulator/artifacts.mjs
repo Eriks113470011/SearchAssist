@@ -52,7 +52,7 @@ export async function writeInvestigationArtifacts(result,destination){
 }
 export async function writeValidationArtifacts(result,{root,output}){
   const {validationPayloads}=await import('./validation-report.mjs'),files=validationPayloads(result);
-  const sourceFiles=await Promise.all([...(await sourcePaths()),'simulator/validation-cases.json',...(result.format==='searchassist-constraint-validation'?['simulator/constraint-cases.json','simulator/constraint-freeze.json']:[])].map(async path=>({path,sha256:hash(await readFile(resolve(sourceRoot,path)))})));
+  const sourceFiles=await Promise.all([...(await sourcePaths()),'simulator/validation-cases.json',...(result.format==='searchassist-constraint-validation'?['simulator/constraint-cases.json','simulator/constraint-freeze.json',...(result.config.policyVersions.includes('v5.1')?['simulator/constraint-v5-1-freeze.json']:[])]:[])].map(async path=>({path,sha256:hash(await readFile(resolve(sourceRoot,path)))})));
   let sourceCommit=null,workingTreeDirty=null;
   try{sourceCommit=execFileSync('git',['rev-parse','HEAD'],{cwd:sourceRoot,stdio:['ignore','pipe','ignore'],encoding:'utf8'}).trim();workingTreeDirty=!!execFileSync('git',['status','--porcelain'],{cwd:sourceRoot,stdio:['ignore','pipe','ignore'],encoding:'utf8'}).trim();}catch{}
   files.set('manifest.json',JSON.stringify({format:result.format==='searchassist-constraint-validation'?'searchassist-constraint-validation-manifest':'searchassist-broad-validation-manifest',schemaVersion:1,dataOrigin:'synthetic',calibrationStatus:'uncalibrated',humanRatings:null,runner:'model',

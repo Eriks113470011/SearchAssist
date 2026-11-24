@@ -10,3 +10,5 @@ test-results/
 qa-fixtures/
 
 simulation-runs/
+
+__pycache__/

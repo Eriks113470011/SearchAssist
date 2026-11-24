@@ -195,6 +195,12 @@ jobs:
       - run: python3 tests/verify-constraints.py simulation-runs/ci-constraints
       - run: npm run investigate -- --config configs/investigation-constraints-model.json --output simulation-runs/ci-constraints-directory
       - run: python3 tests/verify-investigation.py simulation-runs/ci-constraints-directory
+      - run: npm run validate:constraints -- --config configs/validation-constraints-v5-1.json --output simulation-runs/ci-constraints-v5-1
+      - run: python3 tests/verify-constraints.py simulation-runs/ci-constraints-v5-1
+      - run: npm run validate:constraints -- --config configs/validation-constraints-patch.json --output simulation-runs/ci-constraints-patch
+      - run: python3 tests/verify-constraints.py simulation-runs/ci-constraints-patch
+      - run: npm run investigate -- --config configs/investigation-constraints-v5-1-model.json --output simulation-runs/ci-constraints-v5-1-directory
+      - run: python3 tests/verify-investigation.py simulation-runs/ci-constraints-v5-1-directory
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -219,8 +225,8 @@ jobs:
           fi
       - if: env.SEARCHASSIST_CHROMIUM_PATH == ''
         run: npx playwright install --with-deps chromium
-      - run: node tests/constraint-browser.mjs
-      - run: python3 tests/verify-investigation.py simulation-runs/ci-constraints-browser
+      - run: node tests/constraint-browser.mjs configs/investigation-constraints-v5-1-browser.json simulation-runs/ci-constraints-v5-1-browser
+      - run: python3 tests/verify-investigation.py simulation-runs/ci-constraints-v5-1-browser
       - uses: actions/upload-artifact@v4
         if: always()
         with:

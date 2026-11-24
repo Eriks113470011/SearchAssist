@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {withoutV51Registration} from './frozen-source.mjs';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {checkConstraints,extractRequirements} from '../simulator/constraints.mjs';
@@ -106,5 +107,5 @@ test('opaque IDs and hidden evaluator targets cannot change V5 decisions or timi
 
 test('V5 implementation freeze matches every dependency before evaluation',async()=>{
  const freeze=JSON.parse(await readFile(new URL('../simulator/constraint-freeze.json',import.meta.url),'utf8'));
- for(const f of freeze.sourceFiles)assert.equal(sha256(await readFile(new URL('../'+f.path,import.meta.url))),f.sha256,f.path);
+ for(const f of freeze.sourceFiles)assert.equal(sha256(withoutV51Registration(f.path,await readFile(new URL('../'+f.path,import.meta.url),'utf8'))),f.sha256,f.path);
 });

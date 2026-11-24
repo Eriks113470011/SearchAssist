@@ -94,6 +94,15 @@ for p in r['pairs']:
 assert actual_pairs == expected_pairs and len(actual_pairs) == len(r['pairs'])
 assert len(r['benchmark']) == len(c['seeds'])*2*len(c['simulation']['profiles'])*10*3
 assert {b['split'] for b in r['benchmark']} == {'development','held-out'}
+# Performance gate in addition to structural validity: do not silently accept the
+# old advising regression just because the runner and artifact checks succeeded.
+if c['policyVersions'][1]=='v5.1':
+    benchmark_key=lambda t:(t['seed'],t['profile'],t['condition'],t['caseId'])
+    previous={benchmark_key(t):t for t in r['benchmark'] if t['policyVersion']==c['policyVersions'][0]}
+    patched=[t for t in r['benchmark'] if t['policyVersion']=='v5.1']
+    for t in patched:
+        if previous[benchmark_key(t)]['accepted']:assert t['accepted'],('V5.1 sanity regression',benchmark_key(t))
+        if t['caseId']=='heldout-alias':assert t['accepted'],('Advising regression',benchmark_key(t))
 for filename, count in [('outcomes.csv',len(rows)),('comparisons.csv',len(r['pairs'])),('benchmark.csv',len(r['benchmark']))]:
     with (root/filename).open() as f:
         exported = list(csv.DictReader(f))

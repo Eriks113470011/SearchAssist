@@ -280,3 +280,5 @@ V5 checks public requirements and attended evidence before submitting, rejects c
 npm run validate:constraints -- --config configs/validation-constraints.json --output simulation-runs/constraints-001
 python3 tests/verify-constraints.py simulation-runs/constraints-001
 ```
+
+V5.1 corrects the singular/plural audience regression identified in local PR #16 testing. Original V5 remains frozen. Use the new `*-v5-1*.json` configurations and the [V5.1 Mac testing commands](docs/CONSTRAINT-POLICY-V5-1.md) to evaluate the corrected policy. Historical sanity regressions are now visible per case and guarded in CI.

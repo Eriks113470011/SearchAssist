@@ -19,7 +19,7 @@ export function validateConfig(input={}) {
   keys(input,Object.keys(DEFAULT_CONFIG),'configuration');
   const c=structuredClone(DEFAULT_CONFIG);Object.assign(c,input);
   for(const [key,value] of Object.entries({format:DEFAULT_CONFIG.format,schemaVersion:1,dataOrigin:'synthetic',calibrationStatus:'uncalibrated',runner:'model'}))if(c[key]!==value)throw new Error(`Unsupported ${key}; this runner produces uncalibrated synthetic model data only.`);
-  if(!['v2','v3','v4','v5'].includes(c.policyVersion))throw new Error('Unsupported policyVersion.');
+  if(!['v2','v3','v4','v5','v5.1'].includes(c.policyVersion))throw new Error('Unsupported policyVersion.');
   integer(c.masterSeed,0,0xffffffff,'masterSeed');integer(c.replicates,1,10,'replicates');
   if(!Array.isArray(c.profiles)||!c.profiles.length||c.profiles.length>6||new Set(c.profiles).size!==c.profiles.length||c.profiles.some(p=>typeof p!=='string'||!Object.hasOwn(PROFILES,p)))throw new Error('Choose unique known profile names.');
   if(c.profiles.length*18*c.replicates>324)throw new Error('A run is limited to 324 simulated sessions.');

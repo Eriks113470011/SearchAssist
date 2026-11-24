@@ -1,0 +1,16 @@
+{
+  "sourceCommit": "4d9a2752c5ebec41eb8527790646efde53730944",
+  "purpose": "Recorded before the V5.1 fix; preserve original V5 actions, costs, outcomes and diagnostics, including the known singular-student failure.",
+  "cases": [
+    {
+      "seed": 201,
+      "sessions": 108,
+      "sha256": "7a8747d9986d7428278e28589f20ea456deacaa06cc7bd2cdf859fc4e1d5abb6"
+    },
+    {
+      "seed": 202,
+      "sessions": 108,
+      "sha256": "812f610873a96f6bc38f0cdce6601e105972b479fae22378dd321bb1aee844a2"
+    }
+  ]
+}

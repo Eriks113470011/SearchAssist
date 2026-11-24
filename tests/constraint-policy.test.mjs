@@ -103,3 +103,8 @@ test('opaque IDs and hidden evaluator targets cannot change V5 decisions or timi
  const a=run(f),b=run({...f,task:{...f.task,target:'absent'}}),c=run({...f,records:f.records.map(r=>({...r,id:'opaque-'+r.id}))});
  assert.deepEqual(a.trace,b.trace);assert.deepEqual(a.ledger,b.ledger);assert.deepEqual(a.trace,c.trace);assert.equal(c.selectedId,'opaque-r2');
 });
+
+test('V5 implementation freeze matches every dependency before evaluation',async()=>{
+ const freeze=JSON.parse(await readFile(new URL('../simulator/constraint-freeze.json',import.meta.url),'utf8'));
+ for(const f of freeze.sourceFiles)assert.equal(sha256(await readFile(new URL('../'+f.path,import.meta.url))),f.sha256,f.path);
+});

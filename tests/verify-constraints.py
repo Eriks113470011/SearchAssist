@@ -34,7 +34,7 @@ for t in r['rows']:
 for s in r['samples']:
  assert all(s[k]==idx[key(s)][k] for k in idx[key(s)])
  assert s['modeledActiveMs']==sum(x['durationMs'] for x in s['ledger'])==sum(x['durationMs'] for x in s['trace'])
- # JSON separators match JS stringify for these integer-valued trace/ledger records, except insignificant float spelling.
+ assert hashlib.sha256(json.dumps({'trace':s['trace'],'ledger':s['ledger']},separators=(',',':'),ensure_ascii=False).encode()).hexdigest()==s['traceSha256']
  submit=next((a for a in s['trace'] if a['type']=='submit'),None)
  if s['policyVersion']=='v5' and submit:
   evidence=submit['decisionEvidence'];checks=evidence['constraints']
@@ -42,6 +42,7 @@ for s in r['samples']:
   assert checks['serviceSupported'] and all(x['status']=='supported' for x in checks['requirements'])
   reads=[a for a in s['trace'] if a['type']=='read_details' and a['handle']==submit['handle']]
   assert reads and reads[-1]['durationMs']>0 and reads[-1]['modeledAtMs']<submit['modeledAtMs']
+assert {(s['caseId'],s['policyVersion'],s['outcome']) for s in r['samples']}=={(t['caseId'],t['policyVersion'],t['outcome']) for t in r['rows']}
 expected_pairs={key(t) for t in r['rows'] if t['policyVersion']=='v5'};actual=set()
 for p in r['pairs']:
  k=(p['seed'],'v5',p['profile'],p['caseId'],p['condition'],p['recordOrder']);a=idx[k];b=idx[(k[0],'v4',*k[2:])]

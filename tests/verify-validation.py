@@ -22,7 +22,12 @@ for f in m['sourceFiles']:
     assert digest(Path(f['path']).read_bytes())==f['sha256']
 frozen=json.loads(Path('tests/fixtures/policy-v4-reference.json').read_text())
 assert m['sourcePolicyCommit']==frozen['sourceCommit']=='a83b40f53c47d61c0e70c1c94bae84bfe3e0571c'
-for f in frozen['sourceFiles']: assert digest(Path(f['path']).read_bytes())==f['sha256']
+for f in frozen['sourceFiles']:
+    source=Path(f['path']).read_text()
+    # Preserve the original reference hash; remove only additive V5 registry/config entries.
+    if f['path']=='simulator/config.mjs':source=source.replace("['v2','v3','v4','v5']","['v2','v3','v4']")
+    if f['path']=='simulator/policy.mjs':source=source.replace("import {createPolicyV5} from './policy-v5.mjs';\n",'').replace(",v5:'bounded-search-policies-v5'",'').replace(',v5:createPolicyV5','')
+    assert digest(source.encode())==f['sha256'],f['path']
 assert digest((root/'config.json').read_bytes())==m['configSha256']
 assert digest(Path('simulator/validation-cases.json').read_bytes())==m['caseSuiteSha256']
 assert m['caseSuiteSha256']==frozen['challengeSuiteSha256']

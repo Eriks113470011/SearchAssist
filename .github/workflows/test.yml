@@ -182,3 +182,51 @@ jobs:
             test-results/
             simulation-runs/
           if-no-files-found: ignore
+
+  constraints-model:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm run validate:constraints -- --config configs/validation-constraints.json --output simulation-runs/ci-constraints
+      - run: python3 tests/verify-constraints.py simulation-runs/ci-constraints
+      - run: npm run investigate -- --config configs/investigation-constraints-model.json --output simulation-runs/ci-constraints-directory
+      - run: python3 tests/verify-investigation.py simulation-runs/ci-constraints-directory
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: constraints-model-qa-${{ github.run_id }}
+          path: simulation-runs/
+          if-no-files-found: ignore
+
+  constraints-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-package-lock --ignore-scripts
+      - name: Use an installed Chromium browser when available
+        run: |
+          searchassist_chromium_path="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [ -n "$searchassist_chromium_path" ]; then
+            printf 'SEARCHASSIST_CHROMIUM_PATH=%s\n' "$searchassist_chromium_path" >> "$GITHUB_ENV"
+          fi
+      - if: env.SEARCHASSIST_CHROMIUM_PATH == ''
+        run: npx playwright install --with-deps chromium
+      - run: node tests/constraint-browser.mjs
+      - run: python3 tests/verify-investigation.py simulation-runs/ci-constraints-browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: constraints-browser-qa-${{ github.run_id }}
+          path: |
+            test-results/
+            simulation-runs/
+          if-no-files-found: ignore
+

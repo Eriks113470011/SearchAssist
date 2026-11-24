@@ -52,10 +52,10 @@ export async function writeInvestigationArtifacts(result,destination){
 }
 export async function writeValidationArtifacts(result,{root,output}){
   const {validationPayloads}=await import('./validation-report.mjs'),files=validationPayloads(result);
-  const sourceFiles=await Promise.all([...(await sourcePaths()),'simulator/validation-cases.json'].map(async path=>({path,sha256:hash(await readFile(resolve(sourceRoot,path)))})));
+  const sourceFiles=await Promise.all([...(await sourcePaths()),'simulator/validation-cases.json',...(result.format==='searchassist-constraint-validation'?['simulator/constraint-cases.json','simulator/constraint-freeze.json']:[])].map(async path=>({path,sha256:hash(await readFile(resolve(sourceRoot,path)))})));
   let sourceCommit=null,workingTreeDirty=null;
   try{sourceCommit=execFileSync('git',['rev-parse','HEAD'],{cwd:sourceRoot,stdio:['ignore','pipe','ignore'],encoding:'utf8'}).trim();workingTreeDirty=!!execFileSync('git',['status','--porcelain'],{cwd:sourceRoot,stdio:['ignore','pipe','ignore'],encoding:'utf8'}).trim();}catch{}
-  files.set('manifest.json',JSON.stringify({format:'searchassist-broad-validation-manifest',schemaVersion:1,dataOrigin:'synthetic',calibrationStatus:'uncalibrated',humanRatings:null,runner:'model',
+  files.set('manifest.json',JSON.stringify({format:result.format==='searchassist-constraint-validation'?'searchassist-constraint-validation-manifest':'searchassist-broad-validation-manifest',schemaVersion:1,dataOrigin:'synthetic',calibrationStatus:'uncalibrated',humanRatings:null,runner:'model',
     validationVersion:result.validationVersion,caseSuiteVersion:result.caseSuiteVersion,caseSuiteSha256:result.caseSuiteSha256,sourcePolicyCommit:result.sourcePolicyCommit,
     sourceCommit,workingTreeDirty,sourceFiles,configSha256:hash(files.get('config.json')),hashAlgorithm:'SHA-256',hashScope:'All payload files; manifest excludes itself. Hashes are not signatures.',
     maxOutputBytes:MAX_OUTPUT_BYTES,runtime:{node:process.version,platform:process.platform,icu:process.versions.icu},files:[...files].map(([path,content])=>({path,bytes:Buffer.byteLength(content),sha256:hash(content)}))},null,2)+'\n');

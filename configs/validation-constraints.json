@@ -1,0 +1,7 @@
+{
+  "splits": [
+    "regression",
+    "development",
+    "evaluation"
+  ]
+}

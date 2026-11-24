@@ -16,7 +16,8 @@
     "investigate": "node simulator/investigate-cli.mjs",
     "test:investigation-browser": "node tests/investigation-browser.mjs",
     "validate:broad": "node simulator/validation-cli.mjs",
-    "test:validation-browser": "node tests/validation-browser.mjs"
+    "test:validation-browser": "node tests/validation-browser.mjs",
+    "validate:constraints": "node simulator/constraint-cli.mjs"
   },
   "engines": {
     "node": ">=22"

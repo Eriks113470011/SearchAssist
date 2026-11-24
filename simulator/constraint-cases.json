@@ -1,0 +1,534 @@
+{
+  "format": "searchassist-constraint-cases",
+  "schemaVersion": 1,
+  "version": "constraint-cases-v1",
+  "provenance": "Hand-authored before V5 implementation. Development and evaluation are disclosed author-created splits, not an independent population or blind holdout. Existing broad challenges are regression tests.",
+  "cases": [
+    {
+      "id": "dev-east",
+      "split": "development",
+      "family": "location",
+      "prompt": "Find east campus locker rentals.",
+      "query": "Locker Rentals",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Locker Rentals",
+          "description": "Locker rentals for west campus only. East campus is not served.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Locker Rentals",
+          "description": "Locker rentals for east campus.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r2"
+      ],
+      "rationale": "Only descriptions that affirm every requested requirement qualify; conflicting or unspecified requirements do not."
+    },
+    {
+      "id": "dev-night",
+      "split": "development",
+      "family": "timing",
+      "prompt": "Find evening ceramics workshop bookings.",
+      "query": "Ceramics Workshop",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Ceramics Workshop",
+          "description": "Morning ceramics workshop bookings; evening sessions are unavailable.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Ceramics Workshop",
+          "description": "Evening ceramics workshop bookings are available.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r2"
+      ],
+      "rationale": "Only descriptions that affirm every requested requirement qualify; conflicting or unspecified requirements do not."
+    },
+    {
+      "id": "dev-open",
+      "split": "development",
+      "family": "availability",
+      "prompt": "Find an open childcare application.",
+      "query": "Childcare Application",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Childcare Application",
+          "description": "Childcare applications are closed.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Childcare Application",
+          "description": "Open childcare application intake.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r2"
+      ],
+      "rationale": "Only descriptions that affirm every requested requirement qualify; conflicting or unspecified requirements do not."
+    },
+    {
+      "id": "dev-visiting",
+      "split": "development",
+      "family": "eligibility",
+      "prompt": "Find equipment grants for visiting students.",
+      "query": "Equipment Grants",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Equipment Grants",
+          "description": "Equipment grants for staff only. Visiting students are ineligible.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Equipment Grants",
+          "description": "Equipment grants for visiting students.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r2"
+      ],
+      "rationale": "Only descriptions that affirm every requested requirement qualify; conflicting or unspecified requirements do not."
+    },
+    {
+      "id": "dev-walkin",
+      "split": "development",
+      "family": "availability",
+      "prompt": "Find walk in document certification appointments.",
+      "query": "Document Certification",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Document Certification",
+          "description": "Walk in document certification appointments are not offered.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Document Certification",
+          "description": "Walk in document certification appointments are available.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r2"
+      ],
+      "rationale": "Only descriptions that affirm every requested requirement qualify; conflicting or unspecified requirements do not."
+    },
+    {
+      "id": "dev-missing",
+      "split": "development",
+      "family": "missing-answer",
+      "prompt": "Find west campus evening parcel collection.",
+      "query": "Parcel Collection",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Parcel Collection",
+          "description": "Parcel collection for east campus only.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Parcel Collection",
+          "description": "West campus parcel collection in the morning only.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [],
+      "rationale": "Only descriptions that affirm every requested requirement qualify; conflicting or unspecified requirements do not."
+    },
+    {
+      "id": "dev-unknown",
+      "split": "development",
+      "family": "unknown",
+      "prompt": "Find weekend camera loans for international students.",
+      "query": "Camera Loans",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Camera Loans",
+          "description": "Camera loans and photography advice.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [],
+      "rationale": "Only descriptions that affirm every requested requirement qualify; conflicting or unspecified requirements do not."
+    },
+    {
+      "id": "dev-scope",
+      "split": "development",
+      "family": "scope",
+      "prompt": "Find Monday museum tour bookings.",
+      "query": "Museum Tours",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Museum Tours",
+          "description": "Museum tour bookings are available Monday. Closed on Sundays.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r1"
+      ],
+      "rationale": "Only descriptions that affirm every requested requirement qualify; conflicting or unspecified requirements do not."
+    },
+    {
+      "id": "dev-nonexclusive",
+      "split": "development",
+      "family": "scope",
+      "prompt": "Find studio reservations for students.",
+      "query": "Studio Reservations",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Studio Reservations",
+          "description": "Studio reservations are not only for staff; students are eligible.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r1"
+      ],
+      "rationale": "Only descriptions that affirm every requested requirement qualify; conflicting or unspecified requirements do not."
+    },
+    {
+      "id": "dev-multiple",
+      "split": "development",
+      "family": "multiple-answers",
+      "prompt": "Find north campus book collection.",
+      "query": "Book Collection",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Book Collection",
+          "description": "North campus book collection at the library.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Book Collection",
+          "description": "North campus book collection at reception.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r1",
+        "r2"
+      ],
+      "rationale": "Only descriptions that affirm every requested requirement qualify; conflicting or unspecified requirements do not."
+    },
+    {
+      "id": "eval-south",
+      "split": "evaluation",
+      "family": "location",
+      "prompt": "Find south campus bicycle storage.",
+      "query": "Bicycle Storage",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Bicycle Storage",
+          "description": "Bicycle storage for north campus only. South campus is not served.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Bicycle Storage",
+          "description": "Bicycle storage for south campus.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r2"
+      ],
+      "rationale": "Only descriptions that affirm every requested requirement qualify; conflicting or unspecified requirements do not."
+    },
+    {
+      "id": "eval-weekend",
+      "split": "evaluation",
+      "family": "timing",
+      "prompt": "Find weekend pottery class registration.",
+      "query": "Pottery Classes",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Pottery Classes",
+          "description": "Weekday pottery class registration only.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Pottery Classes",
+          "description": "Weekend pottery class registration is available.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r2"
+      ],
+      "rationale": "Only descriptions that affirm every requested requirement qualify; conflicting or unspecified requirements do not."
+    },
+    {
+      "id": "eval-current",
+      "split": "evaluation",
+      "family": "availability",
+      "prompt": "Find current travel reimbursement forms.",
+      "query": "Travel Reimbursement",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Travel Reimbursement",
+          "description": "Archived travel reimbursement forms from a closed year.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Travel Reimbursement",
+          "description": "Current travel reimbursement forms for the open year.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r2"
+      ],
+      "rationale": "Only descriptions that affirm every requested requirement qualify; conflicting or unspecified requirements do not."
+    },
+    {
+      "id": "eval-international",
+      "split": "evaluation",
+      "family": "eligibility",
+      "prompt": "Find graduate research grants for international students.",
+      "query": "Research Grants",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Research Grants",
+          "description": "Graduate research grants for domestic students only; international students are ineligible.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Research Grants",
+          "description": "Graduate research grants for international students.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r2"
+      ],
+      "rationale": "Only descriptions that affirm every requested requirement qualify; conflicting or unspecified requirements do not."
+    },
+    {
+      "id": "eval-onsite",
+      "split": "evaluation",
+      "family": "availability",
+      "prompt": "Find onsite language assessment booking.",
+      "query": "Language Assessment",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Language Assessment",
+          "description": "Onsite language assessment booking is unavailable; referrals only.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Language Assessment",
+          "description": "Onsite language assessment booking is available.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r2"
+      ],
+      "rationale": "Only descriptions that affirm every requested requirement qualify; conflicting or unspecified requirements do not."
+    },
+    {
+      "id": "eval-missing",
+      "split": "evaluation",
+      "family": "missing-answer",
+      "prompt": "Find emergency plumbing repairs available tonight.",
+      "query": "Plumbing Repairs",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Plumbing Repairs",
+          "description": "Emergency plumbing repairs are not available tonight.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Plumbing Repairs",
+          "description": "Historic plumbing repairs and maintenance reports.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [],
+      "rationale": "Only descriptions that affirm every requested requirement qualify; conflicting or unspecified requirements do not."
+    },
+    {
+      "id": "eval-unknown",
+      "split": "evaluation",
+      "family": "unknown",
+      "prompt": "Find evening parking permits for visiting students.",
+      "query": "Parking Permits",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Parking Permits",
+          "description": "Parking permits and payment instructions.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [],
+      "rationale": "Only descriptions that affirm every requested requirement qualify; conflicting or unspecified requirements do not."
+    },
+    {
+      "id": "eval-scope",
+      "split": "evaluation",
+      "family": "scope",
+      "prompt": "Find Tuesday garden tour reservations.",
+      "query": "Garden Tours",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Garden Tours",
+          "description": "Garden tour reservations are available Tuesday. Closed on Fridays.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r1"
+      ],
+      "rationale": "Only descriptions that affirm every requested requirement qualify; conflicting or unspecified requirements do not."
+    },
+    {
+      "id": "eval-nonexclusive",
+      "split": "evaluation",
+      "family": "scope",
+      "prompt": "Find workshop bookings for students.",
+      "query": "Workshop Bookings",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Workshop Bookings",
+          "description": "Workshop bookings are not only for staff; students are welcome.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r1"
+      ],
+      "rationale": "Only descriptions that affirm every requested requirement qualify; conflicting or unspecified requirements do not."
+    },
+    {
+      "id": "eval-multiple",
+      "split": "evaluation",
+      "family": "multiple-answers",
+      "prompt": "Find east campus water refill stations.",
+      "query": "Water Refill",
+      "records": [
+        {
+          "id": "r1",
+          "title": "Water Refill",
+          "description": "East campus drinking water refill stations at the gym.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        },
+        {
+          "id": "r2",
+          "title": "Water Refill",
+          "description": "East campus drinking water refill stations at the library.",
+          "category": "Resources",
+          "tags": [],
+          "aliases": []
+        }
+      ],
+      "acceptableIds": [
+        "r1",
+        "r2"
+      ],
+      "rationale": "Only descriptions that affirm every requested requirement qualify; conflicting or unspecified requirements do not."
+    }
+  ]
+}

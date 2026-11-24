@@ -89,9 +89,11 @@ for session in sessions:
                         assert math.isclose(e['overlap'],e['goalOverlap']+(1-e['goalOverlap'])*e['queryWeight']*e['querySupport'],abs_tol=1e-12)
                     if e['version'] in ['topic-overlap-v1','topic-query-evidence-v1'] and e['eligible']:
                         assert e['matchedTopicTerms'] and e.get('goalOverlap',e['overlap'])>=e['minimumOverlap']
-            if a['type']=='submit' and config['policyVersion'] in ['v3','v4']:
+            if a['type']=='submit' and config['policyVersion'] in ['v3','v4','v5','v5.1']:
                 assert a['decisionEvidence']['eligible']
                 assert a['decisionEvidence']['score']>=a['decisionEvidence']['threshold']
+                if config['policyVersion'] in ['v5','v5.1']:
+                    assert a['decisionEvidence']['constraints']['qualified'] and a['decisionEvidence']['detailsVerified']
         trials.append(t)
 assert len(trials) == manifest['totalTrials']
 assert len(coverage) == len(config['profiles']) * len(config.get('browser', {}).get('assignmentSlots', list(range(18)))) and set(coverage.values()) == {config['replicates']}

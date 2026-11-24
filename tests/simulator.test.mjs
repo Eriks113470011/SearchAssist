@@ -62,7 +62,7 @@ test('opaque result ID permutation leaves observed decisions equivalent',()=>{
 });
 test('the policy source cannot import answers, the engine, dataset or evaluator',async()=>{
   const text=await readFile(new URL('../simulator/policy.mjs',import.meta.url),'utf8');
-  const imports=[...text.matchAll(/from\s+['"]([^'"]+)['"]/g)].map(m=>m[1]);assert.deepEqual(imports,['./policy-v2.mjs','./policy-v3.mjs','./policy-v4.mjs']);
+  const imports=[...text.matchAll(/from\s+['"]([^'"]+)['"]/g)].map(m=>m[1]);assert.deepEqual(imports,['./policy-v2.mjs','./policy-v3.mjs','./policy-v4.mjs','./policy-v5.mjs','./policy-v5-1.mjs']);
   assert.ok(!/targetId|expectedTarget|sessionStorage|condition\s*===/.test(text));
 });
 test('unused C capabilities confer no automatic success or time bonus',()=>{

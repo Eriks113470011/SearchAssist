@@ -271,3 +271,14 @@ npm run simulate:browser -- --config configs/simulator-recovery-smoke.json --out
 This opens Chromium and checks 3 sessions / 36 tasks / 15 interruptions. Use `configs/simulator-recovery-full.json` for all 18 assignments: 18 sessions / 216 tasks / 90 interruptions. Open the generated `report.html` and inspect `interruptions.csv` for preserved query/undo/progress state, paused active-time plateaus, advancing wall time, provenance and explicit resumption. Native hidden-tab scenarios require headed mode; Linux CI uses Xvfb.
 
 [The V1.3 recovery guide](docs/RECOVERY-v1.3.md) documents scheduling, timing, strict synthetic restore, separate storage, native visibility and failure handling. Human study imports still reject synthetic recordings, and no human ratings are fabricated. Recovery does not calibrate the behavior model against people.
+
+### Experimental V5 constraint policy
+
+V5 checks public requirements and attended evidence before submitting, rejects contradictions, inspects alternatives and abstains on missing evidence. V4 remains the default; the engine and A/B/C interfaces are unchanged. See [V5 behavior, limitations and reproduction commands](docs/CONSTRAINT-POLICY-V5.md) and the [pre-implementation evaluation protocol](docs/CONSTRAINT-PROTOCOL.md).
+
+```sh
+npm run validate:constraints -- --config configs/validation-constraints.json --output simulation-runs/constraints-001
+python3 tests/verify-constraints.py simulation-runs/constraints-001
+```
+
+V5.1 corrects the singular/plural audience regression identified in local PR #16 testing. Original V5 remains frozen. Use the new `*-v5-1*.json` configurations and the [V5.1 Mac testing commands](docs/CONSTRAINT-POLICY-V5-1.md) to evaluate the corrected policy. Historical sanity regressions are now visible per case and guarded in CI.

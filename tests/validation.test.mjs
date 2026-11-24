@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {withoutV51Registration} from './frozen-source.mjs';
 import assert from 'node:assert/strict';
 import {readFile,mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
@@ -8,10 +9,15 @@ import {validationPayloads} from '../simulator/validation-report.mjs';
 import {simulate} from '../simulator/runner.mjs';
 import {validateInvestigation} from '../simulator/investigate.mjs';
 import {writeValidationArtifacts} from '../simulator/artifacts.mjs';
-test('V4 remains byte-identical to V1.5 and replays its pre-challenge session references',async()=>{
+test('V4 implementation remains frozen with additive V5 registration and replays its pre-challenge session references',async()=>{
  const ref=JSON.parse(await readFile(new URL('./fixtures/policy-v4-reference.json',import.meta.url),'utf8'));
  assert.equal(ref.sourceCommit,'a83b40f53c47d61c0e70c1c94bae84bfe3e0571c');
- for(const f of ref.sourceFiles)assert.equal(sha256(await readFile(new URL('../'+f.path,import.meta.url))),f.sha256,f.path);
+ for(const f of ref.sourceFiles){
+  let source=withoutV51Registration(f.path,await readFile(new URL('../'+f.path,import.meta.url),'utf8'));
+  if(f.path==='simulator/config.mjs')source=source.replace("['v2','v3','v4','v5']","['v2','v3','v4']");
+  if(f.path==='simulator/policy.mjs')source=source.replace("import {createPolicyV5} from './policy-v5.mjs';\n",'').replace(",v5:'bounded-search-policies-v5'",'').replace(',v5:createPolicyV5','');
+  assert.equal(sha256(source),f.sha256,f.path);
+ }
  for(const c of ref.cases){const r=simulate({masterSeed:c.seed,policyVersion:'v4'});assert.equal(sha256(JSON.stringify(r.sessions)),c.sha256);assert.equal(r.sessions.length,c.sessions);}
 });
 test('fresh case suite covers each declared risk and has evaluator-only consistent answers',async()=>{

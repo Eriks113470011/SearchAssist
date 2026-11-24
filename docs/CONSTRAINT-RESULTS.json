@@ -1,0 +1,226 @@
+{
+  "format": "searchassist-v5-evaluation-summary",
+  "schemaVersion": 1,
+  "fixtureCommit": "cf648e615b10768d561d1d677e7fb6e0b176fc4d",
+  "implementationCommit": "de902c6eb8d05d3fd40f2cf065bdbbe3bd176f65",
+  "dataOrigin": "synthetic",
+  "calibrationStatus": "uncalibrated",
+  "humanRatings": null,
+  "seeds": [
+    201,
+    202,
+    203,
+    204,
+    205
+  ],
+  "splitOutcomes": [
+    {
+      "policyVersion": "v4",
+      "split": "regression",
+      "tasks": 4320,
+      "correct-selection": 2601,
+      "wrong-selection": 1539,
+      "answerable-skip": 0,
+      "correct-abstention": 180,
+      "meanModeledActiveMs": 26206.13425925926
+    },
+    {
+      "policyVersion": "v4",
+      "split": "development",
+      "tasks": 1800,
+      "correct-selection": 1062,
+      "wrong-selection": 738,
+      "answerable-skip": 0,
+      "correct-abstention": 0,
+      "meanModeledActiveMs": 23004.8
+    },
+    {
+      "policyVersion": "v4",
+      "split": "evaluation",
+      "tasks": 1800,
+      "correct-selection": 1103,
+      "wrong-selection": 697,
+      "answerable-skip": 0,
+      "correct-abstention": 0,
+      "meanModeledActiveMs": 23562.97388888889
+    },
+    {
+      "policyVersion": "v5",
+      "split": "regression",
+      "tasks": 4320,
+      "correct-selection": 3600,
+      "wrong-selection": 0,
+      "answerable-skip": 0,
+      "correct-abstention": 720,
+      "meanModeledActiveMs": 36782.61736111111
+    },
+    {
+      "policyVersion": "v5",
+      "split": "development",
+      "tasks": 1800,
+      "correct-selection": 1440,
+      "wrong-selection": 0,
+      "answerable-skip": 0,
+      "correct-abstention": 360,
+      "meanModeledActiveMs": 33911.73777777778
+    },
+    {
+      "policyVersion": "v5",
+      "split": "evaluation",
+      "tasks": 1800,
+      "correct-selection": 1440,
+      "wrong-selection": 0,
+      "answerable-skip": 0,
+      "correct-abstention": 360,
+      "meanModeledActiveMs": 34631.04111111111
+    }
+  ],
+  "directory": [
+    {
+      "policyVersion": "v4",
+      "tasks": 6480,
+      "correct": 6291,
+      "wrong": 0,
+      "skipped": 189,
+      "meanModeledActiveMs": 30894.576543209878
+    },
+    {
+      "policyVersion": "v5",
+      "tasks": 6480,
+      "correct": 6414,
+      "wrong": 0,
+      "skipped": 66,
+      "meanModeledActiveMs": 37783.445679012344
+    }
+  ],
+  "challengeTerminations": [
+    {
+      "split": "regression",
+      "policyVersion": "v4",
+      "termination": "submitted",
+      "trials": 4140
+    },
+    {
+      "split": "regression",
+      "policyVersion": "v4",
+      "termination": "agent-skip",
+      "trials": 180
+    },
+    {
+      "split": "development",
+      "policyVersion": "v4",
+      "termination": "submitted",
+      "trials": 1800
+    },
+    {
+      "split": "evaluation",
+      "policyVersion": "v4",
+      "termination": "submitted",
+      "trials": 1800
+    },
+    {
+      "split": "regression",
+      "policyVersion": "v5",
+      "termination": "submitted",
+      "trials": 3600
+    },
+    {
+      "split": "regression",
+      "policyVersion": "v5",
+      "termination": "agent-skip",
+      "trials": 716
+    },
+    {
+      "split": "development",
+      "policyVersion": "v5",
+      "termination": "submitted",
+      "trials": 1440
+    },
+    {
+      "split": "development",
+      "policyVersion": "v5",
+      "termination": "agent-skip",
+      "trials": 360
+    },
+    {
+      "split": "evaluation",
+      "policyVersion": "v5",
+      "termination": "submitted",
+      "trials": 1440
+    },
+    {
+      "split": "evaluation",
+      "policyVersion": "v5",
+      "termination": "agent-skip",
+      "trials": 360
+    },
+    {
+      "split": "regression",
+      "policyVersion": "v5",
+      "termination": "time-budget",
+      "trials": 4
+    }
+  ],
+  "pairedTransitions": [
+    {
+      "split": "regression",
+      "beforeOutcome": "correct-selection",
+      "afterOutcome": "correct-selection",
+      "trials": 2601
+    },
+    {
+      "split": "regression",
+      "beforeOutcome": "wrong-selection",
+      "afterOutcome": "correct-selection",
+      "trials": 999
+    },
+    {
+      "split": "regression",
+      "beforeOutcome": "correct-abstention",
+      "afterOutcome": "correct-abstention",
+      "trials": 180
+    },
+    {
+      "split": "regression",
+      "beforeOutcome": "wrong-selection",
+      "afterOutcome": "correct-abstention",
+      "trials": 540
+    },
+    {
+      "split": "development",
+      "beforeOutcome": "wrong-selection",
+      "afterOutcome": "correct-selection",
+      "trials": 378
+    },
+    {
+      "split": "development",
+      "beforeOutcome": "correct-selection",
+      "afterOutcome": "correct-selection",
+      "trials": 1062
+    },
+    {
+      "split": "development",
+      "beforeOutcome": "wrong-selection",
+      "afterOutcome": "correct-abstention",
+      "trials": 360
+    },
+    {
+      "split": "evaluation",
+      "beforeOutcome": "wrong-selection",
+      "afterOutcome": "correct-selection",
+      "trials": 337
+    },
+    {
+      "split": "evaluation",
+      "beforeOutcome": "correct-selection",
+      "afterOutcome": "correct-selection",
+      "trials": 1103
+    },
+    {
+      "split": "evaluation",
+      "beforeOutcome": "wrong-selection",
+      "afterOutcome": "correct-abstention",
+      "trials": 360
+    }
+  ]
+}

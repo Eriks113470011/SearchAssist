@@ -1,0 +1,135 @@
+{
+  "format": "searchassist-v5-1-regression-summary",
+  "schemaVersion": 1,
+  "dataOrigin": "synthetic",
+  "calibrationStatus": "uncalibrated",
+  "humanRatings": null,
+  "baselineCommit": "4d9a2752c5ebec41eb8527790646efde53730944",
+  "note": "All fixtures are reused regressions after identifying the V5 singular/plural failure. Not a fresh held-out evaluation.",
+  "challengeSplits": [
+    {
+      "policyVersion": "v4",
+      "split": "regression",
+      "tasks": 4320,
+      "correct-selection": 2601,
+      "wrong-selection": 1539,
+      "answerable-skip": 0,
+      "correct-abstention": 180,
+      "meanModeledActiveMs": 26206.13425925926
+    },
+    {
+      "policyVersion": "v4",
+      "split": "development",
+      "tasks": 1800,
+      "correct-selection": 1062,
+      "wrong-selection": 738,
+      "answerable-skip": 0,
+      "correct-abstention": 0,
+      "meanModeledActiveMs": 23004.8
+    },
+    {
+      "policyVersion": "v4",
+      "split": "evaluation",
+      "tasks": 1800,
+      "correct-selection": 1103,
+      "wrong-selection": 697,
+      "answerable-skip": 0,
+      "correct-abstention": 0,
+      "meanModeledActiveMs": 23562.97388888889
+    },
+    {
+      "policyVersion": "v5.1",
+      "split": "regression",
+      "tasks": 4320,
+      "correct-selection": 3600,
+      "wrong-selection": 0,
+      "answerable-skip": 0,
+      "correct-abstention": 720,
+      "meanModeledActiveMs": 36782.61736111111
+    },
+    {
+      "policyVersion": "v5.1",
+      "split": "development",
+      "tasks": 1800,
+      "correct-selection": 1440,
+      "wrong-selection": 0,
+      "answerable-skip": 0,
+      "correct-abstention": 360,
+      "meanModeledActiveMs": 33911.73777777778
+    },
+    {
+      "policyVersion": "v5.1",
+      "split": "evaluation",
+      "tasks": 1800,
+      "correct-selection": 1440,
+      "wrong-selection": 0,
+      "answerable-skip": 0,
+      "correct-abstention": 360,
+      "meanModeledActiveMs": 34631.04111111111
+    }
+  ],
+  "patchComparison": [
+    {
+      "policyVersion": "v5",
+      "tasks": 7920,
+      "correct-selection": 6480,
+      "wrong-selection": 0,
+      "answerable-skip": 0,
+      "correct-abstention": 1440,
+      "meanModeledActiveMs": 35641.150126262626
+    },
+    {
+      "policyVersion": "v5.1",
+      "tasks": 7920,
+      "correct-selection": 6480,
+      "wrong-selection": 0,
+      "answerable-skip": 0,
+      "correct-abstention": 1440,
+      "meanModeledActiveMs": 35641.150126262626
+    }
+  ],
+  "directory": [
+    {
+      "policyVersion": "v4",
+      "tasks": 6480,
+      "correct": 6291,
+      "wrong": 0,
+      "skipped": 189,
+      "meanModeledActiveMs": 30894.576543209878
+    },
+    {
+      "policyVersion": "v5.1",
+      "tasks": 6480,
+      "correct": 6414,
+      "wrong": 0,
+      "skipped": 66,
+      "meanModeledActiveMs": 37783.445679012344
+    }
+  ],
+  "historicalSanity": [
+    {
+      "policyVersion": "v4",
+      "split": "development",
+      "trials": 360,
+      "accepted": 345
+    },
+    {
+      "policyVersion": "v4",
+      "split": "held-out",
+      "trials": 540,
+      "accepted": 520
+    },
+    {
+      "policyVersion": "v5.1",
+      "split": "development",
+      "trials": 360,
+      "accepted": 360
+    },
+    {
+      "policyVersion": "v5.1",
+      "split": "held-out",
+      "trials": 540,
+      "accepted": 520
+    }
+  ]
+}

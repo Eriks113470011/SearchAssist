@@ -6,7 +6,7 @@ import {summarizeRun} from './report.mjs';
 import {benchmarkCases,BENCHMARK_VERSION} from './benchmark-cases.mjs';
 export const INVESTIGATION_VERSION='paired-policy-controls-v2';
 const variants=['baseline','no-interruptions','no-recognition-noise','no-typing-errors'];
-const supportedVersions=['v2','v3','v4'];
+const supportedVersions=['v2','v3','v4','v5','v5.1'];
 export function validateInvestigation(input={}){
  if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(k=>!['seeds','simulation','variants','policyVersions'].includes(k)))throw new Error('Unknown investigation fields.');
  const c={seeds:[42,43,44],simulation:{},policyVersions:['v3','v4'],variants:['baseline','no-recognition-noise','no-typing-errors'],...structuredClone(input)};

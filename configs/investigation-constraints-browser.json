@@ -1,0 +1,33 @@
+{
+  "seeds": [
+    201,
+    202
+  ],
+  "policyVersions": [
+    "v4",
+    "v5"
+  ],
+  "simulation": {
+    "runner": "browser",
+    "profiles": [
+      "careful-scanner",
+      "first-result-chooser",
+      "frequent-reformulator",
+      "limited-vocabulary",
+      "explanation-reader",
+      "cautious-suggestion-user"
+    ],
+    "browser": {
+      "assignmentSlots": [
+        0,
+        7,
+        14
+      ],
+      "pacing": "none",
+      "interruptions": []
+    }
+  },
+  "variants": [
+    "baseline"
+  ]
+}
